@@ -19,3 +19,8 @@ $routes->get('/apply', function () {
 
 $routes->get('jobs', 'Jobs::index');           // List all jobs
 $routes->get('jobs/view/(:num)', 'Jobs::view/$1');  // View single job by ID
+// app/Config/Routes.php
+$routes->get('register', 'Register::index'); // or whatever controller/method
+
+$routes->get('register', 'Register::index');   // show the registration form
+$routes->post('register/save', 'Register::save');  // handle form submission

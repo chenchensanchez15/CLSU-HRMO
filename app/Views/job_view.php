@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= esc($job['position_title']) ?> | HRMO Online Job Application</title>
+    <title>HRMO Online Job Application System | CLSU</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -20,20 +22,22 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-<header class="bg-clsuGreen text-white px-8 py-5">
-    <h1 class="text-xl font-bold">CLSU HRMO Online Job Application</h1>
-</header>
 
-<main class="max-w-5xl mx-auto bg-white p-8 my-10 rounded-lg shadow">
+<header class="bg-clsuGreen text-white px-8 py-5">
+    <h1 class="text-xl font-bold">CLSU Online Job Application</h1>
+</header>
+<main class="max-w-6xl mx-auto bg-white p-12 my-12 rounded-xl shadow-xl">
 
     <!-- Job Title & Basic Info -->
-    <h2 class="text-2xl font-bold text-clsuGreen mb-4"><?= esc($job['position_title']) ?></h2>
-    <p class="text-sm mb-2"><strong>Office:</strong> <?= esc($job['office']) ?></p>
-    <p class="text-sm mb-2"><strong>Item No.:</strong> <?= esc($job['item_no']) ?></p>
-    <p class="text-sm mb-2"><strong>Salary Grade:</strong> <?= esc($job['salary_grade']) ?></p>
-    <p class="text-sm mb-6"><strong>Monthly Salary:</strong> <?= esc($job['monthly_salary']) ?></p>
+    <h2 class="text-3xl font-extrabold text-clsuGreen mb-6"><?= esc($job['position_title']) ?></h2>
 
-    <hr class="my-6">
+    <p class="text-lg mb-3"><strong>Office:</strong> <?= esc($job['office']) ?></p>
+    <p class="text-lg mb-3"><strong>Item No.:</strong> <?= esc($job['item_no']) ?></p>
+    <p class="text-lg mb-3"><strong>Salary Grade:</strong> <?= esc($job['salary_grade']) ?></p>
+    <p class="text-lg mb-8"><strong>Monthly Salary:</strong> <?= esc($job['monthly_salary']) ?></p>
+
+    <hr class="my-8 border-gray-300">
+
 
     <!-- Qualifications & Requirements -->
     <details class="mb-6 border rounded">
@@ -65,14 +69,6 @@
         </div>
     </details>
 
-    <!-- Job Description -->
-    <details class="mb-6 border rounded">
-        <summary class="cursor-pointer px-4 py-3 font-semibold bg-gray-100">Job Description</summary>
-        <div class="px-6 py-4 text-sm">
-            <?= nl2br(esc((string) $job['description'])) ?>
-
-        </div>
-    </details>
 
 <p class="font-semibold text-lg mb-6">
     Deadline for Submission: 
@@ -81,18 +77,20 @@
     </span>
 </p>
 
+<div class="text-center mt-6">
+    <a href="<?= base_url('register') ?>"
+       class="bg-clsuGreen text-white px-8 py-3 rounded font-semibold hover:bg-green-800 transition">
+        Apply Now
+    </a>
+</div>
 
-    <!-- Apply Button -->
-    <div class="text-center">
-        <a href="#" class="bg-clsuGreen text-white px-8 py-3 rounded font-semibold hover:bg-green-800 transition">
-            Apply for this Position
-        </a>
-    </div>
 
 </main>
 
-<footer class="bg-clsuGreen text-white text-center py-4">
-    <p>&copy; <?= date('Y') ?> Central Luzon State University – HRMO</p>
+<footer class="bg-clsuGreen text-white text-center py-6">
+    <p>
+        &copy; <?= date('Y') ?> Central Luzon State University – Human Resource Management Office
+    </p>
 </footer>
 
 </body>

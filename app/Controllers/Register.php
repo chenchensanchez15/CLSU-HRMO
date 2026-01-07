@@ -2,41 +2,47 @@
 
 namespace App\Controllers;
 
+use App\Controllers\BaseController;
 use App\Models\UserModel;
 
 class Register extends BaseController
 {
     public function index()
     {
-        return view('register');
+        return view('register'); // your form view
     }
 
     public function save()
     {
-        $userModel = new UserModel();
+        $validation =  \Config\Services::validation();
 
-        $rules = [
+        // Validate inputs
+        $validation->setRules([
             'first_name' => 'required|min_length[2]',
+            'middle_name'=> 'permit_empty',
             'last_name'  => 'required|min_length[2]',
-            'email'      => 'required|valid_email|is_unique[users.email]',
-            'password'   => 'required|min_length[6]',
-            'confirm_password' => 'matches[password]'
-        ];
+            'extension'  => 'permit_empty',
+            'email'      => 'required|valid_email|is_unique[users.email]'
+        ]);
 
-        if (! $this->validate($rules)) {
+        if (!$this->validate($validation->getRules())) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
+        // Prepare data
         $data = [
             'first_name' => $this->request->getPost('first_name'),
+            'middle_name'=> $this->request->getPost('middle_name'),
             'last_name'  => $this->request->getPost('last_name'),
+            'extension'  => $this->request->getPost('extension'),
             'email'      => $this->request->getPost('email'),
-            'password'   => password_hash($this->request->getPost('password'), PASSWORD_DEFAULT),
-            'confirm_password' => password_hash($this->request->getPost('confirm_password'), PASSWORD_DEFAULT)
+            // Generate random password
+            'password'   => password_hash(bin2hex(random_bytes(4)), PASSWORD_DEFAULT),
         ];
 
-        $userModel->insert($data);
+        $model = new UserModel();
+        $model->save($data);
 
-        return redirect()->to(base_url('login'))->with('success', 'Account created successfully!');
+        return redirect()->to(base_url('login'))->with('success', 'Registration successful! Please check your email for login credentials.');
     }
 }
