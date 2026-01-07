@@ -19,3 +19,5 @@ $routes->get('/apply', function () {
 
 $routes->get('jobs', 'Jobs::index');           // List all jobs
 $routes->get('jobs/view/(:num)', 'Jobs::view/$1');  // View single job by ID
+
+$routes->get('dashboard', 'Dashboard::index');
