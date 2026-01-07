@@ -22,37 +22,14 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
-<header class="bg-clsuGreen text-white px-8 py-4 flex flex-col md:flex-row md:justify-between md:items-center">
 
-    <div class="flex items-center space-x-4">
-        <div>
-            <h1 class="text-xl font-bold leading-tight">
-                Central Luzon State University
-            </h1>
-            <p class="text-sm opacity-90">
-                HRMO Online Job Application System
-            </p>
-        </div>
-    </div>
-
-    <nav class="mt-4 md:mt-0 space-x-5 font-semibold">
-        <a href="<?= base_url('login') ?>" class="hover:underline">Login</a>
-        <a href="<?= base_url('register') ?>" class="hover:underline">Register</a>
-    </nav>
-
-</header>
-
-<section class="bg-clsuGreen text-white text-center py-24 px-6">
-    <h2 class="text-4xl font-bold mb-4">
-        Welcome to CLSU HRMO Online Job Application
+<section class="bg-clsuGreen text-white text-center py-10 px-6">
+    <h2 class="text-4xl font-bold mb-2">
+        CLSU Online Job Application
     </h2>
-    <p class="text-lg mb-8 max-w-2xl mx-auto">
+    <p class="text-lg mb-2 max-w-2xl mx-auto">
         Explore career opportunities and apply online with ease and security.
     </p>
-    <a href="#jobs"
-       class="bg-clsuGold text-black px-8 py-3 rounded-md font-bold hover:bg-yellow-400 transition">
-        View Job Openings
-    </a>
 </section>
 
 <section id="jobs" class="max-w-7xl mx-auto py-16 px-6">
