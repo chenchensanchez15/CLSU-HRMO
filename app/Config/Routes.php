@@ -26,3 +26,6 @@ $routes->get('register', 'Register::index');   // show the registration form
 $routes->post('register/save', 'Register::save');  // handle form submission
 
 $routes->get('dashboard', 'Dashboard::index');
+
+$routes->post('apply', 'Dashboard::apply');
+$routes->get('apply/(:num)', 'Apply::index/$1');

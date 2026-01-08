@@ -8,39 +8,38 @@ class Dashboard extends BaseController
     {
         $db = \Config\Database::connect();
 
-        // TEMP: use Juan Dela Cruz
+        // TEMP USER (Juan Dela Cruz)
         $userId = 3;
 
-        // Fetch user + applicant profile (left join)
+        // USER INFO
         $user = $db->table('users')
-            ->select('users.first_name, users.last_name, users.email, applicants.contact, applicants.photo')
-            ->join('applicants', 'applicants.user_id = users.id', 'left')
-            ->where('users.id', $userId)
+            ->select('first_name, last_name, email')
+            ->where('id', $userId)
             ->get()
             ->getRowArray();
 
-        // Safety defaults if null
+        // SAFETY FALLBACK
         if (!$user) {
             $user = [
-                'first_name' => 'No',
-                'last_name'  => 'Name',
-                'email'      => 'noemail@example.com',
-                'contact'    => 'N/A',
-                'photo'      => null
+                'first_name' => 'Guest',
+                'last_name'  => 'User',
+                'email'      => 'guest@example.com'
             ];
         }
 
-        // Fetch user's applications
-        $applications = $db->table('applications')
-            ->select('job_vacancies.position, job_vacancies.department, applications.status')
-            ->join('job_vacancies', 'job_vacancies.id = applications.vacancy_id')
+        // USER APPLICATIONS
+            $applications = $db->table('applications')
+            ->select('job_positions.position_title, job_positions.department, applications.status')
+            ->join('job_positions', 'job_positions.id = applications.vacancy_id')
             ->where('applications.user_id', $userId)
             ->get()
             ->getResultArray();
 
-        // Fetch open job vacancies
-        $vacancies = $db->table('job_vacancies')
+
+        // 👉 GET VACANT JOBS FROM job_positions
+        $vacancies = $db->table('job_positions')
             ->where('status', 'Open')
+            ->orderBy('application_deadline', 'ASC')
             ->get()
             ->getResultArray();
 
@@ -50,4 +49,37 @@ class Dashboard extends BaseController
             'vacancies' => $vacancies
         ]);
     }
+
+    public function apply()
+    {
+        $db = \Config\Database::connect();
+
+        // TEMP USER
+        $userId = 3;
+
+        $vacancyId = $this->request->getPost('vacancy_id');
+
+        // Prevent duplicate application
+        $exists = $db->table('applications')
+            ->where([
+                'user_id' => $userId,
+                'vacancy_id' => $vacancyId
+            ])
+            ->get()
+            ->getRow();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'You already applied for this position.');
+        }
+
+        $db->table('applications')->insert([
+            'user_id' => $userId,
+            'vacancy_id' => $vacancyId,
+            'status' => 'Pending',
+            'applied_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->back()->with('success', 'Application submitted successfully.');
+    }
+
 }
