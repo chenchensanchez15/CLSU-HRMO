@@ -76,25 +76,28 @@ th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
 }
 </style>
 </head>
-<body>
+<body class="bg-gray-100 min-h-screen">
 
-<!-- NAVBAR -->
 <div class="navbar">
     <div>
         <a href="#">Personal</a>
         <a href="#">Trainings</a>
         <a href="#">Other Details</a>
     </div>
-    <div>Applicant Dashboard</div>
-</div>
+    <div class="font-bold text-lg">
+        CLSU Online Job Application
+    </div>
+</nav>
 
-<div class="container">
+<!-- MAIN CONTAINER -->
+<div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
 
     <!-- LEFT PANEL -->
     <div class="left">
         <div class="profile-pic">
+            <!-- If photo exists, use <img> -->
             <?php if(!empty($user['photo'])): ?>
-                <img src="<?= base_url('uploads/' . esc($user['photo'])) ?>" alt="Profile" class="w-full h-full rounded-full">
+                <img src="<?= base_url('uploads/'.$user['photo']) ?>" alt="Profile" style="width:120px;height:120px;border-radius:50%;">
             <?php endif; ?>
         </div>
         <h3><?= esc($user['first_name'] ?? 'No') ?> <?= esc($user['last_name'] ?? 'Name') ?></h3>
@@ -103,58 +106,107 @@ th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
     </div>
 
     <!-- RIGHT PANEL -->
-    <div class="right">
+    <div class="md:col-span-2 space-y-6">
 
-        <!-- APPLICATIONS -->
-        <div class="card">
-            <h3>Positions Applied For</h3>
-            <table>
-                <tr>
-                    <th>Position</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                </tr>
-                <?php if(empty($applications)): ?>
-                    <tr><td colspan="3">No applications yet.</td></tr>
-                <?php else: ?>
-                    <?php foreach($applications as $app): ?>
+        <!-- APPLIED POSITIONS -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-semibold text-clsu mb-4">
+                Positions Applied For
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700">
                         <tr>
-                            <td><?= esc($app['position']) ?></td>
-                            <td><?= esc($app['department']) ?></td>
-                            <td>
-                                <span class="status <?= esc($app['status']) ?>">
-                                    <?= esc($app['status']) ?>
-                                </span>
-                            </td>
+                            <th class="px-4 py-2">Position</th>
+                            <th class="px-4 py-2">Department</th>
+                            <th class="px-4 py-2">Status</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($applications)): ?>
+                            <tr>
+                                <td colspan="3" class="px-4 py-3 text-center text-gray-500">
+                                    No applications yet.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($applications as $app): ?>
+                                <tr class="border-b">
+                                    <td class="px-4 py-2"><?= esc($app['position_title']) ?></td>
+                                    <td class="px-4 py-2"><?= esc($app['department']) ?></td>
+                                    <td class="px-4 py-2">
+                                        <span class="
+                                            px-3 py-1 rounded-full text-white text-xs
+                                            <?= $app['status'] === 'Pending' ? 'bg-yellow-500' : '' ?>
+                                            <?= $app['status'] === 'Approved' ? 'bg-green-600' : '' ?>
+                                            <?= $app['status'] === 'Rejected' ? 'bg-red-600' : '' ?>
+                                        ">
+                                            <?= esc($app['status']) ?>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- VACANCIES -->
-        <div class="card">
-            <h3>Available Job Vacancies</h3>
-            <table>
-                <tr>
-                    <th>Position</th>
-                    <th>Department</th>
-                </tr>
-                <?php if(empty($vacancies)): ?>
-                    <tr><td colspan="2">No open vacancies.</td></tr>
-                <?php else: ?>
-                    <?php foreach($vacancies as $vac): ?>
+        <!-- AVAILABLE VACANCIES -->
+        <div class="bg-white rounded-xl shadow p-6">
+            <h3 class="text-lg font-semibold text-clsu mb-4">
+                Available Job Vacancies
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm text-left">
+                    <thead class="bg-gray-100 text-gray-700">
                         <tr>
-                            <td><?= esc($vac['position']) ?></td>
-                            <td><?= esc($vac['department']) ?></td>
+                            <th class="px-4 py-2">Position</th>
+                            <th class="px-4 py-2">Department</th>
+                            <th class="px-4 py-2">Employment</th>
+                            <th class="px-4 py-2">Salary</th>
+                            <th class="px-4 py-2">Deadline</th>
+                            <th class="px-4 py-2">Action</th>
                         </tr>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </table>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($vacancies)): ?>
+                            <tr>
+                                <td colspan="6" class="px-4 py-3 text-center text-gray-500">
+                                    No open job positions.
+                                </td>
+                            </tr>
+                        <?php else: ?>
+                            <?php foreach ($vacancies as $job): ?>
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-4 py-2"><?= esc($job['position_title']) ?></td>
+                                    <td class="px-4 py-2"><?= esc($job['department']) ?></td>
+                                    <td class="px-4 py-2"><?= esc($job['employment_type']) ?></td>
+                                    <td class="px-4 py-2"><?= esc($job['monthly_salary']) ?></td>
+                                    <td class="px-4 py-2"><?= esc($job['application_deadline']) ?></td>
+                                    <td class="px-4 py-2">
+                                        <form method="post" action="<?= base_url('apply') ?>">
+                                            <?= csrf_field() ?>
+                                            <input type="hidden" name="vacancy_id" value="<?= $job['id'] ?>">
+                                            <a
+                                                href="<?= base_url('apply?id='.$job['id']) ?>"
+                                                class="bg-cyan-500 hover:bg-cyan-400 text-white px-3 py-1 text-sm rounded-md transition"
+                                            >
+                                                Apply
+                                            </a>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
-
 </div>
 
 </body>

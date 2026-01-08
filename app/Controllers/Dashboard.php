@@ -38,4 +38,37 @@ class Dashboard extends BaseController
 
         return view('dashboard', $data);
     }
+
+    public function apply()
+    {
+        $db = \Config\Database::connect();
+
+        // TEMP USER
+        $userId = 3;
+
+        $vacancyId = $this->request->getPost('vacancy_id');
+
+        // Prevent duplicate application
+        $exists = $db->table('applications')
+            ->where([
+                'user_id' => $userId,
+                'vacancy_id' => $vacancyId
+            ])
+            ->get()
+            ->getRow();
+
+        if ($exists) {
+            return redirect()->back()->with('error', 'You already applied for this position.');
+        }
+
+        $db->table('applications')->insert([
+            'user_id' => $userId,
+            'vacancy_id' => $vacancyId,
+            'status' => 'Pending',
+            'applied_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->back()->with('success', 'Application submitted successfully.');
+    }
+
 }
