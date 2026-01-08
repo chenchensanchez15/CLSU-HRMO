@@ -65,10 +65,10 @@
             Register
         </button>
 
-        <p class="text-sm text-center">
-            Already have an account?
-            <a href="<?= base_url('login') ?>" class="text-clsuGreen font-semibold hover:underline">Login here</a>
-        </p>
+       <p class="text-sm text-center">
+    Already have an account?
+    <a href="<?= base_url('login') ?>" class="text-clsuGreen font-semibold hover:underline">Login here</a>
+</p>
 
     </form>
 </div>

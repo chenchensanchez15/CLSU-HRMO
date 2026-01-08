@@ -8,10 +8,15 @@ class JobVacancyModel extends Model
 {
     protected $table = 'job_vacancies';
     protected $primaryKey = 'id';
+
     protected $allowedFields = [
         'position',
         'department',
         'description',
-        'status'
+        'requirements'
     ];
+
+    protected $useTimestamps = true;
+    protected $createdField  = 'created_at';
+    protected $updatedField  = 'updated_at';
 }

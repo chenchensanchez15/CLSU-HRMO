@@ -1,44 +1,84 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Applicant Dashboard</title>
-    <style>
-        body { margin:0; font-family: Arial; background:#f4f6f9; }
-
-        /* NAVBAR */
-        .navbar {
-            background:#0b5e1e;
-            padding:15px 30px;
-            color:#fff;
-            display:flex;
-            justify-content:space-between;
+<meta charset="UTF-8">
+<title>Applicant Dashboard | CLSU HRMO</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+    theme: {
+        extend: {
+            colors: {
+                clsuGreen: '#0B6B3A',
+                clsuGold: '#F2C94C'
+            }
         }
-        .navbar a { color:#fff; margin-right:20px; text-decoration:none; font-weight:bold; }
+    }
+}
+</script>
+<style>
+/* Custom dashboard styles */
+body { margin:0; font-family: Arial, sans-serif; background:#f4f6f9; }
 
-        /* LAYOUT */
-        .container { display:flex; padding:30px; gap:30px; }
+/* NAVBAR */
+.navbar {
+    background: #0B6B3A;
+    padding: 15px 30px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.navbar a {
+    color: #fff;
+    margin-right: 20px;
+    font-weight: bold;
+    text-decoration: none;
+}
 
-        /* LEFT PANEL */
-        .left { width:30%; background:#fff; padding:20px; border-radius:10px; text-align:center; }
-        .profile-pic { width:120px; height:120px; border-radius:50%; background:#ccc; margin:0 auto 15px; }
-        .left h3 { color:#0b5e1e; margin-bottom:5px; }
+/* LAYOUT */
+.container { display: flex; padding: 30px; gap: 30px; flex-wrap: wrap; }
 
-        /* RIGHT PANEL */
-        .right { width:70%; }
-        .card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px; }
-        .card h3 { color:#0b5e1e; margin-bottom:15px; }
+/* LEFT PANEL */
+.left {
+    width: 30%;
+    min-width: 250px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+.profile-pic {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: #ccc;
+    margin: 0 auto 15px;
+}
+.left h3 { color: #0B6B3A; margin-bottom: 5px; }
 
-        table { width:100%; border-collapse:collapse; }
-        th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
+/* RIGHT PANEL */
+.right { width: 70%; min-width: 300px; }
+.card { background: #fff; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
+.card h3 { color: #0B6B3A; margin-bottom: 15px; }
 
-        .status { padding:5px 10px; border-radius:5px; color:#fff; font-size:13px; }
-        .Pending { background:orange; }
-        .Approved { background:green; }
-        .Rejected { background:red; }
-    </style>
+table { width: 100%; border-collapse: collapse; }
+th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+
+.status { padding: 5px 10px; border-radius: 5px; color: #fff; font-size: 13px; }
+.Pending { background: orange; }
+.Approved { background: green; }
+.Rejected { background: red; }
+
+@media (max-width: 768px) {
+    .container { flex-direction: column; }
+    .left, .right { width: 100%; }
+}
+</style>
 </head>
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
     <div>
         <a href="#">Personal</a>
@@ -53,9 +93,8 @@
     <!-- LEFT PANEL -->
     <div class="left">
         <div class="profile-pic">
-            <!-- If photo exists, use <img> -->
             <?php if(!empty($user['photo'])): ?>
-                <img src="<?= base_url('uploads/'.$user['photo']) ?>" alt="Profile" style="width:120px;height:120px;border-radius:50%;">
+                <img src="<?= base_url('uploads/' . esc($user['photo'])) ?>" alt="Profile" class="w-full h-full rounded-full">
             <?php endif; ?>
         </div>
         <h3><?= esc($user['first_name'] ?? 'No') ?> <?= esc($user['last_name'] ?? 'Name') ?></h3>

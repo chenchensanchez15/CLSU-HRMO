@@ -6,116 +6,72 @@ use CodeIgniter\Config\BaseConfig;
 
 class Email extends BaseConfig
 {
-    public string $fromEmail  = '';
-    public string $fromName   = '';
+    // Sender info
+    public string $fromEmail  = 'rogelioalmerol1@gmail.com';
+    public string $fromName   = 'CLSU HRMO';
     public string $recipients = '';
 
     /**
-     * The "user agent"
+     * User agent
      */
     public string $userAgent = 'CodeIgniter';
 
     /**
-     * The mail sending protocol: mail, sendmail, smtp
+     * Protocol
      */
-    public string $protocol = 'mail';
+    public string $protocol = 'smtp';
 
     /**
-     * The server path to Sendmail.
+     * Sendmail path (not used for SMTP, but required)
      */
     public string $mailPath = '/usr/sbin/sendmail';
 
     /**
-     * SMTP Server Hostname
+     * SMTP settings (GMAIL)
      */
-    public string $SMTPHost = '';
+    public string $SMTPHost = 'smtp.gmail.com';
+    public string $SMTPUser = 'rogelioalmerol1@gmail.com';
 
-    /**
-     * SMTP Username
-     */
-    public string $SMTPUser = '';
+    // ⚠️ USE GMAIL APP PASSWORD (16 characters, no spaces)
+    public string $SMTPPass = 'pxvzurahffuoayil';
 
-    /**
-     * SMTP Password
-     */
-    public string $SMTPPass = '';
-
-    /**
-     * SMTP Port
-     */
-    public int $SMTPPort = 25;
-
-    /**
-     * SMTP Timeout (in seconds)
-     */
-    public int $SMTPTimeout = 5;
-
-    /**
-     * Enable persistent SMTP connections
-     */
+    public int $SMTPPort = 587;
+    public int $SMTPTimeout = 10;
     public bool $SMTPKeepAlive = false;
 
     /**
-     * SMTP Encryption.
-     *
-     * @var string '', 'tls' or 'ssl'. 'tls' will issue a STARTTLS command
-     *             to the server. 'ssl' means implicit SSL. Connection on port
-     *             465 should set this to ''.
+     * Encryption
      */
     public string $SMTPCrypto = 'tls';
 
     /**
-     * Enable word-wrap
+     * Email formatting
      */
     public bool $wordWrap = true;
-
-    /**
-     * Character count to wrap at
-     */
     public int $wrapChars = 76;
+    public string $mailType = 'html';
+    public string $charset  = 'UTF-8';
+    public bool $validate  = false;
 
     /**
-     * Type of mail, either 'text' or 'html'
-     */
-    public string $mailType = 'text';
-
-    /**
-     * Character set (utf-8, iso-8859-1, etc.)
-     */
-    public string $charset = 'UTF-8';
-
-    /**
-     * Whether to validate the email address
-     */
-    public bool $validate = false;
-
-    /**
-     * Email Priority. 1 = highest. 5 = lowest. 3 = normal
+     * Priority
      */
     public int $priority = 3;
 
     /**
-     * Newline character. (Use “\r\n” to comply with RFC 822)
+     * Newlines (IMPORTANT for Gmail)
      */
-    public string $CRLF = "\r\n";
-
-    /**
-     * Newline character. (Use “\r\n” to comply with RFC 822)
-     */
+    public string $CRLF    = "\r\n";
     public string $newline = "\r\n";
 
     /**
-     * Enable BCC Batch Mode.
+     * BCC
      */
     public bool $BCCBatchMode = false;
+    public int $BCCBatchSize  = 200;
 
     /**
-     * Number of emails in each BCC batch
-     */
-    public int $BCCBatchSize = 200;
-
-    /**
-     * Enable notify message from server
+     * Delivery Status Notification
      */
     public bool $DSN = false;
 }

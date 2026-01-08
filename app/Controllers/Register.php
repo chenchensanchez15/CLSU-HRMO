@@ -14,35 +14,39 @@ class Register extends BaseController
 
     public function save()
     {
-        $validation =  \Config\Services::validation();
+        $userModel = new UserModel();
 
-        // Validate inputs
-        $validation->setRules([
-            'first_name' => 'required|min_length[2]',
-            'middle_name'=> 'permit_empty',
-            'last_name'  => 'required|min_length[2]',
-            'extension'  => 'permit_empty',
-            'email'      => 'required|valid_email|is_unique[users.email]'
-        ]);
+        // Generate TEMP password
+        $plainPassword = bin2hex(random_bytes(4)); // 8 chars
+        $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
-        if (!$this->validate($validation->getRules())) {
-            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
-        }
-
-        // Prepare data
         $data = [
-            'first_name' => $this->request->getPost('first_name'),
-            'middle_name'=> $this->request->getPost('middle_name'),
-            'last_name'  => $this->request->getPost('last_name'),
-            'extension'  => $this->request->getPost('extension'),
-            'email'      => $this->request->getPost('email'),
-            // Generate random password
-            'password'   => password_hash(bin2hex(random_bytes(4)), PASSWORD_DEFAULT),
+            'first_name'  => $this->request->getPost('first_name'),
+            'middle_name' => $this->request->getPost('middle_name'),
+            'last_name'   => $this->request->getPost('last_name'),
+            'extension'   => $this->request->getPost('extension'),
+            'email'       => $this->request->getPost('email'),
+            'password'    => $hashedPassword,
         ];
 
-        $model = new UserModel();
-        $model->save($data);
+        $userModel->insert($data);
 
-        return redirect()->to(base_url('login'))->with('success', 'Registration successful! Please check your email for login credentials.');
+        // SEND EMAIL
+        $email = \Config\Services::email();
+
+        $email->setTo($data['email']);
+        $email->setSubject('CLSU HRMO Account Created');
+        $email->setMessage("
+            <h3>Welcome to CLSU HRMO</h3>
+            <p>Your account has been successfully created.</p>
+            <p><strong>Temporary Password:</strong> {$plainPassword}</p>
+            <p>Please log in and change your password immediately.</p>
+        ");
+
+        if (!$email->send()) {
+            return $email->printDebugger();
+        }
+
+        return redirect()->to('/login')->with('success', 'Account created. Check your email.');
     }
 }
