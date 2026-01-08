@@ -17,24 +17,25 @@ tailwind.config = {
 }
 </script>
 <style>
-/* Custom dashboard styles */
 body { margin:0; font-family: Arial, sans-serif; background:#f4f6f9; }
 
 /* NAVBAR */
 .navbar {
     background: #0B6B3A;
-    padding: 15px 30px;
+    padding: 10px 30px;
     color: #fff;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.navbar a {
-    color: #fff;
-    margin-right: 20px;
-    font-weight: bold;
-    text-decoration: none;
-}
+.nav-links a { color: #fff; margin-right: 20px; font-weight: bold; text-decoration: none; }
+
+.account-menu { position: relative; display: inline-block; }
+.account-btn { display: flex; align-items: center; gap: 8px; cursor: pointer; background: none; border: none; color: #fff; font-weight: bold; }
+.account-btn img { width: 32px; height: 32px; border-radius: 50%; border: 1px solid #fff; }
+.account-dropdown { display: none; position: absolute; right: 0; background: #fff; color: #000; min-width: 160px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 100; }
+.account-dropdown a { display: block; padding: 10px; text-decoration: none; color: #0B6B3A; }
+.account-dropdown a:hover { background: #f2f2f2; }
 
 /* LAYOUT */
 .container { display: flex; padding: 30px; gap: 30px; flex-wrap: wrap; }
@@ -48,13 +49,7 @@ body { margin:0; font-family: Arial, sans-serif; background:#f4f6f9; }
     border-radius: 10px;
     text-align: center;
 }
-.profile-pic {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background: #ccc;
-    margin: 0 auto 15px;
-}
+.profile-pic { width: 120px; height: 120px; border-radius: 50%; background: #ccc; margin: 0 auto 15px; }
 .left h3 { color: #0B6B3A; margin-bottom: 5px; }
 
 /* RIGHT PANEL */
@@ -75,29 +70,46 @@ th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
     .left, .right { width: 100%; }
 }
 </style>
+<script>
+function toggleDropdown() {
+    const dropdown = document.getElementById('accountDropdown');
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+}
+window.onclick = function(event) {
+    if (!event.target.closest('.account-menu')) {
+        const dropdown = document.getElementById('accountDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+    }
+}
+</script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body>
 
+<!-- NAVBAR -->
 <div class="navbar">
-    <div>
+    <div class="nav-links">
         <a href="#">Personal</a>
         <a href="#">Trainings</a>
         <a href="#">Other Details</a>
     </div>
-    <div class="font-bold text-lg">
-        CLSU Online Job Application
+    <div class="account-menu">
+        <button onclick="toggleDropdown()" class="account-btn">
+           Account
+        </button>
+        <div id="accountDropdown" class="account-dropdown">
+            <a href="<?= site_url('account/settings') ?>">Settings</a>
+            <a href="<?= site_url('logout') ?>">Logout</a>
+        </div>
     </div>
-</nav>
+</div>
 
-<!-- MAIN CONTAINER -->
-<div class="max-w-7xl mx-auto px-6 py-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="container">
 
     <!-- LEFT PANEL -->
     <div class="left">
         <div class="profile-pic">
-            <!-- If photo exists, use <img> -->
             <?php if(!empty($user['photo'])): ?>
-                <img src="<?= base_url('uploads/'.$user['photo']) ?>" alt="Profile" style="width:120px;height:120px;border-radius:50%;">
+                <img src="<?= base_url('uploads/' . esc($user['photo'])) ?>" alt="Profile" class="w-full h-full rounded-full">
             <?php endif; ?>
         </div>
         <h3><?= esc($user['first_name'] ?? 'No') ?> <?= esc($user['last_name'] ?? 'Name') ?></h3>
@@ -106,107 +118,79 @@ th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
     </div>
 
     <!-- RIGHT PANEL -->
-    <div class="md:col-span-2 space-y-6">
+    <div class="right">
 
-        <!-- APPLIED POSITIONS -->
-        <div class="bg-white rounded-xl shadow p-6">
-            <h3 class="text-lg font-semibold text-clsu mb-4">
-                Positions Applied For
-            </h3>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-700">
+        <!-- APPLICATIONS -->
+        <div class="card">
+            <h3>Positions Applied For</h3>
+            <table>
+                <tr>
+                    <th>Position</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                </tr>
+                <?php if(empty($applications)): ?>
+                    <tr><td colspan="3">No applications yet.</td></tr>
+                <?php else: ?>
+                    <?php foreach($applications as $app): ?>
                         <tr>
-                            <th class="px-4 py-2">Position</th>
-                            <th class="px-4 py-2">Department</th>
-                            <th class="px-4 py-2">Status</th>
+                            <td><?= esc($app['position']) ?></td>
+                            <td><?= esc($app['department']) ?></td>
+                            <td>
+                                <span class="status <?= esc($app['status']) ?>">
+                                    <?= esc($app['status']) ?>
+                                </span>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($applications)): ?>
-                            <tr>
-                                <td colspan="3" class="px-4 py-3 text-center text-gray-500">
-                                    No applications yet.
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($applications as $app): ?>
-                                <tr class="border-b">
-                                    <td class="px-4 py-2"><?= esc($app['position_title']) ?></td>
-                                    <td class="px-4 py-2"><?= esc($app['department']) ?></td>
-                                    <td class="px-4 py-2">
-                                        <span class="
-                                            px-3 py-1 rounded-full text-white text-xs
-                                            <?= $app['status'] === 'Pending' ? 'bg-yellow-500' : '' ?>
-                                            <?= $app['status'] === 'Approved' ? 'bg-green-600' : '' ?>
-                                            <?= $app['status'] === 'Rejected' ? 'bg-red-600' : '' ?>
-                                        ">
-                                            <?= esc($app['status']) ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </table>
         </div>
 
-        <!-- AVAILABLE VACANCIES -->
-        <div class="bg-white rounded-xl shadow p-6">
-            <h3 class="text-lg font-semibold text-clsu mb-4">
-                Available Job Vacancies
-            </h3>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm text-left">
-                    <thead class="bg-gray-100 text-gray-700">
-                        <tr>
-                            <th class="px-4 py-2">Position</th>
-                            <th class="px-4 py-2">Department</th>
-                            <th class="px-4 py-2">Employment</th>
-                            <th class="px-4 py-2">Salary</th>
-                            <th class="px-4 py-2">Deadline</th>
-                            <th class="px-4 py-2">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($vacancies)): ?>
-                            <tr>
-                                <td colspan="6" class="px-4 py-3 text-center text-gray-500">
-                                    No open job positions.
-                                </td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($vacancies as $job): ?>
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="px-4 py-2"><?= esc($job['position_title']) ?></td>
-                                    <td class="px-4 py-2"><?= esc($job['department']) ?></td>
-                                    <td class="px-4 py-2"><?= esc($job['employment_type']) ?></td>
-                                    <td class="px-4 py-2"><?= esc($job['monthly_salary']) ?></td>
-                                    <td class="px-4 py-2"><?= esc($job['application_deadline']) ?></td>
-                                    <td class="px-4 py-2">
-                                        <form method="post" action="<?= base_url('apply') ?>">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="vacancy_id" value="<?= $job['id'] ?>">
-                                            <a
-                                                href="<?= base_url('apply?id='.$job['id']) ?>"
-                                                class="bg-cyan-500 hover:bg-cyan-400 text-white px-3 py-1 text-sm rounded-md transition"
-                                            >
-                                                Apply
-                                            </a>
-                                        </form>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
+        <!-- AVAILABLE JOB VACANCIES -->
+        <div class="card">
+            <h3>Available Job Vacancies</h3>
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Position</th>
+                        <th>Office</th>
+                        <th>Department</th>
+                        <th>Employment Type</th>
+                        <th>Deadline</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if(!empty($vacancies)):
+                        $count = 0;
+                        foreach($vacancies as $vac):
+                            $count++;
+                    ?>
+                    <tr>
+                        <td><?= $count ?></td>
+                        <td><?= esc($vac['position_title']) ?></td>
+                        <td><?= esc($vac['office']) ?></td>
+                        <td><?= esc($vac['department']) ?></td>
+                        <td><?= esc($vac['employment_type']) ?></td>
+                        <td><?= esc($vac['application_deadline']) ?></td>
+                        <td>
+                            <form method="post" action="<?= site_url('applications/apply') ?>">
+                                <input type="hidden" name="vacancy_id" value="<?= esc($vac['id']) ?>">
+                                <button type="submit" class="bg-clsuGreen text-white px-2 py-1 rounded text-xs">Apply</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <?php endforeach; else: ?>
+                    <tr><td colspan="7">No open vacancies.</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
         </div>
 
     </div>
+
 </div>
 
 </body>
