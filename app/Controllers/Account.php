@@ -7,7 +7,7 @@ use App\Models\ApplicantModel;
 
 class Account extends BaseController
 {
-    public function settings()
+    public function personal()
     {
         $session = session();
         $userId = $session->get('user_id');
@@ -18,7 +18,7 @@ class Account extends BaseController
         $user = $userModel->find($userId);
         $profile = $applicantModel->where('user_id', $userId)->first();
 
-        return view('account/settings', [
+        return view('account/personal', [
             'user' => $user,
             'profile' => $profile
         ]);
@@ -67,21 +67,22 @@ class Account extends BaseController
             'competency' => $this->request->getPost('competency')
         ];
 
-        // Handle photo upload
-        $photo = $this->request->getFile('photo');
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $photoName = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads', $photoName);
-            $profileData['photo'] = $photoName;
-        }
+// Handle photo upload
+$photo = $this->request->getFile('photo');
+if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+    $photoName = $photo->getRandomName();
+    $photo->move(FCPATH . 'uploads', $photoName); // <-- FCPATH points to public/
+    $profileData['photo'] = $photoName;
+}
 
-        // Handle resume upload
-        $resume = $this->request->getFile('resume');
-        if ($resume && $resume->isValid() && !$resume->hasMoved()) {
-            $resumeName = $resume->getRandomName();
-            $resume->move(WRITEPATH . 'uploads', $resumeName);
-            $profileData['resume'] = $resumeName;
-        }
+// Handle resume upload
+$resume = $this->request->getFile('resume');
+if ($resume && $resume->isValid() && !$resume->hasMoved()) {
+    $resumeName = $resume->getRandomName();
+    $resume->move(FCPATH . 'uploads', $resumeName); // <-- move to public/uploads
+    $profileData['resume'] = $resumeName;
+}
+
 
         // Check if profile exists
         $profile = $applicantModel->where('user_id', $userId)->first();
@@ -93,6 +94,6 @@ class Account extends BaseController
             $applicantModel->insert($profileData);
         }
 
-        return redirect()->to('account/settings')->with('success', 'Profile updated successfully.');
+        return redirect()->to('account/personal')->with('success', 'Profile updated successfully.');
     }
 }

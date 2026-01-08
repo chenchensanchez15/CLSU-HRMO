@@ -86,22 +86,49 @@ window.onclick = function(event) {
 <body>
 
 <!-- NAVBAR -->
-<div class="navbar">
-    <div class="nav-links">
-        <a href="#">Personal</a>
-        <a href="#">Trainings</a>
-        <a href="#">Other Details</a>
-    </div>
-    <div class="account-menu">
-        <button onclick="toggleDropdown()" class="account-btn">
-           Account
-        </button>
-        <div id="accountDropdown" class="account-dropdown">
-            <a href="<?= site_url('account/settings') ?>">Settings</a>
-            <a href="<?= site_url('logout') ?>">Logout</a>
+<div class="navbar bg-clsuGreen text-white flex items-center justify-between px-6 py-3">
+
+    <!-- LEFT SIDE: Logo + Text -->
+    <div class="flex items-center gap-4">
+        <!-- CLSU Logo -->
+     <img src="/HRMO/public/assets/clsu-logo.png" alt="CLSU Logo" class="w-12 h-12 object-contain">
+
+        <div class="flex flex-col leading-tight">
+            <span class="font-bold text-lg">Online Job Application System</span>
+            <span class="text-sm">Central Luzon State University</span>
         </div>
     </div>
+
+    <!-- MIDDLE: Menu Links -->
+<div class="hidden md:flex gap-6 font-semibold">
+    <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
+    <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
+    <a href="#" class="hover:underline">Trainings</a>
 </div>
+
+  <!-- RIGHT SIDE: Account Photo + Dropdown -->
+<div class="account-menu relative">
+    <?php 
+        // Use the photo from the database, or fallback to default
+        $photo = !empty($user['photo']) ? $user['photo'] : 'default-avatar.png';
+    ?>
+    <button onclick="toggleDropdown()" class="flex items-center gap-2 bg-none border-none cursor-pointer">
+        <img src="<?= base_url('uploads/'.$photo) ?>" 
+             alt="Profile" 
+             class="w-10 h-10 rounded-full border-2 border-white object-cover">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+    </button>
+    <div id="accountDropdown" class="account-dropdown absolute right-0 mt-2 hidden bg-white text-black min-w-[160px] rounded shadow-lg z-50">
+        <a href="<?= site_url('account/personal') ?>" class="block px-4 py-2 hover:bg-gray-100">Settings</a>
+        <a href="<?= site_url('logout') ?>" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+    </div>
+</div>
+
+
+</div>
+
 
 <div class="container">
 

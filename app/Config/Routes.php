@@ -33,5 +33,5 @@ $routes->get('/dashboard', 'Dashboard::index');   // Show dashboard
 $routes->get('/logout', 'Auth::logout');          // Logout
 $routes->get('dashboard', 'Dashboard::index'); // http://localhost:8080/HRMO/dashboard
 
-$routes->get('account/settings', 'Account::settings');
+$routes->get('account/personal', 'Account::personal');
 $routes->post('account/update', 'Account::update');
