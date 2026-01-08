@@ -2,52 +2,41 @@
 
 namespace App\Controllers;
 
+use App\Models\UserModel;
+use App\Models\JobApplicationModel;
+use App\Models\JobVacancyModel;
+
 class Dashboard extends BaseController
 {
     public function index()
     {
-        $db = \Config\Database::connect();
+        $session = session();
 
-        // TEMP USER (Juan Dela Cruz)
-        $userId = 3;
-
-        // USER INFO
-        $user = $db->table('users')
-            ->select('first_name, last_name, email')
-            ->where('id', $userId)
-            ->get()
-            ->getRowArray();
-
-        // SAFETY FALLBACK
-        if (!$user) {
-            $user = [
-                'first_name' => 'Guest',
-                'last_name'  => 'User',
-                'email'      => 'guest@example.com'
-            ];
+        if (!$session->get('logged_in')) {
+            return redirect()->to('login');
         }
 
-        // USER APPLICATIONS
-            $applications = $db->table('applications')
-            ->select('job_positions.position_title, job_positions.department, applications.status')
-            ->join('job_positions', 'job_positions.id = applications.vacancy_id')
-            ->where('applications.user_id', $userId)
-            ->get()
-            ->getResultArray();
+        $userId = $session->get('user_id');
 
+        // Fetch user info
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
 
-        // 👉 GET VACANT JOBS FROM job_positions
-        $vacancies = $db->table('job_positions')
-            ->where('status', 'Open')
-            ->orderBy('application_deadline', 'ASC')
-            ->get()
-            ->getResultArray();
+        // Fetch applications for this user
+        $applicationModel = new JobApplicationModel();
+        $applications = $applicationModel->where('user_id', $userId)->findAll();
 
-        return view('dashboard', [
+        // Fetch all job vacancies (from job_positions table)
+        $vacancyModel = new JobVacancyModel();
+        $vacancies = $vacancyModel->where('status', 'Open')->findAll();
+
+        $data = [
             'user' => $user,
             'applications' => $applications,
             'vacancies' => $vacancies
-        ]);
+        ];
+
+        return view('dashboard', $data);
     }
 
     public function apply()

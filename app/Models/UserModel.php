@@ -6,11 +6,19 @@ use CodeIgniter\Model;
 
 class UserModel extends Model
 {
-    protected $table = 'users';
+    protected $table      = 'users';
     protected $primaryKey = 'id';
+
     protected $allowedFields = [
-        'first_name', 'middle_name', 'last_name', 'extension', 'email', 'password', 'created_at'
+        'first_name',
+        'middle_name',
+        'last_name',
+        'extension',
+        'email',
+        'password'
     ];
-    protected $useTimestamps = true; // automatically sets created_at
-    protected $createdField  = 'created_at';
+
+    protected $useTimestamps = true;
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
 }
