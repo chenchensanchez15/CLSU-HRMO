@@ -84,51 +84,59 @@ window.onclick = function(event) {
 </script>
 </head>
 <body>
-
+    
 <!-- NAVBAR -->
-<div class="navbar bg-clsuGreen text-white flex items-center justify-between px-6 py-3">
+<header class="bg-clsuGreen text-white py-3 px-6 shadow">
+    <div class="flex items-center justify-between max-w-7xl mx-auto">
+        
+        <!-- LEFT SIDE: Logo + Text -->
+        <div class="flex items-center gap-4">
+            <img
+                src="/HRMO/public/assets/images/clsu-logo2.png"
+                alt="CLSU Logo"
+                class="w-12 h-auto"
+            >
+            <div class="flex flex-col leading-tight">
+                <span class="text-xl font-bold">
+                    CLSU Online Job Application
+                </span>
+                <span class="text-sm font-medium opacity-90">
+                    Human Resource Management Office
+                </span>
+            </div>
+        </div>
 
-    <!-- LEFT SIDE: Logo + Text -->
-    <div class="flex items-center gap-4">
-        <!-- CLSU Logo -->
-     <img src="/HRMO/public/assets/clsu-logo.png" alt="CLSU Logo" class="w-12 h-12 object-contain">
+   <!-- RIGHT SIDE: Menu Links + Profile -->
+<div class="flex items-center gap-6">
+    <nav class="hidden md:flex gap-6 font-semibold mt-7"> <!-- added mt-2 -->
+        <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
+        <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
+        <a href="#" class="hover:underline">Trainings</a>
+        <a href="<?= site_url('account/profile') ?>" class="hover:underline">Profile</a>
+    </nav>
 
-        <div class="flex flex-col leading-tight">
-            <span class="font-bold text-lg">Online Job Application System</span>
-            <span class="text-sm">Central Luzon State University</span>
+    <!-- Profile Dropdown -->
+    <div class="account-menu relative mt-1"> <!-- optional: adjust independently -->
+        <?php 
+            $photo = !empty($user['photo']) ? $user['photo'] : 'default-avatar.png';
+        ?>
+        <button onclick="toggleDropdown()" class="flex items-center gap-2 bg-none border-none cursor-pointer">
+            <img src="<?= base_url('uploads/'.$photo) ?>" 
+                 alt="Profile" 
+                 class="w-10 h-10 rounded-full border-2 border-white object-cover">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+        </button>
+        <div id="accountDropdown" class="account-dropdown absolute right-0 mt-2 hidden bg-white text-black min-w-[160px] rounded shadow-lg z-50">
+            <a href="<?= site_url('logout') ?>" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
         </div>
     </div>
-
-    <!-- MIDDLE: Menu Links -->
-<div class="hidden md:flex gap-6 font-semibold">
-    <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
-    <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
-    <a href="#" class="hover:underline">Trainings</a>
 </div>
 
-  <!-- RIGHT SIDE: Account Photo + Dropdown -->
-<div class="account-menu relative">
-    <?php 
-        // Use the photo from the database, or fallback to default
-        $photo = !empty($user['photo']) ? $user['photo'] : 'default-avatar.png';
-    ?>
-    <button onclick="toggleDropdown()" class="flex items-center gap-2 bg-none border-none cursor-pointer">
-        <img src="<?= base_url('uploads/'.$photo) ?>" 
-             alt="Profile" 
-             class="w-10 h-10 rounded-full border-2 border-white object-cover">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-        </svg>
-    </button>
-    <div id="accountDropdown" class="account-dropdown absolute right-0 mt-2 hidden bg-white text-black min-w-[160px] rounded shadow-lg z-50">
-        <a href="<?= site_url('account/personal') ?>" class="block px-4 py-2 hover:bg-gray-100">Settings</a>
-        <a href="<?= site_url('logout') ?>" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+
     </div>
-</div>
-
-
-</div>
-
+</header>
 
 <div class="container">
 
@@ -212,6 +220,8 @@ window.onclick = function(event) {
                     <?php endforeach; else: ?>
                     <tr><td colspan="7">No open vacancies.</td></tr>
                     <?php endif; ?>
+
+                    
                 </tbody>
             </table>
         </div>
@@ -219,6 +229,14 @@ window.onclick = function(event) {
     </div>
 
 </div>
+<footer class="w-full bg-gray-100 py-4 mt-auto border-t">
+    <div class="flex justify-end px-6 text-xs text-gray-600">
+        <div class="text-right">
+            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
+            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
+        </div>
+    </div>
+</footer>
 
 </body>
 </html>

@@ -35,3 +35,4 @@ $routes->get('dashboard', 'Dashboard::index'); // http://localhost:8080/HRMO/das
 
 $routes->get('account/personal', 'Account::personal');
 $routes->post('account/update', 'Account::update');
+ 

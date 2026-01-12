@@ -15,3 +15,4 @@ class ApplicantModel extends Model
         'education','training','experience','eligibility','competency','photo','resume'
     ];
 }
+ 

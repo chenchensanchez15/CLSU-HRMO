@@ -22,28 +22,46 @@
 </head>
 <body class="bg-gray-100 text-gray-800">
 
+<header class="bg-clsuGreen text-white py-3 px-6 shadow">
+    <div class="flex items-center gap-3">
+        
+        <img
+            src="/HRMO/public/assets/images/clsu-logo2.png"
+            alt="CLSU Logo"
+            class="w-12 h-auto"
+        >
 
-<header class="bg-clsuGreen text-white px-8 py-5">
-    <h1 class="text-xl font-bold">CLSU Online Job Application</h1>
+        <div class="flex flex-col leading-tight">
+            <span class="text-xl font-bold">
+                CLSU Online Job Application
+            </span>
+            <span class="text-sm font-medium opacity-90">
+                Human Resource Management Office
+            </span>
+        </div>
+
+    </div>
 </header>
-<main class="max-w-6xl mx-auto bg-white p-12 my-12 rounded-xl shadow-xl">
 
-    <!-- Job Title & Basic Info -->
-    <h2 class="text-3xl font-extrabold text-clsuGreen mb-6"><?= esc($job['position_title']) ?></h2>
+<main class="max-w-6xl mx-auto bg-white p-4 my-4 rounded-lg shadow-lg">
 
-    <p class="text-lg mb-3"><strong>Office:</strong> <?= esc($job['office']) ?></p>
-    <p class="text-lg mb-3"><strong>Item No.:</strong> <?= esc($job['item_no']) ?></p>
-    <p class="text-lg mb-3"><strong>Salary Grade:</strong> <?= esc($job['salary_grade']) ?></p>
-    <p class="text-lg mb-8"><strong>Monthly Salary:</strong> <?= esc($job['monthly_salary']) ?></p>
+    <h2 class="text-2xl font-extrabold text-clsuGreen mb-3">
+        <?= esc($job['position_title']) ?>
+    </h2>
 
-    <hr class="my-8 border-gray-300">
+    <p class="text-base mb-1"><strong>Office:</strong> <?= esc($job['office']) ?></p>
+    <p class="text-base mb-1"><strong>Item No.:</strong> <?= esc($job['item_no']) ?></p>
+    <p class="text-base mb-1"><strong>Salary Grade:</strong> <?= esc($job['salary_grade']) ?></p>
+    <p class="text-base mb-2"><strong>Monthly Salary:</strong> <?= esc($job['monthly_salary']) ?></p>
 
+    <hr class="my-3 border-gray-300">
 
-    <!-- Qualifications & Requirements -->
-    <details class="mb-6 border rounded">
-        <summary class="cursor-pointer px-4 py-3 font-semibold bg-gray-100">Qualification Standards</summary>
-        <div class="px-6 py-4 text-sm">
-            <ul class="list-disc ml-6">
+    <details class="mb-3 border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+            Qualification Standards
+        </summary>
+        <div class="px-4 py-2 text-sm">
+            <ul class="list-disc ml-4 space-y-0.5">
                 <li><strong>Education:</strong> <?= esc($job['education']) ?></li>
                 <li><strong>Training:</strong> <?= esc($job['training']) ?></li>
                 <li><strong>Experience:</strong> <?= esc($job['experience']) ?></li>
@@ -53,45 +71,49 @@
         </div>
     </details>
 
-    <!-- Duties & Responsibilities -->
-    <details class="mb-6 border rounded">
-        <summary class="cursor-pointer px-4 py-3 font-semibold bg-gray-100">Duties and Responsibilities</summary>
-        <div class="px-6 py-4 text-sm">
+    <details class="mb-3 border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+            Duties and Responsibilities
+        </summary>
+        <div class="px-4 py-2 text-sm">
             <?= nl2br(esc((string) $job['duties_responsibilities'])) ?>
         </div>
     </details>
-
-    <!-- Application Requirements -->
-    <details class="mb-6 border rounded">
-        <summary class="cursor-pointer px-4 py-3 font-semibold bg-gray-100">Application Requirements</summary>
-        <div class="px-6 py-4 text-sm">
+    
+    <details class="mb-3 border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+            Application Requirements
+        </summary>
+        <div class="px-4 py-2 text-sm">
            <?= nl2br(esc((string) $job['application_requirements'])) ?>
         </div>
     </details>
 
+    <p class="font-semibold text-base mb-3">
+        Deadline for Submission:
+        <span class="text-red-600">
+            <?= date('F j, Y', strtotime($job['application_deadline'])) ?>
+        </span>
+    </p>
 
-<p class="font-semibold text-lg mb-6">
-    Deadline for Submission: 
-    <span class="text-red-600">
-        <?= date('F j, Y', strtotime($job['application_deadline'])) ?>
-    </span>
-</p>
-
-<div class="text-center mt-6">
-    <a href="<?= base_url('register') ?>"
-       class="bg-clsuGreen text-white px-8 py-3 rounded font-semibold hover:bg-green-800 transition">
-        Apply Now
-    </a>
-</div>
-
+    <div class="text-center mt-3">
+        <a href="<?= base_url('register') ?>"
+           class="bg-clsuGreen text-white px-6 py-2 rounded font-semibold hover:bg-green-800 transition text-sm">
+            Apply Now
+        </a>
+    </div>
 
 </main>
 
-<footer class="bg-clsuGreen text-white text-center py-6">
-    <p>
-        &copy; <?= date('Y') ?> Central Luzon State University – Human Resource Management Office
-    </p>
+<footer class="w-full bg-gray-100 py-4 mt-auto border-t">
+    <div class="flex justify-end px-6 text-xs text-gray-600">
+        <div class="text-right">
+            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
+            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
+        </div>
+    </div>
 </footer>
+
 
 </body>
 </html>

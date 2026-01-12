@@ -9,15 +9,34 @@ class Register extends BaseController
 {
     public function index()
     {
-        return view('register'); // your form view
+        return view('register');
     }
 
     public function save()
     {
+        $rules = [
+            'first_name'  => 'required',
+            'middle_name' => 'required',
+            'last_name'   => 'required',
+            'email'       => 'required|valid_email|is_unique[users.email]',
+        ];
+
+        $messages = [
+            'email' => [
+                'is_unique' => 'This email is already registered.'
+            ]
+        ];
+
+        if (!$this->validate($rules, $messages)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('swal_error', $this->validator->getError('email'));
+        }
+
         $userModel = new UserModel();
 
-        // Generate TEMP password
-        $plainPassword = bin2hex(random_bytes(4)); // 8 chars
+        // ✅ Generate TEMP password
+        $plainPassword  = bin2hex(random_bytes(4)); // 8 chars
         $hashedPassword = password_hash($plainPassword, PASSWORD_DEFAULT);
 
         $data = [
@@ -27,11 +46,11 @@ class Register extends BaseController
             'extension'   => $this->request->getPost('extension'),
             'email'       => $this->request->getPost('email'),
             'password'    => $hashedPassword,
+            'role'        => 'applicant'
         ];
 
         $userModel->insert($data);
 
-        // SEND EMAIL
         $email = \Config\Services::email();
 
         $email->setTo($data['email']);
@@ -44,9 +63,11 @@ class Register extends BaseController
         ");
 
         if (!$email->send()) {
-            return $email->printDebugger();
+            return redirect()->back()
+                ->with('swal_error', 'Account created but email failed to send.');
         }
 
-        return redirect()->to('/login')->with('success', 'Account created. Check your email.');
+        return redirect()->to('/login')
+            ->with('swal_success', 'Account created successfully. Check your email.');
     }
 }

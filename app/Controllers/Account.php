@@ -19,7 +19,7 @@ class Account extends BaseController
         $profile = $applicantModel->where('user_id', $userId)->first();
 
         return view('account/personal', [
-            'user' => $user,
+            'user' => $user, 
             'profile' => $profile
         ]);
     }
