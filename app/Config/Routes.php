@@ -3,36 +3,30 @@
 use CodeIgniter\Router\RouteCollection;
 
 /**
- * @var RouteCollection $routes
+ * @var RouteCollection
  */
+
 $routes->get('/', 'Home::index');
 
-$routes->get('/register', function () {
-    return view('register');
-});
-$routes->get('/jobs', function () {
-    return view('jobs');
-});
-$routes->get('/apply', function () {
-    return view('apply');
-});
+$routes->get('/login', 'Auth::login');               
+$routes->post('/auth/loginPost', 'Auth::loginPost');    
+$routes->get('/logout', 'Auth::logout');                
 
-$routes->get('jobs', 'Jobs::index');           // List all jobs
-$routes->get('jobs/view/(:num)', 'Jobs::view/$1');  // View single job by ID
+$routes->get('/register', 'Register::index');          
+$routes->post('/register/save', 'Register::save');     
 
-$routes->get('register', 'Register::index'); // or whatever controller/method
+$routes->get('/dashboard', 'Dashboard::index');      
 
-$routes->get('register', 'Register::index');   // show the registration form
-$routes->post('register/save', 'Register::save');  // handle form submission
+$routes->get('/jobs', 'Jobs::index');          
+$routes->get('/jobs/view/(:num)', 'Jobs::view/$1');    
 
-$routes->get('dashboard', 'Dashboard::index');
+$routes->get('applications/apply/(:any)', 'Applications::apply/$1');
+$routes->post('applications/apply/(:any)', 'Applications::submit/$1');
 
-$routes->get('/login', 'Auth::login');             // Show login form
-$routes->post('/auth/loginPost', 'Auth::loginPost'); // Handle login
-$routes->get('/dashboard', 'Dashboard::index');   // Show dashboard
-$routes->get('/logout', 'Auth::logout');          // Logout
-$routes->get('dashboard', 'Dashboard::index'); // http://localhost:8080/HRMO/dashboard
+$routes->get('account/personal', 'Account::personal');   
+$routes->post('account/update', 'Account::update');          
+$routes->get('account/changePassword', 'Account::changePassword'); 
+$routes->post('account/updatePassword', 'Account::updatePassword'); 
 
-$routes->get('account/personal', 'Account::personal');
-$routes->post('account/update', 'Account::update');
- 
+$routes->post('applications/apply/(:any)', 'Applications::submit/$1');
+$routes->post('applications/submit/(:num)', 'Applications::submit/$1');

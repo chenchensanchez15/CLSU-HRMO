@@ -43,6 +43,8 @@
 
     </div>
 </header>
+
+
 <!-- FORM CONTAINER -->
 <main class="flex-1 flex items-center justify-center px-4 py-6">
     <div class="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
@@ -66,7 +68,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium mb-1">Middle Name</label>
-                        <input type="text" name="middle_name" class="w-full border rounded-md px-2 py-1.5 focus:ring-2 focus:ring-clsuGreen focus:outline-none" placeholder="Santos" required>
+                        <input type="text" name="middle_name" class="w-full border rounded-md px-2 py-1.5 focus:ring-2 focus:ring-clsuGreen focus:outline-none" placeholder="Santos">
                     </div>
                     <div>
                         <label class="block text-xs font-medium mb-1">Last Name</label>
@@ -115,8 +117,6 @@
     </div>
 </footer>
 
-
-    <!-- SWEET ALERT -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <?php if (session()->getFlashdata('swal_error')): ?>

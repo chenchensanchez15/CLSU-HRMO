@@ -19,7 +19,7 @@ class Account extends BaseController
         $profile = $applicantModel->where('user_id', $userId)->first();
 
         return view('account/personal', [
-            'user' => $user, 
+            'user' => $user,
             'profile' => $profile
         ]);
     }
@@ -67,22 +67,21 @@ class Account extends BaseController
             'competency' => $this->request->getPost('competency')
         ];
 
-// Handle photo upload
-$photo = $this->request->getFile('photo');
-if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-    $photoName = $photo->getRandomName();
-    $photo->move(FCPATH . 'uploads', $photoName); // <-- FCPATH points to public/
-    $profileData['photo'] = $photoName;
-}
+        // Handle photo upload
+        $photo = $this->request->getFile('photo');
+        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
+            $photoName = $photo->getRandomName();
+            $photo->move(FCPATH . 'uploads', $photoName);
+            $profileData['photo'] = $photoName;
+        }
 
-// Handle resume upload
-$resume = $this->request->getFile('resume');
-if ($resume && $resume->isValid() && !$resume->hasMoved()) {
-    $resumeName = $resume->getRandomName();
-    $resume->move(FCPATH . 'uploads', $resumeName); // <-- move to public/uploads
-    $profileData['resume'] = $resumeName;
-}
-
+        // Handle resume upload
+        $resume = $this->request->getFile('resume');
+        if ($resume && $resume->isValid() && !$resume->hasMoved()) {
+            $resumeName = $resume->getRandomName();
+            $resume->move(FCPATH . 'uploads', $resumeName);
+            $profileData['resume'] = $resumeName;
+        }
 
         // Check if profile exists
         $profile = $applicantModel->where('user_id', $userId)->first();
@@ -96,4 +95,53 @@ if ($resume && $resume->isValid() && !$resume->hasMoved()) {
 
         return redirect()->to('account/personal')->with('success', 'Profile updated successfully.');
     }
+
+    // --- Show change password form ---
+    public function changePassword()
+    {
+        $session = session();
+        $userId = $session->get('user_id');
+
+        $userModel = new UserModel();
+        $user = $userModel->find($userId);
+
+        return view('account/change_password', [
+            'user' => $user
+        ]);
+    }
+
+   public function updatePassword()
+{
+    $session = session();
+    $userId = $session->get('user_id');
+
+    $current = $this->request->getPost('current_password');
+    $new = $this->request->getPost('new_password');
+    $confirm = $this->request->getPost('confirm_password');
+
+    $userModel = new \App\Models\UserModel();
+    $user = $userModel->find($userId);
+
+    // Check if current password is correct
+    if (!password_verify($current, $user['password'])) {
+        return redirect()->back()->with('error', 'Current password is incorrect.');
+    }
+
+    // Check if new password matches confirm password
+    if ($new !== $confirm) {
+        return redirect()->back()->with('error', 'New password and confirm password do not match.');
+    }
+
+    // Update password AND set first_login = 0
+    $userModel->update($userId, [
+        'password' => password_hash($new, PASSWORD_DEFAULT),
+        'first_login' => 0
+    ]);
+
+    // Update session so the SweetAlert won't show again
+    $session->set('first_login', 0);
+
+    return redirect()->to('/dashboard')->with('success', 'Password updated successfully!');
+}
+
 }

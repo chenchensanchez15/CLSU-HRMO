@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Login | CLSU HRMO</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 tailwind.config = {
     theme: {
@@ -17,15 +18,28 @@ tailwind.config = {
 }
 </script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="min-h-screen bg-gray-100 flex flex-col">
 
-<div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md">
+<header class="bg-clsuGreen text-white py-3 px-6 shadow">
+    <div class="flex items-center gap-3">
+        <img
+            src="/HRMO/public/assets/images/clsu-logo2.png"
+            alt="CLSU Logo"
+            class="w-12 h-auto"
+        >
+        <div class="flex flex-col leading-tight">
+            <span class="text-xl font-bold">
+                CLSU Online Job Application
+            </span>
+            <span class="text-sm font-medium opacity-90">
+                Human Resource Management Office
+            </span>
+        </div>
+    </div>
+</header>
+
+<div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-md mx-auto mt-10">
     <h1 class="text-2xl font-bold text-clsuGreen mb-6 text-center">Login</h1>
-
-    <!-- Display error if login fails -->
-    <?php if(session()->getFlashdata('error')): ?>
-        <p class="text-red-600 mb-4 text-center"><?= session()->getFlashdata('error') ?></p>
-    <?php endif; ?>
 
     <form action="<?= base_url('auth/loginPost') ?>" method="post" class="space-y-4">
         <div>
@@ -46,6 +60,27 @@ tailwind.config = {
         </button>
     </form>
 </div>
+
+<footer class="w-full bg-gray-100 py-4 mt-auto border-t">
+    <div class="flex justify-end px-6 text-xs text-gray-600">
+        <div class="text-right">
+            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
+            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
+        </div>
+    </div>
+</footer>
+
+<!-- SweetAlert2 Error -->
+<?php if(session()->getFlashdata('error')): ?>
+<script>
+    Swal.fire({
+        icon: 'error',
+        title: 'Login Failed',
+        text: '<?= session()->getFlashdata('error') ?>',
+        confirmButtonColor: '#0B6B3A'
+    });
+</script>
+<?php endif; ?>
 
 </body>
 </html>

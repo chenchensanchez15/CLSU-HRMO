@@ -11,35 +11,46 @@ class Auth extends BaseController
         return view('auth/login');
     }
 
-    public function loginPost()
-    {
-        $session = session();
-        $model = new UserModel();
+public function loginPost()
+{
+    $session = session();
+    $model = new UserModel();
 
-        $email = $this->request->getVar('email');
-        $password = $this->request->getVar('password');
+    $email = $this->request->getVar('email');
+    $password = $this->request->getVar('password');
 
-        $user = $model->where('email', $email)->first();
+    $user = $model->where('email', $email)->first();
 
-        if ($user) {
-            // Check password
-            if (password_verify($password, $user['password'])) {
-                $session->set([
-                    'user_id' => $user['id'],
-                    'first_name' => $user['first_name'],
-                    'email' => $user['email'],
-                    'logged_in' => true
-                ]);
-                return redirect()->to('/dashboard'); // Redirect to dashboard view
-            } else {
-                $session->setFlashdata('error', 'Wrong email or password.');
-                return redirect()->back();
+    if ($user) {
+        if (password_verify($password, $user['password'])) {
+
+            // Set basic session
+            $session->set([
+                'user_id' => $user['id'],
+                'first_name' => $user['first_name'],
+                'email' => $user['email'],
+                'logged_in' => true,
+                'first_login' => $user['first_login']
+            ]);
+
+            // If first login, redirect to dashboard with flashdata
+            if ($user['first_login'] == 1) {
+                return redirect()->to('/dashboard')->with('first_login', true);
             }
+
+            // Normal login
+            return redirect()->to('/dashboard');
+
         } else {
             $session->setFlashdata('error', 'Wrong email or password.');
             return redirect()->back();
         }
+    } else {
+        $session->setFlashdata('error', 'Wrong email or password.');
+        return redirect()->back();
     }
+}
+
 
     public function logout()
     {

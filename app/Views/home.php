@@ -19,9 +19,9 @@
         }
     </script>
 </head>
+
 <body class="flex flex-col min-h-screen bg-gray-100 text-gray-800">
 
-    <!-- HEADER -->
     <header class="bg-clsuGreen text-white py-6 px-6">
         <div class="max-w-5xl mx-auto flex items-center justify-center">
             <div class="flex items-center gap-4 text-center md:text-left">
@@ -42,7 +42,6 @@
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
     <main class="flex-1 max-w-7xl mx-auto py-10 px-6">
         <h2 class="text-3xl font-bold text-center mb-6">
             Available Job Vacancies

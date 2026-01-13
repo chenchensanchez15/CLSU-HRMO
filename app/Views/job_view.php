@@ -105,7 +105,7 @@
 
 </main>
 
-<footer class="w-full bg-gray-100 py-4 mt-auto border-t">
+<footer class="flex-shrink-0 w-full bg-gray-100 py-4 border-t mt-auto">
     <div class="flex justify-end px-6 text-xs text-gray-600">
         <div class="text-right">
             &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
@@ -113,7 +113,6 @@
         </div>
     </div>
 </footer>
-
 
 </body>
 </html>

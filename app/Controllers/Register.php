@@ -16,7 +16,6 @@ class Register extends BaseController
     {
         $rules = [
             'first_name'  => 'required',
-            'middle_name' => 'required',
             'last_name'   => 'required',
             'email'       => 'required|valid_email|is_unique[users.email]',
         ];
@@ -46,21 +45,34 @@ class Register extends BaseController
             'extension'   => $this->request->getPost('extension'),
             'email'       => $this->request->getPost('email'),
             'password'    => $hashedPassword,
-            'role'        => 'applicant'
+            'role'        => 'applicant',
+            'first_login' => 1
         ];
 
         $userModel->insert($data);
 
         $email = \Config\Services::email();
 
-        $email->setTo($data['email']);
-        $email->setSubject('CLSU HRMO Account Created');
-        $email->setMessage("
-            <h3>Welcome to CLSU HRMO</h3>
-            <p>Your account has been successfully created.</p>
-            <p><strong>Temporary Password:</strong> {$plainPassword}</p>
-            <p>Please log in and change your password immediately.</p>
-        ");
+  $email->setFrom('hrmo@noreply.com', 'CLSU HRMO'); // Sender
+$email->setTo($data['email']); // Recipient
+$email->setSubject('CLSU HRMO Account Created');
+$email->setMessage("
+    <h3>Welcome to CLSU Online Job Application System</h3>
+    <p>Your account has been successfully created.</p>
+    <p><strong>Temporary Password:</strong> {$plainPassword}</p>
+    <p>Please log in and change your password immediately.</p>
+    <p>
+        <a href='http://localhost:8080/HRMO/login' style='
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #0B6B3A;
+            text-decoration: none;
+            border-radius: 5px;
+        '>Log In Here</a>
+    </p>
+");
 
         if (!$email->send()) {
             return redirect()->back()
