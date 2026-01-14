@@ -41,9 +41,9 @@
 
     <hr class="my-4">
 
-<form id="applicationForm" method="POST" action="<?= base_url('applications/submit/' . $job['item_no']) ?>" enctype="multipart/form-data">
+    <form id="applicationForm" method="POST" action="<?= base_url('applications/submit/' . $job['item_no']) ?>" enctype="multipart/form-data">
 
-     <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
+        <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
 
         <!-- Step 1: Personal Information -->
         <div class="step" id="step-1">
@@ -147,6 +147,7 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- Father -->
                     <div>
                         <p class="font-semibold text-sm mb-2 text-text-black">Father</p>
@@ -169,6 +170,7 @@
                             </div>
                         </div>
                     </div>
+
                     <!-- Mother -->
                     <div>
                         <p class="font-semibold text-sm mb-2 text-text-black">Mother (Maiden Name)</p>
@@ -189,6 +191,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="text-right mt-4">
                 <button type="button" onclick="prevStep(2)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">
                     Previous
@@ -264,38 +267,38 @@
                 <button type="button" onclick="nextStep(4)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Next</button>
             </div>
         </div>
-
-        <!-- Step 5: File Attachments & Submit -->
-        <div class="step hidden" id="step-5">
+<!-- Step 5: File Attachments & Submit -->
+<div class="step hidden" id="step-5">
+    <div>
+        <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">File Attachments</div>
+        <div class="space-y-4">
             <div>
-                <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">File Attachments</div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="text-xs font-medium">1. Resume / Curriculum Vitae (PDF)</label>
-                        <input type="file" name="resume" accept=".pdf" required class="border rounded px-2 py-2 text-sm w-full">
-                        <p class="text-xs text-gray-500">Upload your latest resume in PDF format.</p>
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">2. Government-issued ID (Front)</label>
-                        <input type="file" name="id_front" accept=".jpg,.jpeg,.png,.pdf" required class="border rounded px-2 py-2 text-sm w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">3. Government-issued ID (Back)</label>
-                        <input type="file" name="id_back" accept=".jpg,.jpeg,.png,.pdf" required class="border rounded px-2 py-2 text-sm w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">4. Additional ID (optional)</label>
-                        <input type="file" name="additional_id" accept=".jpg,.jpeg,.png,.pdf" class="border rounded px-2 py-2 text-sm w-full">
-                        <p class="text-xs text-gray-500">Any other valid government ID (optional).</p>
-                    </div>
-                    <p class="text-xs text-gray-500">Accepted formats: PDF, JPG, PNG | Maximum file size: 5MB per file</p>
-                </div>
+                <label class="text-xs font-medium">1. Resume (PDF)</label>
+                <input type="file" name="resume" accept=".pdf" required class="border rounded px-2 py-2 text-sm w-full">
+                <p class="text-xs text-gray-500">Upload your latest resume in PDF format.</p>
             </div>
-            <div class="text-right mt-4">
-                <button type="button" onclick="prevStep(5)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">Previous</button>
-                <button type="submit" id="submitApplication" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Submit Application</button>
+            <div>
+                <label class="text-xs font-medium">2. Transcript of Records (TOR) (PDF)</label>
+                <input type="file" name="tor" accept=".pdf" required class="border rounded px-2 py-2 text-sm w-full">
             </div>
+            <div>
+                <label class="text-xs font-medium">3. Diploma (PDF)</label>
+                <input type="file" name="diploma" accept=".pdf" required class="border rounded px-2 py-2 text-sm w-full">
+            </div>
+            <div>
+                <label class="text-xs font-medium">4. Certificate (optional, PDF)</label>
+                <input type="file" name="certificate" accept=".pdf" class="border rounded px-2 py-2 text-sm w-full">
+                <p class="text-xs text-gray-500">Upload any additional certificates (optional).</p>
+            </div>
+            <p class="text-xs text-gray-500">Accepted format: PDF | Maximum file size: 5MB per file</p>
         </div>
+    </div>
+    <div class="text-right mt-4">
+        <button type="button" onclick="prevStep(5)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">Previous</button>
+        <button type="submit" id="submitApplication" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Submit Application</button>
+    </div>
+</div>
+
 
     </form>
 </main>

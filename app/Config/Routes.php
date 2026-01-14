@@ -30,3 +30,5 @@ $routes->post('account/updatePassword', 'Account::updatePassword');
 
 $routes->post('applications/apply/(:any)', 'Applications::submit/$1');
 $routes->post('applications/submit/(:num)', 'Applications::submit/$1');
+
+$routes->get('applications/view/(:num)', 'Applications::view/$1');

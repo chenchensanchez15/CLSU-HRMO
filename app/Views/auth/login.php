@@ -59,6 +59,16 @@ tailwind.config = {
             Login
         </button>
     </form>
+
+    <!-- Register Link -->
+<div class="mt-4 text-center text-sm">
+    <span class="text-gray-600">Don't have an account?</span>
+    <a href="<?= base_url('register') ?>" 
+       class="text-clsuGreen font-semibold hover:underline">
+        Register here
+    </a>
+</div>
+
 </div>
 
 <footer class="w-full bg-gray-100 py-4 mt-auto border-t">

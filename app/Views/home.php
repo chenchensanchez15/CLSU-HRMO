@@ -11,7 +11,7 @@
             theme: {
                 extend: {
                     colors: {
-                        clsuGreen: '#116c2f',
+                        clsuGreen: '#0B6B3A',
                         clsuGold: '#F2C94C'
                     }
                 }

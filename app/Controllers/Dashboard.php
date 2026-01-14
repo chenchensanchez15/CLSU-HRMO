@@ -9,7 +9,7 @@ use App\Models\ApplicantModel;
 
 class Dashboard extends BaseController
 {
-  public function index()
+ public function index()
 {
     $session = session();
 
@@ -26,10 +26,13 @@ class Dashboard extends BaseController
     // Fetch applications for this user with job info
     $db = \Config\Database::connect();
     $builder = $db->table('job_applications');
-    $builder->select('job_applications.id, job_positions.position_title, job_positions.department, job_positions.item_no, job_positions.created_at as posting_date, job_positions.application_deadline as closing_date, job_applications.application_status');
+    $builder->select('job_applications.id, job_applications.job_position_id, job_positions.position_title, job_positions.department, job_positions.item_no, job_positions.created_at as posting_date, job_positions.application_deadline as closing_date, job_applications.application_status');
     $builder->join('job_positions', 'job_positions.id = job_applications.job_position_id', 'left');
     $builder->where('job_applications.user_id', $userId);
     $applications = $builder->get()->getResultArray();
+
+    // Prepare a list of job_position_id the user already applied to
+    $appliedJobIds = array_column($applications, 'job_position_id');
 
     // Fetch all open job vacancies
     $vacancyModel = new JobVacancyModel();
@@ -54,6 +57,7 @@ class Dashboard extends BaseController
         'vacancies' => $vacancies,
         'profile' => $profile,
         'profilePhoto' => $profilePhoto, // Pass to view
+        'appliedJobIds' => $appliedJobIds // <-- list of already applied jobs
     ];
 
     return view('dashboard', $data);

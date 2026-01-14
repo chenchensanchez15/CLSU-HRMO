@@ -1,8 +1,3 @@
-<?php
-// --- Backend: Prepare Vacancies ---
-// We'll handle filtering & pagination on the client side via JS, so no need for PHP filtering
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -131,9 +126,8 @@ window.onclick = function(event) {
     <p class="text-gray-700 mb-1"><?= esc($user['email'] ?? $profile['email'] ?? 'noemail@example.com') ?></p>
 </div>
 
-<!-- RIGHT PANEL -->
 <div class="right w-full lg:w-2/3 space-y-6">
-<!-- My Job Applications -->
+    
 <div class="card bg-white p-6 rounded-lg shadow">
     <h3 class="text-clsuGreen font-bold mb-4">My Job Applications</h3>
     <table class="w-full table-auto border-collapse text-sm">
@@ -154,29 +148,62 @@ window.onclick = function(event) {
                     <td colspan="7" class="p-2 text-gray-500 text-center">No data available in table</td>
                 </tr>
             <?php else: $i = 1; foreach($applications as $app): ?>
-                <tr>
+                <tr class="bg-white hover:bg-gray-50">
                     <td class="p-2"><?= $i++ ?></td>
                     <td class="p-2"><?= esc($app['position_title']) ?></td>
                     <td class="p-2"><?= esc($app['department']) ?></td>
                     <td class="p-2"><?= date('M d, Y', strtotime($app['posting_date'])) ?></td>
                     <td class="p-2"><?= date('M d, Y', strtotime($app['closing_date'])) ?></td>
-                    <td class="p-2"><?= esc($app['application_status']) ?></td>
                     <td class="p-2">
-                        <a href="<?= base_url('applications/view/' . $app['id']) ?>" class="text-blue-600 hover:underline text-xs">View</a>
-                    </td>
+                        <?php
+                            $status = $app['application_status'] ?? 'Submitted. For Evaluation';
+
+                            $statusClasses = [
+                                'Submitted. For Evaluation' => 'bg-yellow-400 text-black',
+                                'Under Evaluation' => 'bg-blue-500 text-white',
+                                'Not qualified' => 'bg-red-500 text-white',
+                                'Shortlisted.' => 'bg-blue-300 text-black',
+                                'Scheduled for Interview' => 'bg-purple-500 text-white',
+                                'Withdrawn application' => 'bg-gray-400 text-black',
+                                'Did not attend interview' => 'bg-red-600 text-white',
+                                'Interviewed. Awaiting Result' => 'bg-yellow-300 text-black',
+                                'Not selected.' => 'bg-red-400 text-white',
+                                'Job offered.' => 'bg-green-500 text-white',
+                                'Rejected job offer.' => 'bg-red-700 text-white',
+                                'ACCEPTED.' => 'bg-green-600 text-white',
+                            ];
+
+                            $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
+                            $badgeClass = $statusClasses[$status] ?? 'bg-gray-400 text-white';
+                        ?>
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold <?= $badgeClass ?>">
+                            <?= esc($displayText) ?>
+                        </span>
+                 <td class="p-2 whitespace-nowrap">
+    <div class="flex items-center gap-1">
+        <a href="<?= base_url('applications/view/' . $app['id']) ?>" 
+           class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center">
+            <i class="fas fa-eye mr-1"></i> View
+        </a>
+        <a href="<?= base_url('applications/edit/' . $app['id']) ?>" 
+           class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center">
+            <i class="fas fa-pencil-alt mr-1"></i> Edit
+        </a>
+        <a href="<?= base_url('applications/withdraw/' . $app['id']) ?>" 
+           class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center"
+           onclick="return confirm('Are you sure you want to withdraw this application?');">
+            <i class="fas fa-times mr-1"></i> Withdraw
+        </a>
+    </div>
+</td>
                 </tr>
             <?php endforeach; endif; ?>
         </tbody>
     </table>
 </div>
 
-
-
-<!-- Available Job Vacancies -->
 <div class="card bg-white p-6 rounded-lg">
     <h3 class="text-clsuGreen font-bold mb-4">Available Job Vacancies</h3>
-
-    <!-- FILTER + SEARCH -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div class="flex gap-2">
             <?php $filters = ['All','Contractual','Permanent']; foreach($filters as $f): ?>
@@ -186,7 +213,6 @@ window.onclick = function(event) {
         <input type="text" placeholder="Search jobs..." class="border rounded-full px-4 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-clsuGreen outline-none">
     </div>
 
-<!-- JOB CARDS -->
 <div class="space-y-6">
     <?php foreach($vacancies as $vac): ?>
     <div class="border rounded-xl p-5 hover:shadow-md transition job-card" 
@@ -218,24 +244,29 @@ window.onclick = function(event) {
                 Deadline: <?= date('F j, Y', strtotime($vac['application_deadline'])) ?>
             </p>
 
-         <form method="GET" action="<?= base_url('applications/apply/' . $vac['item_no']) ?>">
-    <button class="bg-clsuGreen text-white px-5 py-2 rounded-lg text-sm hover:bg-green-800">
-        Apply
-    </button>
-</form>
+    <?php if(in_array($vac['id'], $appliedJobIds)): ?>
+    <span class="px-4 py-2 rounded-lg bg-yellow-400 text-black text-sm font-semibold cursor-not-allowed">
+        Submitted
+    </span>
+<?php else: ?>
+    <form method="GET" action="<?= base_url('applications/apply/' . $vac['item_no']) ?>">
+        <button class="bg-clsuGreen text-white px-5 py-2 rounded-lg text-sm hover:bg-green-800">
+            Apply
+        </button>
+    </form>
+<?php endif; ?>
 
         </div>
     </div>
     <?php endforeach; ?>
 </div>
 
-    <!-- PAGINATION -->
     <div id="pagination" class="flex justify-center mt-6 gap-2"></div>
 </div>
 
-</div></div>
+</div>
+</div>
 
-<!-- UPDATED FOOTER -->
 <footer class="flex-shrink-0 w-full bg-gray-100 py-4 border-t mt-auto">
     <div class="flex justify-end px-6 text-xs text-gray-600">
         <div class="text-right">
@@ -244,7 +275,7 @@ window.onclick = function(event) {
         </div>
     </div>
 </footer>
-<!-- JOB MODAL -->
+
 <div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
         <button onclick="closeModal()" class="float-right text-gray-500 text-xl">✕</button>
@@ -258,14 +289,12 @@ const jobCards = Array.from(document.querySelectorAll('.job-card'));
 let perPage = 5, currentPage = 1, filteredType = 'all';
 
 function renderJobs() {
-    // Filter
+
     let filteredJobs = jobCards.filter(card => filteredType==='all'||card.dataset.type===filteredType);
 
-    // Search filter
     const searchValue = document.querySelector('input[placeholder="Search jobs..."]').value.toLowerCase();
     filteredJobs = filteredJobs.filter(card=>card.dataset.title.includes(searchValue));
 
-    // Pagination
     const totalPages = Math.ceil(filteredJobs.length/perPage);
     const start = (currentPage-1)*perPage;
     const paginated = filteredJobs.slice(start,start+perPage);
@@ -273,7 +302,6 @@ function renderJobs() {
     jobCards.forEach(card=>card.style.display='none');
     paginated.forEach(card=>card.style.display='block');
 
-    // Pagination buttons
     const pagination = document.getElementById('pagination');
     pagination.innerHTML='';
     for(let i=1;i<=totalPages;i++){
@@ -285,22 +313,19 @@ function renderJobs() {
     }
 }
 
-// Filter buttons
 document.querySelectorAll('.filter-btn').forEach(btn=>{
     btn.addEventListener('click',()=>{
         filteredType = btn.dataset.type;
         currentPage=1;
-        // highlight active button
+
         document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('bg-clsuGreen','text-white'));
         btn.classList.add('bg-clsuGreen','text-white');
         renderJobs();
     });
 });
 
-// Search input
 document.querySelector('input[placeholder="Search jobs..."]').addEventListener('keyup',()=>renderJobs());
 
-// Modal functions
 function openModal(id){
     const job = jobs.find(j=>j.id==id);
     if(!job) return;
@@ -326,11 +351,8 @@ function openModal(id){
 
 function closeModal(){ document.getElementById('jobModal').classList.add('hidden'); }
 
-// Initial render
 renderJobs();
 </script>
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
