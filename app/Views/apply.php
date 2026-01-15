@@ -32,81 +32,179 @@
     </div>
 </header>
 
-<main class="max-w-3xl mx-auto bg-white my-6 p-6 rounded-lg shadow text-sm">
 
-    <h2 class="text-lg font-semibold mb-2">Applying for a Regular Position</h2>
-    <p class="font-bold text-clsuGreen mb-3">
-        <?= esc($job['position_title']) ?> (<?= esc($job['monthly_salary']) ?>)
-    </p>
+<div class="min-h-screen bg-gray-100 px-4 py-6 flex justify-center">
+    <!-- Main Form Container -->
+    <div class="w-full max-w-7xl bg-white shadow rounded-lg p-6 text-sm">
+
+        <!-- Application Details Header -->
+        <div class="flex justify-between items-center mb-4">
+            <span class="font-semibold text-gray-700 text-base">Application Details</span>
+            <a href="<?= site_url('dashboard') ?>" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm font-medium">
+                ✕
+            </a>
+        </div>
+
+        <!-- Application Details Info -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="space-y-1">
+                <p><span class="font-semibold">Position:</span> <?= esc($job['position_title'] ?? '-') ?></p>
+                <p><span class="font-semibold">Office:</span> <?= esc($job['office'] ?? '-') ?></p>
+                <p><span class="font-semibold">Department:</span> <?= esc($job['department'] ?? '-') ?></p>
+                <p><span class="font-semibold">Monthly Salary:</span> <span class="text-clsuGreen font-semibold"><?= esc($job['monthly_salary'] ?? '-') ?></span></p>
+            </div>
+         
+        </div>
 
     <hr class="my-4">
 
     <form id="applicationForm" method="POST" action="<?= base_url('applications/submit/' . $job['item_no']) ?>" enctype="multipart/form-data">
 
-        <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
+    <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
 
-        <!-- Step 1: Personal Information -->
-        <div class="step" id="step-1">
-            <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-                Personal Information
+<!-- Step 1: Personal Information -->
+<div class="step" id="step-1">
+    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
+        Personal Information
+    </div>
+
+    <div class="space-y-3">
+
+        <!-- Name Fields -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div>
+                <label class="text-xs font-medium">Surname *</label>
+                <input type="text" name="last_name"
+                       value="<?= esc($profile['last_name'] ?? '') ?>"
+                       placeholder="Enter Surname" required
+                       class="border rounded px-2 py-1 text-xs w-full">
             </div>
-            <div class="space-y-3">
-                <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                    <div>
-                        <label class="text-xs font-medium">Surname *</label>
-                        <input type="text" name="last_name" placeholder="Enter Surname" required class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">First Name *</label>
-                        <input type="text" name="first_name" placeholder="Enter First Name" required class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">Middle Name</label>
-                        <input type="text" name="middle_name" placeholder="Enter Middle Name" class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">Jr./Sr.</label>
-                        <input type="text" name="name_extension" placeholder="Enter Extension" class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div>
-                        <label class="text-xs font-medium">Date of Birth *</label>
-                        <input type="date" name="birth_date" required class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">Place of Birth</label>
-                        <input type="text" name="place_of_birth" placeholder="Enter Place of Birth" class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">Sex *</label>
-                        <select name="sex" required class="border rounded px-2 py-1 text-xs w-full">
-                            <option value="">Select Sex</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                        <label class="text-xs font-medium">Civil Status</label>
-                        <input type="text" name="civil_status" placeholder="Enter Civil Status" class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                    <div>
-                        <label class="text-xs font-medium">Citizenship</label>
-                        <input type="text" name="citizenship" placeholder="Enter Citizenship" class="border rounded px-2 py-1 text-xs w-full">
-                    </div>
-                </div>
-
-                <div class="text-right">
-                    <button type="button" onclick="nextStep(1)" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
-                        Next
-                    </button>
-                </div>
+            <div>
+                <label class="text-xs font-medium">First Name *</label>
+                <input type="text" name="first_name"
+                       value="<?= esc($profile['first_name'] ?? '') ?>"
+                       placeholder="Enter First Name" required
+                       class="border rounded px-2 py-1 text-xs w-full">
+            </div>
+          
+            <div>
+                <label class="text-xs font-medium">Jr./Sr.</label>
+                <input type="text" name="name_extension"
+                       value="<?= esc($profile['suffix'] ?? '') ?>"
+                       placeholder="Enter Extension"
+                       class="border rounded px-2 py-1 text-xs w-full">
+            </div>
+              <div>
+                <label class="text-xs font-medium">Middle Name</label>
+                <input type="text" name="middle_name"
+                       value="<?= esc($profile['middle_name'] ?? '') ?>"
+                       placeholder="Enter Middle Name"
+                       class="border rounded px-2 py-1 text-xs w-full">
             </div>
         </div>
+
+<!-- Birth, Sex, Civil Status & Citizenship -->
+<div class="grid grid-cols-1 sm:grid-cols-5 gap-2">
+    <div>
+        <label class="text-xs font-medium">Sex *</label>
+        <select name="sex" required class="border rounded px-2 py-1 text-xs w-full">
+            <option value="">Select Sex</option>
+            <option value="Male" <?= ($profile['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
+            <option value="Female" <?= ($profile['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
+        </select>
+    </div>
+    <div>
+        <label class="text-xs font-medium">Date of Birth *</label>
+        <input type="date" name="birth_date" required
+               value="<?= esc($profile['date_of_birth'] ?? '') ?>"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Place of Birth</label>
+        <input type="text" name="place_of_birth"
+               value="<?= esc($profile['place_of_birth'] ?? '') ?>"
+               placeholder="Enter Place of Birth"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Civil Status</label>
+        <select name="civil_status" class="border rounded px-2 py-1 text-xs w-full">
+            <option value="">Select Civil Status</option>
+            <option value="Single" <?= ($profile['civil_status'] ?? '') === 'Single' ? 'selected' : '' ?>>Single</option>
+            <option value="Married" <?= ($profile['civil_status'] ?? '') === 'Married' ? 'selected' : '' ?>>Married</option>
+            <option value="Widowed" <?= ($profile['civil_status'] ?? '') === 'Widowed' ? 'selected' : '' ?>>Widowed</option>
+            <option value="Separated" <?= ($profile['civil_status'] ?? '') === 'Separated' ? 'selected' : '' ?>>Separated</option>
+            <option value="Divorced" <?= ($profile['civil_status'] ?? '') === 'Divorced' ? 'selected' : '' ?>>Divorced</option>
+        </select>
+    </div>
+</div>
+<!-- Contact Info -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+    <div>
+        <label class="text-xs font-medium">Email</label>
+        <input type="email" name="email"
+               value="<?= esc($profile['email'] ?? '') ?>"
+               placeholder="Enter Email"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Phone Number</label>
+        <input type="text" name="phone"
+               value="<?= esc($profile['phone'] ?? '') ?>"
+               placeholder="Enter Phone Number"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Citizenship</label>
+        <input type="text" name="citizenship"
+               value="<?= esc($profile['citizenship'] ?? '') ?>"
+               placeholder="Enter Citizenship"
+                class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+</div>
+
+<!-- Height, Weight & Blood Type -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+    <div>
+        <label class="text-xs font-medium">Height (m)</label>
+        <input type="number" step="0.01" name="height"
+               value="<?= esc($profile['height'] ?? '') ?>"
+               placeholder="Enter Height in meters"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Weight (kg)</label>
+        <input type="number" step="0.1" name="weight"
+               value="<?= esc($profile['weight'] ?? '') ?>"
+               placeholder="Enter Weight in kilograms"
+               class="border rounded px-2 py-1 text-xs w-full">
+    </div>
+    <div>
+        <label class="text-xs font-medium">Blood Type</label>
+        <select name="blood_type" class="border rounded px-2 py-1 text-xs w-full">
+            <option value="" disabled <?= empty($profile['blood_type']) ? 'selected' : '' ?>>Select Blood Type</option>
+            <option value="A+" <?= ($profile['blood_type'] ?? '') === 'A+' ? 'selected' : '' ?>>A+</option>
+            <option value="A-" <?= ($profile['blood_type'] ?? '') === 'A-' ? 'selected' : '' ?>>A-</option>
+            <option value="B+" <?= ($profile['blood_type'] ?? '') === 'B+' ? 'selected' : '' ?>>B+</option>
+            <option value="B-" <?= ($profile['blood_type'] ?? '') === 'B-' ? 'selected' : '' ?>>B-</option>
+            <option value="AB+" <?= ($profile['blood_type'] ?? '') === 'AB+' ? 'selected' : '' ?>>AB+</option>
+            <option value="AB-" <?= ($profile['blood_type'] ?? '') === 'AB-' ? 'selected' : '' ?>>AB-</option>
+            <option value="O+" <?= ($profile['blood_type'] ?? '') === 'O+' ? 'selected' : '' ?>>O+</option>
+            <option value="O-" <?= ($profile['blood_type'] ?? '') === 'O-' ? 'selected' : '' ?>>O-</option>
+        </select>
+    </div>
+</div>
+
+<!-- Next Button -->
+<div class="text-right mt-2">
+    <button type="button" onclick="nextStep(1)"
+            class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+        Next
+    </button>
+</div>
+
+    </div>
+</div>
 
         <!-- Step 2: Family Background -->
         <div class="step hidden" id="step-2">
@@ -148,47 +246,68 @@
                         </div>
                     </div>
 
-                    <!-- Father -->
-                    <div>
-                        <p class="font-semibold text-sm mb-2 text-text-black">Father</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                            <div>
-                                <label class="text-xs text-text-black">Surname</label>
-                                <input type="text" name="father_surname" placeholder="Surname" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                            <div>
-                                <label class="text-xs text-text-black">First Name</label>
-                                <input type="text" name="father_first_name" placeholder="First Name" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                            <div>
-                                <label class="text-xs text-text-black">Middle Name</label>
-                                <input type="text" name="father_middle_name" placeholder="Middle Name" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                            <div>
-                                <label class="text-xs text-text-black">Extension</label>
-                                <input type="text" name="father_ext_name" placeholder="Extension name" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                        </div>
-                    </div>
+                   <!-- Father -->
+<div>
+    <p class="font-semibold text-sm mb-2 text-text-black">Father</p>
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div>
+            <label class="text-xs text-text-black">Surname</label>
+            <input type="text" name="father_surname" placeholder="Surname" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs text-text-black">First Name</label>
+            <input type="text" name="father_first_name" placeholder="First Name" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs text-text-black">Middle Name</label>
+            <input type="text" name="father_middle_name" placeholder="Middle Name" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs text-text-black">Extension</label>
+            <input type="text" name="father_ext_name" placeholder="Extension name" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+        <div>
+            <label class="text-xs">Occupation</label>
+            <input type="text" name="father_occupation" placeholder="Occupation" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs">Contact Number</label>
+            <input type="text" name="father_contact" placeholder="Contact Number" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+    </div>
+</div>
 
-                    <!-- Mother -->
-                    <div>
-                        <p class="font-semibold text-sm mb-2 text-text-black">Mother (Maiden Name)</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                            <div>
-                                <label class="text-xs text-text-black">Surname</label>
-                                <input type="text" name="mother_maiden_surname" placeholder="Surname" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                            <div>
-                                <label class="text-xs text-text-black">First Name</label>
-                                <input type="text" name="mother_first_name" placeholder="First Name" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                            <div>
-                                <label class="text-xs text-text-black">Middle Name</label>
-                                <input type="text" name="mother_middle_name" placeholder="Middle Name" class="border rounded px-2 py-2 text-sm w-full">
-                            </div>
-                        </div>
-                    </div>
+<!-- Mother -->
+<div>
+    <p class="font-semibold text-sm mb-2 text-text-black">Mother (Maiden Name)</p>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div>
+            <label class="text-xs text-text-black">Surname</label>
+            <input type="text" name="mother_maiden_surname" placeholder="Surname" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs text-text-black">First Name</label>
+            <input type="text" name="mother_first_name" placeholder="First Name" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs text-text-black">Middle Name</label>
+            <input type="text" name="mother_middle_name" placeholder="Middle Name" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+        <div>
+            <label class="text-xs">Occupation</label>
+            <input type="text" name="mother_occupation" placeholder="Occupation" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+        <div>
+            <label class="text-xs">Contact Number</label>
+            <input type="text" name="mother_contact" placeholder="Contact Number" class="border rounded px-2 py-2 text-sm w-full">
+        </div>
+    </div>
+</div>
+
                 </div>
             </div>
 
@@ -256,10 +375,21 @@
             <div>
                 <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-3">Work Experience</div>
                 <div class="space-y-3">
-                    <input type="text" name="current_work" placeholder="Current Work / Position / Agency" class="border rounded px-2 py-2 text-sm w-full">
-                    <input type="text" name="previous_work" placeholder="Previous Work / Position / Agency" class="border rounded px-2 py-2 text-sm w-full">
-                    <input type="text" name="work_duration" placeholder="Duration (From – To)" class="border rounded px-2 py-2 text-sm w-full">
+            <label class="text-xs font-medium">Current Work</label>
+                    <input type="text" name="current_work" placeholder="Current Work" class="border rounded px-2 py-2 text-sm w-full">
+                </div>
+                <div class="space-y-3">
+                   <label class="text-xs font-medium">Previous Work</label>
+                    <input type="text" name="previous_work" placeholder="Previous Work" class="border rounded px-2 py-2 text-sm w-full">
+                </div>
+                <div class="space-y-3">
+                     <label class="text-xs font-medium">Duration</label>
+                    <input type="text" name="work_duration" placeholder="Duration in Months/Yrs" class="border rounded px-2 py-2 text-sm w-full">
+                </div>
+                    <div class="space-y-3">
+                     <label class="text-xs font-medium">Award</label>
                     <input type="text" name="work_awards" placeholder="Awards / Achievements" class="border rounded px-2 py-2 text-sm w-full">
+                
                 </div>
             </div>
             <div class="text-right mt-3">
@@ -267,6 +397,7 @@
                 <button type="button" onclick="nextStep(4)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Next</button>
             </div>
         </div>
+        
 <!-- Step 5: File Attachments & Submit -->
 <div class="step hidden" id="step-5">
     <div>
@@ -298,10 +429,18 @@
         <button type="submit" id="submitApplication" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Submit Application</button>
     </div>
 </div>
-
-
     </form>
 </main>
+</div>
+</div>
+<footer class="flex-shrink-0 w-full bg-gray-100 py-4 border-t mt-auto">
+    <div class="flex justify-end px-6 text-xs text-gray-600">
+        <div class="text-right">
+            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
+            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
+        </div>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -339,6 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('applicationForm');

@@ -32,3 +32,6 @@ $routes->post('applications/apply/(:any)', 'Applications::submit/$1');
 $routes->post('applications/submit/(:num)', 'Applications::submit/$1');
 
 $routes->get('applications/view/(:num)', 'Applications::view/$1');
+$routes->get('applications/edit/(:num)', 'Applications::edit/$1');
+$routes->post('applications/update/(:num)', 'Applications::update/$1');
+$routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');

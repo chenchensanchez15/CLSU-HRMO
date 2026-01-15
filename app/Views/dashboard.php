@@ -102,10 +102,9 @@ window.onclick = function(event) {
     </div>
 </header>
 
-<div class="container flex flex-col lg:flex-row gap-6 p-6 max-w-6xl mx-auto flex-1">
+<div class="w-full min-h-screen flex flex-col lg:flex-row gap-2 p-4 mx-auto flex-1">
 
-<!-- LEFT PANEL -->
-<div class="left bg-white p-6 rounded-lg text-center shadow-md self-start">
+<div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
     <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-hidden flex items-center justify-center mb-4">
         <?php
         $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
@@ -126,12 +125,11 @@ window.onclick = function(event) {
     <p class="text-gray-700 mb-1"><?= esc($user['email'] ?? $profile['email'] ?? 'noemail@example.com') ?></p>
 </div>
 
-<div class="right w-full lg:w-2/3 space-y-6">
-    
+<div class="right w-full flex-1 space-y-2">
 <div class="card bg-white p-6 rounded-lg shadow">
-    <h3 class="text-clsuGreen font-bold mb-4">My Job Applications</h3>
-    <table class="w-full table-auto border-collapse text-sm">
-        <thead class="bg-gray-100">
+    <h3 class="text-clsuGreen font-bold mb-2">My Job Applications</h3>
+ <table class="w-full table-auto border-collapse text-xs"> <!-- smaller font -->
+    <thead class="bg-gray-100 text-xs"> <!-- header smaller font -->
             <tr>
                 <th class="border-b p-2 text-left">No.</th>
                 <th class="border-b p-2 text-left">Position</th>
@@ -181,17 +179,21 @@ window.onclick = function(event) {
                         </span>
                  <td class="p-2 whitespace-nowrap">
     <div class="flex items-center gap-1">
+        
         <a href="<?= base_url('applications/view/' . $app['id']) ?>" 
            class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center">
             <i class="fas fa-eye mr-1"></i> View
         </a>
-        <a href="<?= base_url('applications/edit/' . $app['id']) ?>" 
-           class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center">
+
+        <a href="#"
+        class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
+        data-url="<?= base_url('applications/edit/' . $app['id']) ?>">
             <i class="fas fa-pencil-alt mr-1"></i> Edit
         </a>
-        <a href="<?= base_url('applications/withdraw/' . $app['id']) ?>" 
-           class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center"
-           onclick="return confirm('Are you sure you want to withdraw this application?');">
+
+        <a href="#"
+            class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center withdraw-btn"
+            data-id="<?= $app['id'] ?>">
             <i class="fas fa-times mr-1"></i> Withdraw
         </a>
     </div>
@@ -204,10 +206,10 @@ window.onclick = function(event) {
 
 <div class="card bg-white p-6 rounded-lg">
     <h3 class="text-clsuGreen font-bold mb-4">Available Job Vacancies</h3>
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
         <div class="flex gap-2">
             <?php $filters = ['All','Contractual','Permanent']; foreach($filters as $f): ?>
-                <button class="filter-btn px-4 py-2 rounded-full text-sm" data-type="<?= strtolower($f) ?>"><?= $f ?></button>
+                <button class="filter-btn px-2 py-2 rounded-full text-sm" data-type="<?= strtolower($f) ?>"><?= $f ?></button>
             <?php endforeach; ?>
         </div>
         <input type="text" placeholder="Search jobs..." class="border rounded-full px-4 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-clsuGreen outline-none">
@@ -355,6 +357,7 @@ renderJobs();
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -401,6 +404,153 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+<script>
+function confirmAction(actionType, url) {
+    let title = '', text = '', icon = 'warning';
+    if(actionType === 'edit') {
+        title = 'Edit Application?';
+        text = 'Are you sure you want to edit this application?';
+        icon = 'question';
+    } else if(actionType === 'withdraw') {
+        title = 'Withdraw Application?';
+        text = 'Are you sure you want to withdraw this application?';
+        icon = 'warning';
+    }
+
+    Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        showCancelButton: true,
+        confirmButtonColor: '#0B6B3A',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+}
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Edit button handler
+    document.querySelectorAll('a.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function(e){
+            e.preventDefault();
+            const row = this.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6) span');
+            const statusText = statusCell.textContent.trim();
+
+            if(statusText === 'Submitted'){
+                // Editable - show confirmation modal
+         Swal.fire({
+    title: 'Edit Application?',
+    text: 'Are you sure you want to edit this application?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#0B6B3A',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, edit it!'
+}).then((result) => {
+    if(result.isConfirmed){
+        // Redirect to edit page
+        window.location.href = this.dataset.url;
+    }
+});
+
+            } else {
+                // Not editable - show info modal
+                Swal.fire({
+                    title: 'Cannot Edit',
+                    text: `You cannot edit this application right now.`,
+                    icon: 'info',
+                    confirmButtonColor: '#0B6B3A'
+                });
+            }
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.querySelectorAll('a.withdraw-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const row = this.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6) span');
+            const statusText = statusCell.textContent.trim();
+
+            // If already withdrawn, show info modal
+            if(statusText === 'Withdrawn application' || statusText === 'Withdrawn'){
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Cannot Withdraw',
+                    text: 'This application has already been withdrawn.',
+                    confirmButtonColor: '#0B6B3A'
+                });
+                return;
+            }
+
+            const appId = this.dataset.id;
+
+            Swal.fire({
+                title: 'Withdraw Application?',
+                text: 'Are you sure you want to withdraw this application?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0B6B3A',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes'
+            }).then(result => {
+                if(result.isConfirmed){
+                    fetch(`<?= base_url('applications/withdraw') ?>/${appId}`, {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if(data.success){
+                            // Update status badge
+                            statusCell.textContent = 'Withdrawn application';
+                            statusCell.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-gray-400 text-black';
+
+                            // Show info modal instead of disabling
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Application Withdrawn',
+                                text: 'Your application status has been updated.',
+                                confirmButtonColor: '#0B6B3A'
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to withdraw application.',
+                                confirmButtonColor: '#0B6B3A'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred.',
+                            confirmButtonColor: '#0B6B3A'
+                        });
+                    });
+                }
+            });
+        });
+    });
+
+});
+</script>
 
 </body>
 </html>
