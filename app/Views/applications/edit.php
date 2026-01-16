@@ -71,8 +71,11 @@ window.onclick = function(event) {
         </div>
         <div class="flex items-center gap-12">
             <nav class="hidden md:flex gap-6 font-semibold mt-7">
-                <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
-                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
+                      <a href="<?= site_url('dashboard') ?>" 
+   class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
+   Home
+</a>
+            <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
                 <a href="#" class="hover:underline">Trainings</a>
             </nav>
             <div class="account-menu relative mt-1">
@@ -105,28 +108,41 @@ window.onclick = function(event) {
     <!-- Main Form Container -->
     <div class="w-full max-w-7xl bg-white shadow rounded-lg p-6 text-sm">
 
-        <!-- Application Details Header -->
-        <div class="flex justify-between items-center mb-4">
-            <span class="font-semibold text-gray-700 text-base">Application Details</span>
-            <a href="<?= site_url('dashboard') ?>" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm font-medium">
-                ✕
-            </a>
-        </div>
+   <!-- Application Details Header -->
+<div class="flex justify-between items-center mb-6 border-b border-gray-200 pb-3">
+    <h2 class="text-xl md:text-2xl font-bold text-clsuGreen">Application Details</h2>
+    <a href="<?= site_url('dashboard') ?>" class="bg-red-500 text-white px-4 py-1.5 rounded hover:bg-red-600 text-sm font-medium">
+        ✕
+    </a>
+</div>
 
-        <!-- Application Details Info -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="space-y-1">
-                <p><span class="font-semibold">Position:</span> <?= esc($job['position_title'] ?? '-') ?></p>
-                <p><span class="font-semibold">Office:</span> <?= esc($job['office'] ?? '-') ?></p>
-                <p><span class="font-semibold">Department:</span> <?= esc($job['department'] ?? '-') ?></p>
-                <p><span class="font-semibold">Monthly Salary:</span> <span class="text-clsuGreen font-semibold"><?= esc($job['monthly_salary'] ?? '-') ?></span></p>
-            </div>
-            <div class="space-y-1">
-                <p><span class="font-semibold">Applied At:</span> <?= date('F d, Y') ?></p>
-                <p><span class="font-semibold">Application Deadline:</span> <?= date('F d, Y', strtotime($job['deadline'] ?? '')) ?></p>
-                <p><span class="font-semibold">Status:</span> <?= esc($application_status ?? 'Submitted. For Evaluation') ?></p>
-            </div>
+<!-- Application Details Info (2 Columns, aligned) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <!-- Column 1 -->
+    <div class="space-y-2">
+        <div class="flex">
+            <span class="font-semibold text-clsuGreen w-32">Position:</span>
+               <span class="text-gray-700"><?= esc($job['position_title'] ?? '-') ?></span>
         </div>
+        <div class="flex">
+            <span class="font-semibold text-clsuGreen w-32">Office:</span>
+               <span class="text-gray-700"><?= esc($job['office'] ?? '-') ?></span>
+        </div>
+    </div>
+
+    <!-- Column 2 -->
+    <div class="space-y-2">
+        <div class="flex">
+            <span class="font-semibold text-clsuGreen w-32">Department:</span>
+               <span class="text-gray-700"><?= esc($job['department'] ?? '-') ?></span>
+        </div>
+        <div class="flex">
+            <span class="font-semibold text-clsuGreen w-32">Monthly Salary:</span>
+            <span class="text-gray-700"><?= esc($job['monthly_salary'] ?? '-') ?></span>
+        </div>
+    </div>
+</div>
+
 
         <hr class="my-4">
 
@@ -243,7 +259,7 @@ window.onclick = function(event) {
                         <table class="table-auto w-full text-left border-collapse text-xs">
                             <thead>
                                 <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">Height (m)</th>
+                                    <th class="px-2 py-1 border">Height (cm)</th>
                                     <th class="px-2 py-1 border">Weight (kg)</th>
                                     <th class="px-2 py-1 border">Blood Type</th>
                                 </tr>
@@ -291,6 +307,8 @@ window.onclick = function(event) {
 
         <!-- Spouse Table -->
         <div class="overflow-x-auto">
+        
+        <p class="font-semibold text-sm mb-1">Spouse Information</p>
             <table class="table-auto w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-gray-100">
@@ -321,6 +339,7 @@ window.onclick = function(event) {
 
         <!-- Father Table -->
         <div class="overflow-x-auto">
+        <p class="font-semibold text-sm mb-1">Father's Information</p>
             <table class="table-auto w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-gray-100">
@@ -351,6 +370,7 @@ window.onclick = function(event) {
 
         <!-- Mother Table -->
         <div class="overflow-x-auto">
+        <p class="font-semibold text-sm mb-1">Mother's Information</p>
             <table class="table-auto w-full text-left border-collapse text-xs">
                 <thead>
                     <tr class="bg-gray-100">
@@ -374,7 +394,6 @@ window.onclick = function(event) {
                 </tbody>
             </table>
         </div>
-
     </div>
 
     <!-- Previous / Next Buttons -->
@@ -390,6 +409,7 @@ window.onclick = function(event) {
     <div class="space-y-4">
         <!-- Elementary Table -->
         <div class="overflow-x-auto">
+        <p class="font-semibold text-sm mb-1">Elementary</p>
             <table class="table-auto w-full text-left border-collapse text-xs mb-3">
                 <thead>
                     <tr class="bg-gray-100">
@@ -420,6 +440,7 @@ window.onclick = function(event) {
 
         <!-- High School Table -->
         <div class="overflow-x-auto">
+        <p class="font-semibold text-sm mb-1">High School</p>
             <table class="table-auto w-full text-left border-collapse text-xs mb-3">
                 <thead>
                     <tr class="bg-gray-100">
@@ -450,6 +471,7 @@ window.onclick = function(event) {
 
         <!-- College Table -->
         <div class="overflow-x-auto">
+        <p class="font-semibold text-sm mb-1">College</p>
             <table class="table-auto w-full text-left border-collapse text-xs mb-3">
                 <thead>
                     <tr class="bg-gray-100">
@@ -477,6 +499,59 @@ window.onclick = function(event) {
                 </tbody>
             </table>
         </div>
+
+<!-- Highest Degree Table -->
+<div class="overflow-x-auto">
+    <p class="font-semibold text-sm mb-1">Highest Degree</p>
+    <table class="table-auto w-full text-left border-collapse text-xs mb-3">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="px-2 py-1 border">Level</th>
+                <th class="px-2 py-1 border">School</th>
+                <th class="px-2 py-1 border">Location</th>
+                <th class="px-2 py-1 border">Year Graduated</th>
+                <th class="px-2 py-1 border">Awards / Honors</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <!-- Pass the database row ID for update -->
+                <input type="hidden" name="highest_id" value="<?= esc($highest['id'] ?? '') ?>">
+                <td class="px-2 py-1 border">
+                    <input type="text"
+                        name="highest_degree"
+                        value="<?= esc($highest['level'] ?? '') ?>"
+                        class="px-2 py-1 w-full text-xs">
+                </td>
+                <td class="px-2 py-1 border">
+                    <input type="text"
+                        name="highest_school"
+                        value="<?= esc($highest['school_name'] ?? '') ?>"
+                        class="px-2 py-1 w-full text-xs">
+                </td>
+                <td class="px-2 py-1 border">
+                    <input type="text"
+                        name="highest_location"
+                        value="<?= esc($highest['location'] ?? '') ?>"
+                        class="px-2 py-1 w-full text-xs">
+                </td>
+                <td class="px-2 py-1 border">
+                    <input type="text"
+                        name="highest_year"
+                        value="<?= esc($highest['year_graduated'] ?? '') ?>"
+                        class="px-2 py-1 w-full text-xs">
+                </td>
+                <td class="px-2 py-1 border">
+                    <input type="text"
+                        name="highest_awards"
+                        value="<?= esc($highest['awards'] ?? '') ?>"
+                        class="px-2 py-1 w-full text-xs">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
     </div>
 
     <div class="text-right mt-4">
@@ -572,20 +647,19 @@ window.onclick = function(event) {
                         <?php endif; ?>
                         <input type="file" name="diploma" accept=".pdf" class="px-2 py-1 w-full text-xs ">
                     </td>
-                </tr>
+                </tr><!-- Row 4: Other Certificates -->
+<tr>
+    <td class="px-2 py-1 border font-semibold w-1/4">Other Certificates (Optional)</td>
+    <td class="px-2 py-1 border w-3/4">
+        <?php if (!empty($documents['certificate'])): ?>
+            <p class="text-xs text-green-700 mb-1">
+                Uploaded: <?= esc($documents['certificate']) ?>
+            </p>
+        <?php endif; ?>
+        <input type="file" name="certificate" accept=".pdf,.jpg,.png" class="px-2 py-1 w-full text-xs ">
+    </td>
+</tr>
 
-                <!-- Row 4: Other Certificates -->
-                <tr>
-                    <td class="px-2 py-1 border font-semibold w-1/4">Other Certificates (Optional)</td>
-                    <td class="px-2 py-1 border w-3/4">
-                        <?php if (!empty($documents['certificates'])): ?>
-                            <?php foreach (json_decode($documents['certificates'], true) as $cert): ?>
-                                <p class="text-xs text-green-700">Uploaded: <?= esc($cert) ?></p>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        <input type="file" name="certificates[]" multiple accept=".pdf,.jpg,.png" class="px-2 py-1 w-full text-xs ">
-                    </td>
-                </tr>
             </tbody>
         </table>
     </div>
@@ -595,7 +669,6 @@ window.onclick = function(event) {
         <button type="submit" id="submitBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold">Submit Application</button>
     </div>
 </div>
-
    </div> <!-- End Steps Container -->
 
             </div> <!-- End Steps Container -->

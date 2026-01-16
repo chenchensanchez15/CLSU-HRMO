@@ -35,3 +35,7 @@ $routes->get('applications/view/(:num)', 'Applications::view/$1');
 $routes->get('applications/edit/(:num)', 'Applications::edit/$1');
 $routes->post('applications/update/(:num)', 'Applications::update/$1');
 $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
+
+$routes->get('applications/viewDocument/(:num)/(:segment)', 'Applications::viewDocument/$1/$2');
+$routes->get('applications/viewPhoto/(:num)', 'Applications::viewPhoto/$1');
+$routes->get('applications/viewResume/(:num)', 'Applications::viewResume/$1');

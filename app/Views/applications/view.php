@@ -71,7 +71,10 @@ window.onclick = function(event) {
         </div>
         <div class="flex items-center gap-12">
             <nav class="hidden md:flex gap-6 font-semibold mt-7">
-                <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
+              <a href="<?= site_url('dashboard') ?>" 
+   class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
+   Home
+</a>
                 <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
                 <a href="#" class="hover:underline">Trainings</a>
             </nav>
@@ -278,107 +281,170 @@ window.onclick = function(event) {
     </table>
   </div>
 
-  <!-- FAMILY BACKGROUND -->
-  <h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
-  <div class="overflow-x-auto mb-6">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Relationship</th>
-          <th class="px-2 py-1 border">Full Name</th>
-          <th class="px-2 py-1 border">Occupation</th>
-          <th class="px-2 py-1 border">Contact Number</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($app['family'] as $fam): ?>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($fam['relationship']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($fam['first_name'].' '.$fam['middle_name'].' '.$fam['last_name'].' '.$fam['extension']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($fam['occupation'] ?: '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($fam['contact_number'] ?: '-') ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+<!-- FAMILY BACKGROUND -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Relationship</th>
+        <th class="px-2 py-1 border">Full Name</th>
+        <th class="px-2 py-1 border">Occupation</th>
+        <th class="px-2 py-1 border">Contact Number</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php
+      // Force these three relationships
+      $relations = ['Spouse', 'Father', 'Mother'];
 
-  <!-- EDUCATION -->
-  <h2 class="text-lg font-semibold text-clsuGreen mb-2">Educational Background</h2>
-  <div class="overflow-x-auto mb-6">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Level</th>
-          <th class="px-2 py-1 border">School</th>
-          <th class="px-2 py-1 border">Location</th>
-          <th class="px-2 py-1 border">Year Graduated</th>
-          <th class="px-2 py-1 border">Awards</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($app['education'] as $edu): ?>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($edu['level']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($edu['school_name']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($edu['location']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($edu['year_graduated']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($edu['awards'] ?: '-') ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+      // Index existing family by relationship for quick lookup
+      $family_by_relation = [];
+      if (!empty($app['family'])) {
+          foreach ($app['family'] as $fam) {
+              $family_by_relation[$fam['relationship']] = $fam;
+          }
+      }
 
-  <!-- WORK EXPERIENCE -->
-  <h2 class="text-lg font-semibold text-clsuGreen mb-2">Work Experience</h2>
-  <div class="overflow-x-auto mb-6">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Current Work</th>
-          <th class="px-2 py-1 border">Previous Work</th>
-          <th class="px-2 py-1 border">Duration</th>
-          <th class="px-2 py-1 border">Awards / Achievements</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($app['work']['current_work']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['work']['previous_work']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['work']['duration']) ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['work']['awards'] ?: '-') ?></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+      // Loop through all relations
+      foreach ($relations as $relation):
+          $fam = $family_by_relation[$relation] ?? [];
+          // Build full name, fallback to '-' if empty
+          $fullName = trim(
+              ($fam['first_name'] ?? '') . ' ' .
+              ($fam['middle_name'] ?? '') . ' ' .
+              ($fam['last_name'] ?? '') . ' ' .
+              ($fam['extension'] ?? '')
+          );
+          if ($fullName === '') $fullName = '-';
+      ?>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($relation) ?></td>
+        <td class="px-2 py-1 border"><?= esc($fullName) ?></td>
+        <td class="px-2 py-1 border"><?= esc($fam['occupation'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($fam['contact_number'] ?? '-') ?></td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+<!-- EDUCATION -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Educational Background</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Level</th>
+        <th class="px-2 py-1 border">School</th>
+        <th class="px-2 py-1 border">Location</th>
+        <th class="px-2 py-1 border">Year Graduated</th>
+        <th class="px-2 py-1 border">Awards</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php
+      // Fixed order for main levels
+      $main_levels = ['Elementary', 'High School', 'College'];
 
-  <!-- DOCUMENTS -->
-  <h2 class="text-lg font-semibold text-clsuGreen mb-2">Uploaded Documents</h2>
-  <div class="overflow-x-auto">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Document</th>
-          <th class="px-2 py-1 border">File</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach (['resume','tor','diploma','certificate'] as $doc):
-          $file = $app['documents'][$doc] ?? '';
-        ?>
-        <tr>
-          <td class="px-2 py-1 border font-semibold"><?= ucfirst($doc) ?></td>
-          <td class="px-2 py-1 border">
-            <?php if ($file): ?>
-              <a href="<?= base_url('writable/uploads/'.$file) ?>" target="_blank" class="text-blue-600 hover:underline"><?= esc($file) ?></a>
-            <?php else: ?>-<?php endif; ?>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
+      // Index existing education by level
+      $education_by_level = [];
+      if (!empty($app['education'])) {
+          foreach ($app['education'] as $edu) {
+              $education_by_level[$edu['level']] = $edu;
+          }
+      }
+
+      // Display main levels first
+      foreach ($main_levels as $level):
+          $edu = $education_by_level[$level] ?? [];
+      ?>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($level) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['location'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['awards'] ?? '-') ?></td>
+      </tr>
+      <?php endforeach; ?>
+
+      <?php
+      // Display any other custom levels after main ones
+      if (!empty($app['education'])):
+          foreach ($app['education'] as $edu):
+              if (!in_array($edu['level'], $main_levels)):
+      ?>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($edu['level']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['location'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['awards'] ?: '-') ?></td>
+      </tr>
+      <?php
+              endif;
+          endforeach;
+      endif;
+      ?>
+    </tbody>
+  </table>
+</div>
+
+
+
+<!-- WORK EXPERIENCE -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Work Experience</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Current Work</th>
+        <th class="px-2 py-1 border">Previous Work</th>
+        <th class="px-2 py-1 border">Duration</th>
+        <th class="px-2 py-1 border">Awards / Achievements</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($app['work']['current_work'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['work']['previous_work'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['work']['duration'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['work']['awards'] ?: '-') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<!-- DOCUMENTS -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Uploaded Documents</h2>
+<div class="overflow-x-auto">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Document</th>
+        <th class="px-2 py-1 border">File</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php foreach (['resume','tor','diploma','certificate'] as $doc):
+        $file = $app['documents'][$doc] ?? '';
+      ?>
+      <tr>
+        <td class="px-2 py-1 border font-semibold"><?= ucfirst($doc) ?></td>
+        <td class="px-2 py-1 border">
+          <?php if ($file): ?>
+            <a href="<?= site_url('applications/viewDocument/'.$app['id'].'/'.$doc) ?>" 
+               target="_blank" 
+               class="text-blue-600 hover:underline">
+              <?= esc($file) ?>
+            </a>
+          <?php else: ?>-
+          <?php endif; ?>
+        </td>
+      </tr>
+      <?php endforeach; ?>
+    </tbody>
+  </table>
+</div>
+
 </div>
 </div>
 </div>

@@ -72,7 +72,10 @@ window.onclick = function(event) {
         </div>
         <div class="flex items-center gap-12">
             <nav class="hidden md:flex gap-6 font-semibold mt-7">
-                <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
+                       <a href="<?= site_url('dashboard') ?>" 
+   class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
+   Home
+</a>
                 <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
                 <a href="#" class="hover:underline">Trainings</a>
             </nav>
@@ -202,28 +205,35 @@ window.onclick = function(event) {
             <?php endforeach; endif; ?>
         </tbody>
     </table>
+   <div id="applicationsPagination" class="flex justify-end mt-4 gap-2"></div>
 </div>
 
 <div class="card bg-white p-6 rounded-lg">
     <h3 class="text-clsuGreen font-bold mb-4">Available Job Vacancies</h3>
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
         <div class="flex gap-2">
-            <?php $filters = ['All','Contractual','Permanent']; foreach($filters as $f): ?>
-                <button class="filter-btn px-2 py-2 rounded-full text-sm" data-type="<?= strtolower($f) ?>"><?= $f ?></button>
+            <?php 
+            $filters = ['All','Contractual','Permanent']; 
+            foreach($filters as $index => $f): 
+                $activeClass = $index === 0 ? 'bg-clsuGreen text-white' : 'bg-gray-200 text-black';
+            ?>
+                <button class="filter-btn px-2 py-2 rounded-full text-sm <?= $activeClass ?>" data-type="<?= strtolower($f) ?>">
+                    <?= $f ?>
+                </button>
             <?php endforeach; ?>
         </div>
         <input type="text" placeholder="Search jobs..." class="border rounded-full px-4 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-clsuGreen outline-none">
     </div>
 
-<div class="space-y-6">
+<div class="space-y-4"> <!-- small gap between cards -->
     <?php foreach($vacancies as $vac): ?>
-    <div class="border rounded-xl p-5 hover:shadow-md transition job-card" 
+    <div class="border rounded-xl p-4 hover:shadow-sm transition job-card" 
          data-title="<?= strtolower($vac['position_title']) ?>" 
          data-type="<?= strtolower($vac['employment_type']) ?>">
         
-        <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
             <div>
-                <h4 class="text-lg font-bold text-gray-900">
+                <h4 class="text-base font-semibold text-gray-900">
                     <?= esc($vac['position_title']) ?> 
                     <span class="text-sm font-normal text-gray-500"><?= esc($vac['employment_type']) ?></span>
                 </h4>
@@ -231,38 +241,36 @@ window.onclick = function(event) {
                     <?= esc($vac['office']) ?> • Posted on <?= date('M d, Y', strtotime($vac['created_at'])) ?>
                 </p>
             </div>
-            <div class="text-right text-clsuGreen font-semibold text-lg">
+            <div class="text-right text-clsuGreen font-semibold text-base">
                 <?= esc($vac['monthly_salary']) ?>
             </div>
         </div>
 
-        <p class="text-sm text-gray-700 mt-4">
+        <p class="text-sm text-gray-700 mt-2">
             <?= esc($vac['description']) ?> 
-            <button onclick="openModal(<?= $vac['id'] ?>)" class="text-blue-600 hover:underline ml-1">See more</button>
+            <button onclick="openModal(<?= $vac['id'] ?>)" class="text-blue-600 hover:underline ml-1 text-sm">See more</button>
         </p>
 
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mt-6">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3">
             <p class="text-sm text-red-600 font-semibold">
                 Deadline: <?= date('F j, Y', strtotime($vac['application_deadline'])) ?>
             </p>
 
     <?php if(in_array($vac['id'], $appliedJobIds)): ?>
-    <span class="px-4 py-2 rounded-lg bg-yellow-400 text-black text-sm font-semibold cursor-not-allowed">
+    <span class="px-3 py-1 rounded-lg bg-yellow-400 text-black text-sm font-semibold cursor-not-allowed">
         Submitted
     </span>
 <?php else: ?>
     <form method="GET" action="<?= base_url('applications/apply/' . $vac['item_no']) ?>">
-        <button class="bg-clsuGreen text-white px-5 py-2 rounded-lg text-sm hover:bg-green-800">
+        <button class="bg-clsuGreen text-white px-4 py-1 rounded-lg text-sm hover:bg-green-800">
             Apply
         </button>
     </form>
 <?php endif; ?>
-
         </div>
     </div>
     <?php endforeach; ?>
 </div>
-
     <div id="pagination" class="flex justify-center mt-6 gap-2"></div>
 </div>
 
@@ -278,41 +286,131 @@ window.onclick = function(event) {
     </div>
 </footer>
 
-<div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
-    <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
-        <button onclick="closeModal()" class="float-right text-gray-500 text-xl">✕</button>
-        <div id="modalContent"></div>
+<!-- Job Details Modal -->
+<div id="jobModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+    
+<div id="modalCard" class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col">
+    <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
+      <div>
+        <h2 id="modalTitle" class="text-xl font-bold text-clsuGreen leading-tight"></h2>
+        <p id="modalOfficeText" class="text-sm text-gray-500 mt-1"></p>
+      </div>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 text-xl font-bold">✕</button>
     </div>
+
+    <!-- Content (scrollable) -->
+    <div class="px-6 py-5 space-y-4 text-sm text-gray-800 overflow-y-auto flex-1">
+      
+      <!-- Job Overview (2 columns) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+        <p><strong>Office:</strong> <span id="modalOffice"></span></p>
+        <p><strong>Department:</strong> <span id="modalDepartment"></span></p>
+        <p><strong>Employment Type:</strong> <span id="modalType"></span></p>
+        <p><strong>Monthly Salary:</strong> <span id="modalSalary" class="font-semibold text-clsuGreen"></span></p>
+        <p>📅 <strong>Posted:</strong> <span id="modalPosted"></span></p>
+        <p class="text-red-600 font-semibold">⏳ <strong>Deadline:</strong> <span id="modalDeadline"></span></p>
+      </div>
+
+      <hr class="my-3">
+
+      <!-- Job Description -->
+      <details class="border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+          Job Description
+        </summary>
+        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
+          <p id="modalDescription"></p>
+        </div>
+      </details>
+
+      <!-- Qualification Standards -->
+      <details class="border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+          Qualification Standards
+        </summary>
+        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
+          <ul class="list-disc ml-4 space-y-0.5">
+            <li><strong>Education:</strong> <span id="modalEducation"></span></li>
+            <li><strong>Training:</strong> <span id="modalTraining"></span></li>
+            <li><strong>Experience:</strong> <span id="modalExperience"></span></li>
+            <li><strong>Eligibility:</strong> <span id="modalEligibility"></span></li>
+          </ul>
+        </div>
+      </details>
+
+      <!-- Duties -->
+      <details class="border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+          Duties and Responsibilities
+        </summary>
+        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
+          <p id="modalDuties"></p>
+        </div>
+      </details>
+
+      <!-- Requirements -->
+      <details class="border rounded">
+        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
+          Application Requirements
+        </summary>
+        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
+          <p id="modalRequirements"></p>
+        </div>
+      </details>
+    </div>
+    <div class="border-t px-6 py-4 flex justify-between bg-gray-50 flex-shrink-0 rounded-b-2xl">
+    </div>
+  </div>
 </div>
 
 <script>
 const jobs = <?= json_encode($vacancies) ?>;
 const jobCards = Array.from(document.querySelectorAll('.job-card'));
 let perPage = 5, currentPage = 1, filteredType = 'all';
-
 function renderJobs() {
-
-    let filteredJobs = jobCards.filter(card => filteredType==='all'||card.dataset.type===filteredType);
+    let filteredJobs = jobCards.filter(card => filteredType === 'all' || card.dataset.type === filteredType);
 
     const searchValue = document.querySelector('input[placeholder="Search jobs..."]').value.toLowerCase();
-    filteredJobs = filteredJobs.filter(card=>card.dataset.title.includes(searchValue));
+    filteredJobs = filteredJobs.filter(card => card.dataset.title.includes(searchValue));
 
-    const totalPages = Math.ceil(filteredJobs.length/perPage);
-    const start = (currentPage-1)*perPage;
-    const paginated = filteredJobs.slice(start,start+perPage);
+    const totalPages = Math.ceil(filteredJobs.length / perPage);
+    if(currentPage > totalPages) currentPage = totalPages || 1; // handle empty
 
-    jobCards.forEach(card=>card.style.display='none');
-    paginated.forEach(card=>card.style.display='block');
+    const start = (currentPage - 1) * perPage;
+    const paginated = filteredJobs.slice(start, start + perPage);
 
+    // Hide all cards
+    jobCards.forEach(card => card.style.display = 'none');
+    // Show paginated cards
+    paginated.forEach(card => card.style.display = 'block');
+
+    // Render pagination
     const pagination = document.getElementById('pagination');
-    pagination.innerHTML='';
-    for(let i=1;i<=totalPages;i++){
-        const btn=document.createElement('button');
-        btn.textContent=i;
-        btn.className=`px-3 py-1 rounded ${i===currentPage?'bg-clsuGreen text-white':'bg-gray-100 hover:bg-gray-200'}`;
-        btn.addEventListener('click',()=>{ currentPage=i; renderJobs(); });
-        pagination.appendChild(btn);
-    }
+    pagination.innerHTML = '';
+    pagination.className = 'flex justify-end mt-6 gap-1';
+
+    // Prev button
+    const prevBtn = document.createElement('button');
+    prevBtn.textContent = 'Prev';
+    prevBtn.className = `px-3 py-1 rounded text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.addEventListener('click', () => { if(currentPage > 1){ currentPage--; renderJobs(); } });
+    pagination.appendChild(prevBtn);
+
+    // Current page (single number)
+    const currentBtn = document.createElement('button');
+    currentBtn.textContent = currentPage;
+    currentBtn.className = 'px-3 py-1 rounded bg-clsuGreen text-white text-sm';
+    pagination.appendChild(currentBtn);
+
+    // Next button
+    const nextBtn = document.createElement('button');
+    nextBtn.textContent = 'Next';
+    nextBtn.className = `px-3 py-1 rounded text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+    nextBtn.disabled = currentPage === totalPages;
+    nextBtn.addEventListener('click', () => { if(currentPage < totalPages){ currentPage++; renderJobs(); } });
+    pagination.appendChild(nextBtn);
 }
 
 document.querySelectorAll('.filter-btn').forEach(btn=>{
@@ -327,31 +425,65 @@ document.querySelectorAll('.filter-btn').forEach(btn=>{
 });
 
 document.querySelector('input[placeholder="Search jobs..."]').addEventListener('keyup',()=>renderJobs());
-
 function openModal(id){
-    const job = jobs.find(j=>j.id==id);
+    const job = jobs.find(j => j.id == id);
     if(!job) return;
-    document.getElementById('modalContent').innerHTML=`
-        <h2 class="text-2xl font-bold text-clsuGreen mb-2">${job.position_title}</h2>
-        <p><strong>Office:</strong> ${job.office}</p>
-        <p><strong>Department:</strong> ${job.department}</p>
-        <p><strong>Employment Type:</strong> ${job.employment_type}</p>
-        <p><strong>Salary:</strong> ${job.monthly_salary}</p>
-        <hr class="my-4">
-        <p><strong>Education:</strong> ${job.education}</p>
-        <p><strong>Training:</strong> ${job.training}</p>
-        <p><strong>Experience:</strong> ${job.experience}</p>
-        <p><strong>Eligibility:</strong> ${job.eligibility}</p>
-        <hr class="my-4">
-        <p><strong>Duties & Responsibilities:</strong><br>${job.duties_responsibilities}</p>
-        <hr class="my-4">
-        <p><strong>Application Requirements:</strong><br>${job.application_requirements}</p>
-    `;
-    document.getElementById('jobModal').classList.remove('hidden');
-    document.getElementById('jobModal').classList.add('flex');
+
+    // Populate data
+    document.getElementById('modalTitle').textContent = job.position_title;
+    document.getElementById('modalOfficeText').textContent = job.office;
+    document.getElementById('modalOffice').textContent = job.office;
+    document.getElementById('modalDepartment').textContent = job.department;
+    document.getElementById('modalType').textContent = job.employment_type;
+    document.getElementById('modalSalary').textContent = job.monthly_salary;
+   document.getElementById('modalPosted').textContent =
+    new Date(job.created_at).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+
+document.getElementById('modalDeadline').textContent =
+    new Date(job.application_deadline).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    document.getElementById('modalDescription').textContent = job.description;
+    document.getElementById('modalEducation').textContent = job.education;
+    document.getElementById('modalTraining').textContent = job.training;
+    document.getElementById('modalExperience').textContent = job.experience;
+    document.getElementById('modalEligibility').textContent = job.eligibility;
+    document.getElementById('modalDuties').textContent = job.duties_responsibilities;
+    document.getElementById('modalRequirements').textContent = job.application_requirements;
+
+    const modal = document.getElementById('jobModal');
+    const card  = document.getElementById('modalCard');
+
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+    // Animate card IN
+    setTimeout(() => {
+        card.classList.remove('opacity-0', 'scale-95');
+        card.classList.add('opacity-100', 'scale-100');
+    }, 10);
 }
 
-function closeModal(){ document.getElementById('jobModal').classList.add('hidden'); }
+function closeModal(){
+    const modal = document.getElementById('jobModal');
+    const card  = document.getElementById('modalCard');
+
+    // Animate card OUT
+    card.classList.add('opacity-0', 'scale-95');
+    card.classList.remove('opacity-100', 'scale-100');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }, 200);
+}
 
 renderJobs();
 </script>
@@ -549,6 +681,76 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+});
+</script>
+
+<script>
+    const filterButtons = document.querySelectorAll('.filter-btn');
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // Remove green from all buttons
+            filterButtons.forEach(b => {
+                b.classList.remove('bg-clsuGreen', 'text-white');
+                b.classList.add('bg-gray-200', 'text-black');
+            });
+            // Make clicked button green
+            btn.classList.add('bg-clsuGreen', 'text-white');
+            btn.classList.remove('bg-gray-200', 'text-black');
+        });
+    });
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const rows = Array.from(document.querySelectorAll('table tbody tr')); // all table rows
+    const perPage = 5;
+    let currentPage = 1;
+
+    function renderApplications() {
+        const totalPages = Math.ceil(rows.length / perPage);
+
+        // Hide all rows first
+        rows.forEach(row => row.style.display = 'none');
+
+        // Show rows for current page
+        const start = (currentPage - 1) * perPage;
+        const end = start + perPage;
+        rows.slice(start, end).forEach(row => row.style.display = 'table-row');
+
+        // Render pagination buttons
+        const pagination = document.getElementById('applicationsPagination');
+        pagination.innerHTML = '';
+        pagination.className = 'flex justify-end mt-4 gap-2';
+
+        // Prev button
+        const prevBtn = document.createElement('button');
+        prevBtn.textContent = 'Prev';
+        prevBtn.className = `px-3 py-1 rounded text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+        prevBtn.disabled = currentPage === 1;
+        prevBtn.addEventListener('click', () => {
+            if(currentPage > 1){ currentPage--; renderApplications(); }
+        });
+        pagination.appendChild(prevBtn);
+
+        // Page number button (just one, current)
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = currentPage;
+        pageBtn.className = 'px-3 py-1 rounded bg-clsuGreen text-white text-sm';
+        pagination.appendChild(pageBtn);
+
+        // Next button
+        const nextBtn = document.createElement('button');
+        nextBtn.textContent = 'Next';
+        nextBtn.className = `px-3 py-1 rounded text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+        nextBtn.disabled = currentPage === totalPages;
+        nextBtn.addEventListener('click', () => {
+            if(currentPage < totalPages){ currentPage++; renderApplications(); }
+        });
+        pagination.appendChild(nextBtn);
+    }
+
+    // Initialize pagination
+    renderApplications();
 });
 </script>
 

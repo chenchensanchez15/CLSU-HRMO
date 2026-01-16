@@ -151,12 +151,11 @@ public function submit($item_no = null)
         $db->table('applicant_fam')->insert($member);
     }
 
-
-    // Insert education
-    $educationLevels = [
-        'Elementary' => ['elementary_school','elementary_location','elementary_year','elementary_awards'],
-        'High School' => ['highschool_school','highschool_location','highschool_year','highschool_awards'],
-        'College' => ['college_school','college_location','college_year','college_awards'],
+        $educationLevels = [
+        'Elementary'      => ['elementary_school','elementary_location','elementary_year','elementary_awards'],
+        'High School'     => ['highschool_school','highschool_location','highschool_year','highschool_awards'],
+        'College'         => ['college_school','college_location','college_year','college_awards'],
+        'Highest Degree'  => ['highest_school','highest_location','highest_year','highest_awards'],
     ];
 
     foreach ($educationLevels as $level => $fields) {
@@ -166,14 +165,18 @@ public function submit($item_no = null)
         $awards = $this->request->getPost($fields[3]) ?? null;
 
         if ($school || $location || $year || $awards) {
-            $db->table('applicant_education')->insert([
-                'application_id' => $application_id,
-                'level' => $level,
-                'school_name' => $school,
-                'location' => $location,
-                'year_graduated' => $year,
-                'awards' => $awards,
-            ]);
+ 
+        $dbLevel = ($level === 'Highest Degree') ? $this->request->getPost('highest_degree') ?: 'Highest Degree' : $level;
+
+        $db->table('applicant_education')->insert([
+            'application_id' => $application_id,
+            'level' => $dbLevel,
+            'school_name' => $school,
+            'location' => $location,
+            'year_graduated' => $year,
+            'awards' => $awards,
+        ]);
+
         }
     }
 
@@ -291,25 +294,30 @@ public function edit($application_id = null)
         }
     }
 
-    // =========================
-    // Educational Background
-    // =========================
-    $education = $db->table('applicant_education')
-        ->where('application_id', $application_id)
-        ->get()
-        ->getResultArray();
+  // =========================
+// Educational Background
+// =========================
+$education = $db->table('applicant_education')
+    ->where('application_id', $application_id)
+    ->get()
+    ->getResultArray();
 
-    // Separate education by level
-    $elementary = $highschool = $college = [];
-    foreach ($education as $edu) {
-        if ($edu['level'] === 'Elementary') {
-            $elementary = $edu;
-        } elseif ($edu['level'] === 'High School') {
-            $highschool = $edu;
-        } elseif ($edu['level'] === 'College') {
-            $college = $edu;
-        }
+// Separate education by level
+$elementary = $highschool = $college = $highest = [];
+
+// Loop through all education rows
+foreach ($education as $edu) {
+    if ($edu['level'] === 'Elementary') {
+        $elementary = $edu;
+    } elseif ($edu['level'] === 'High School') {
+        $highschool = $edu;
+    } elseif ($edu['level'] === 'College') {
+        $college = $edu;
+    } else {
+        // Anything that is not Elementary, High School, College → treat as Highest Degree
+        $highest = $edu;
     }
+}
 
     // =========================
     // Work Experience (SINGLE ROW)
@@ -356,6 +364,7 @@ public function edit($application_id = null)
         'elementary'      => $elementary,
         'highschool'      => $highschool,
         'college'         => $college,
+        'highest'         => $highest,
         'applicant_work'  => $applicant_work,
         'documents'       => $documents
     ]);
@@ -439,48 +448,93 @@ public function update($application_id = null)
                         ->update($data);
         }
     }
+    
+    
+ // -------------------
+// Update Educational Background (no duplicates)
+// -------------------
+$eduTable = $db->table('applicant_education');
 
-    // =========================
-    // Update Educational Background (existing only)
-    // =========================
-    $eduTable = $db->table('applicant_education');
-    $levels = ['Elementary', 'High School', 'College'];
+// Fetch all existing education rows for this application
+$existingEducation = $eduTable->where('application_id', $application_id)
+                              ->get()
+                              ->getResultArray();
 
-    foreach ($levels as $level) {
-        $data = [];
-        if ($level === 'Elementary') {
-            $data = [
-                'school_name' => $this->request->getPost('elementary_school'),
-                'location' => $this->request->getPost('elementary_location'),
-                'year_graduated' => $this->request->getPost('elementary_year'),
-                'awards' => $this->request->getPost('elementary_awards')
-            ];
-        } elseif ($level === 'High School') {
-            $data = [
-                'school_name' => $this->request->getPost('highschool_school'),
-                'location' => $this->request->getPost('highschool_location'),
-                'year_graduated' => $this->request->getPost('highschool_year'),
-                'awards' => $this->request->getPost('highschool_awards')
-            ];
-        } elseif ($level === 'College') {
-            $data = [
-                'school_name' => $this->request->getPost('college_school'),
-                'location' => $this->request->getPost('college_location'),
-                'year_graduated' => $this->request->getPost('college_year'),
-                'awards' => $this->request->getPost('college_awards')
-            ];
+// Map existing rows by level for Elementary, High School, College
+$existingByLevel = [];
+$highestId = null;
+
+foreach ($existingEducation as $edu) {
+    if (in_array($edu['level'], ['Elementary', 'High School', 'College'])) {
+        $existingByLevel[$edu['level']] = $edu['id'];
+    } else {
+        // Any other level → treat as Highest Degree
+        $highestId = $edu['id'];
+    }
+}
+
+// Define form fields
+$levels = [
+    'Elementary'      => ['elementary_school','elementary_location','elementary_year','elementary_awards'],
+    'High School'     => ['highschool_school','highschool_location','highschool_year','highschool_awards'],
+    'College'         => ['college_school','college_location','college_year','college_awards'],
+    'Highest Degree'  => ['highest_school','highest_location','highest_year','highest_awards']
+];
+
+foreach ($levels as $originalLevel => $fields) {
+    $school   = $this->request->getPost($fields[0]) ?: '-';
+    $location = $this->request->getPost($fields[1]) ?: '-';
+    $year     = $this->request->getPost($fields[2]) ?: '-';
+    $awards   = $this->request->getPost($fields[3]) ?: '-';
+
+    // Rename Highest Degree if user typed a custom name
+    $dbLevel = ($originalLevel === 'Highest Degree') ? ($this->request->getPost('highest_degree') ?: 'Highest Degree') : $originalLevel;
+
+    if ($originalLevel === 'Highest Degree') {
+        if ($highestId) {
+            // Update existing Highest Degree row
+            $eduTable->where('id', $highestId)->update([
+                'level'          => $dbLevel,
+                'school_name'    => $school,
+                'location'       => $location,
+                'year_graduated' => $year,
+                'awards'         => $awards
+            ]);
+        } else {
+            // Insert new Highest Degree row if none exists
+            $eduTable->insert([
+                'application_id' => $application_id,
+                'level'          => $dbLevel,
+                'school_name'    => $school,
+                'location'       => $location,
+                'year_graduated' => $year,
+                'awards'         => $awards
+            ]);
         }
-
-        $existing = $eduTable->where('application_id', $application_id)
-                             ->where('level', $level)
-                             ->countAllResults();
-
-        if ($existing > 0) {
-            $eduTable->where('application_id', $application_id)
-                     ->where('level', $level)
-                     ->update($data);
+    } else {
+        // Elementary, High School, College
+        if (isset($existingByLevel[$originalLevel])) {
+            // Update existing row
+            $eduTable->where('id', $existingByLevel[$originalLevel])->update([
+                'school_name'    => $school,
+                'location'       => $location,
+                'year_graduated' => $year,
+                'awards'         => $awards
+            ]);
+        } else {
+            // Insert new row if it doesn't exist
+            $eduTable->insert([
+                'application_id' => $application_id,
+                'level'          => $dbLevel,
+                'school_name'    => $school,
+                'location'       => $location,
+                'year_graduated' => $year,
+                'awards'         => $awards
+            ]);
         }
     }
+}
+
 
     // =========================
     // Update Work Experience (existing only)
@@ -555,5 +609,127 @@ public function withdraw($id = null)
         ]);
     }
 }
+
+public function viewDocument($application_id, $doc)
+{
+    $session = session();
+    $current_user_id = $session->get('user_id'); // Get logged-in user ID
+
+    // 1️⃣ Block if not logged in
+    if (!$current_user_id) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+    }
+
+    $db = \Config\Database::connect();
+
+    // 2️⃣ Fetch the document record
+    $record = $db->table('applicant_documents')
+                 ->where('application_id', $application_id)
+                 ->get()
+                 ->getRowArray();
+
+    if (!$record || empty($record[$doc])) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('File not found');
+    }
+
+    // 3️⃣ Optional: Check if the document belongs to this user
+    $app_owner_id = $record['user_id'] ?? null; // Make sure your table has user_id
+    if ($app_owner_id && $app_owner_id != $current_user_id) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+    }
+
+    // 4️⃣ File path
+    $file = $record[$doc];
+    $filePath = WRITEPATH . 'uploads/' . $file;
+
+    if (!file_exists($filePath)) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('File does not exist on server.');
+    }
+
+    // 5️⃣ Stream the file inline
+    $mime = mime_content_type($filePath) ?: 'application/octet-stream';
+    return $this->response->setHeader('Content-Type', $mime)
+                          ->setHeader('Content-Disposition', 'inline; filename="' . basename($file) . '"')
+                          ->setBody(file_get_contents($filePath));
+}
+
+
+public function viewResume($profile_id)
+{
+    $db = \Config\Database::connect();
+
+    // Fetch the resume from applicant_profiles
+    $profile = $db->table('applicant_profiles')
+                  ->select('resume, user_id')
+                  ->where('id', $profile_id)
+                  ->get()
+                  ->getRowArray();
+
+    if (!$profile || empty($profile['resume'])) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Resume not uploaded');
+    }
+
+    // 🔒 Check if the current user is allowed
+    $current_user_id = session()->get('user_id');
+    if (!$current_user_id || $current_user_id != $profile['user_id']) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+    }
+
+    $file = $profile['resume'];
+    $filePath = FCPATH . 'uploads/' . $file;
+
+    if (!file_exists($filePath)) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Resume file not found on server');
+    }
+
+    // Stream resume inline
+    $mime = mime_content_type($filePath) ?: 'application/pdf';
+    return $this->response->setHeader('Content-Type', $mime)
+                          ->setHeader('Content-Disposition', 'inline; filename="' . basename($file) . '"')
+                          ->setBody(file_get_contents($filePath));
+}
+
+public function viewPhoto($user_id)
+{
+    $current_user_id = session()->get('user_id'); // Check logged-in user
+
+    // 1️⃣ Block if not logged in
+    if (!$current_user_id) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+    }
+
+    $db = \Config\Database::connect();
+
+    // 2️⃣ Fetch the user's photo
+    $profile = $db->table('applicant_profiles')
+                  ->select('photo, user_id')
+                  ->where('user_id', $user_id)
+                  ->get()
+                  ->getRowArray();
+
+    if (!$profile || empty($profile['photo'])) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Photo not found');
+    }
+
+    // 3️⃣ Optional: ensure the current user is allowed to view this photo
+    if ($current_user_id != $profile['user_id']) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+    }
+
+    // 4️⃣ File path
+    $filePath = FCPATH . 'uploads/' . $profile['photo'];
+
+    if (!file_exists($filePath)) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException('Photo file missing');
+    }
+
+    // 5️⃣ Stream photo to browser
+    $mime = mime_content_type($filePath) ?: 'image/jpeg';
+    return $this->response->setHeader('Content-Type', $mime)
+                          ->setHeader('Content-Disposition', 'inline; filename="' . basename($profile['photo']) . '"')
+                          ->setBody(file_get_contents($filePath));
+}
+
+
 
 }

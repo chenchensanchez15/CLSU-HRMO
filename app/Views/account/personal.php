@@ -72,7 +72,13 @@ window.onclick = function(event) {
         <div class="flex items-center gap-12">
             <nav class="hidden md:flex gap-6 font-semibold mt-7">
                 <a href="<?= site_url('dashboard') ?>" class="hover:underline">Home</a>
-                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
+        <a href="<?= site_url('account/personal') ?>"
+   class="<?= service('uri')->getSegment(1) === 'account' && service('uri')->getSegment(2) === 'personal'
+        ? 'text-clsuGold border-b-2 border-clsuGold pb-0.5'
+        : 'hover:underline' ?>">
+    Personal
+</a>
+
                 <a href="#" class="hover:underline">Trainings</a>
             </nav>
             <div class="account-menu relative mt-1">
@@ -198,7 +204,7 @@ window.onclick = function(event) {
       <table class="table-auto w-full text-left border-collapse text-xs" id="table-physical">
         <thead>
           <tr class="bg-gray-100">
-            <th class="px-2 py-1 border">Height (m)</th>
+            <th class="px-2 py-1 border">Height (cm)</th>
             <th class="px-2 py-1 border">Weight (kg)</th>
             <th class="px-2 py-1 border" colspan="2">Blood Type</th>
           </tr>
@@ -230,24 +236,40 @@ window.onclick = function(event) {
         </tbody>
       </table>
     </div>
-
+<!-- Resume & Photo -->
+<div class="overflow-x-auto mb-3">
+  <table class="table-auto w-full text-left border-collapse text-xs" id="table-resume">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="px-2 py-1 border">Resume</th>
+        <th class="px-2 py-1 border">Picture</th>
+      </tr>
+    </thead>
+    <tbody>
+    <tr>
+    <td class="px-2 py-1 border" data-key="resume">
     <!-- Resume -->
-    <div class="overflow-x-auto mb-3">
-      <table class="table-auto w-full text-left border-collapse text-xs" id="table-resume">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="px-2 py-1 border">Resume</th>
-             <th class="px-2 py-1 border">Picture</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-2 py-1 border" data-key="resume"><?= esc($profile['resume'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="resume"><?= esc($profile['photo'] ?? '-') ?></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+<?php if (!empty($profile['resume'])): ?>
+<a href="<?= site_url('applications/viewResume/'.$profile['id']) ?>" target="_blank" class="text-blue-600 hover:underline">
+    <?= esc($profile['resume']) ?>
+</a>
+<?php else: ?>
+-
+<?php endif; ?>
+
+    </td>
+    <!-- Photo -->
+        <td class="px-2 py-1 border" data-key="photo">
+          <?php if (!empty($profile['photo']) && file_exists(FCPATH.'uploads/'.$profile['photo'])): ?>
+           <a href="<?= site_url('applications/viewPhoto/'.$user['id']) ?>" target="_blank" class="text-blue-600 hover:underline">View Photo</a>
+          <?php else: ?>
+            -
+          <?php endif; ?>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
 <!-- Update & Cancel Buttons -->
 <div class="flex justify-end -mt-1 gap-2">
@@ -266,7 +288,7 @@ let originalData = {};
 
 const sexOptions = ['Male','Female'];
 const civilStatusOptions = ['Single','Married','Widowed','Divorced','Separated'];
-const bloodTypeOptions = ['A+', 'A-','B+','B-','AB+','AB-','O+','O'];
+const bloodTypeOptions = ['A+', 'A-','B+','B-','AB+','AB-','O+','O-'];
 
 editBtn.addEventListener('click', () => {
     originalData = {};
@@ -279,27 +301,27 @@ editBtn.addEventListener('click', () => {
 
             switch(td.dataset.key){
                 case 'sex':
-                    td.innerHTML = `<select class="w-full border border-gray-300 rounded px-1 text-xs">${sexOptions.map(s => `<option value="${s}" ${s===value?'selected':''}>${s}</option>`).join('')}</select>`;
+                    td.innerHTML = `<select class="w-full px-1 text-xs">${sexOptions.map(s => `<option value="${s}" ${s===value?'selected':''}>${s}</option>`).join('')}</select>`;
                     break;
                 case 'civil_status':
-                    td.innerHTML = `<select class="w-full border border-gray-300 rounded px-1 text-xs">${civilStatusOptions.map(s => `<option value="${s}" ${s===value?'selected':''}>${s}</option>`).join('')}</select>`;
+                    td.innerHTML = `<select class="w-full px-1 text-xs">${civilStatusOptions.map(s => `<option value="${s}" ${s===value?'selected':''}>${s}</option>`).join('')}</select>`;
                     break;
                 case 'date_of_birth':
-                    td.innerHTML = `<input type="date" value="${value}" class="w-full border border-gray-300 rounded px-1 text-xs"/>`;
+                    td.innerHTML = `<input type="date" value="${value}" class="w-full px-1 text-xs"/>`;
                     break;
                 case 'height':
                 case 'weight':
-                    td.innerHTML = `<input type="number" step="0.01" value="${value}" class="w-full border border-gray-300 rounded px-1 text-xs"/>`;
+                    td.innerHTML = `<input type="number" step="0.01" value="${value}" class="w-full px-1 text-xs"/>`;
                     break;
                 case 'blood_type':
-                    td.innerHTML = `<select class="w-full border border-gray-300 rounded px-1 text-xs">${bloodTypeOptions.map(b => `<option value="${b}" ${b===value?'selected':''}>${b}</option>`).join('')}</select>`;
+                    td.innerHTML = `<select class="w-full  px-1 text-xs">${bloodTypeOptions.map(b => `<option value="${b}" ${b===value?'selected':''}>${b}</option>`).join('')}</select>`;
                     break;
                 case 'resume':
                 case 'photo':
-                    td.innerHTML = `<input type="file" class="w-full text-xs"/>`;
+                    td.innerHTML = `<input type="file" name="${td.dataset.key}" class="w-full text-xs"/>`;
                     break;
                 default:
-                    td.innerHTML = `<input type="text" value="${value}" class="w-full border border-gray-300 rounded px-1 text-xs"/>`;
+                    td.innerHTML = `<input type="text" value="${value}" class="w-full px-1 text-xs"/>`;
             }
         });
     });
@@ -346,44 +368,60 @@ saveBtn.addEventListener('click', () => {
     })
     .then(res => res.json())
     .then(res => {
-        if(res.success){
-            Swal.fire({ icon: 'success', title: 'Saved!', text: res.message, timer: 2000, showConfirmButton: false });
-
-            // Update table cells
-            tables.forEach(table => {
-                table.querySelectorAll('td[data-key]').forEach(td => {
-                    const input = td.querySelector('input, select');
-                    if(input){
-                        if(input.type === 'file'){
-                            td.textContent = input.files[0] ? input.files[0].name : originalData[td.dataset.key] || '-';
-                        } else {
-                            td.textContent = input.value || '-';
-                        }
-                    }
-                });
-            });
-
-            // Update Left Panel
-            const leftPanel = document.querySelector('.left');
-            if(leftPanel){
-                const first = formData.get('first_name') || '-';
-                const middle = formData.get('middle_name') ? formData.get('middle_name')[0]+'.' : '';
-                const last = formData.get('last_name') || '-';
-                const suffix = formData.get('suffix') || '';
-                leftPanel.querySelector('h3').textContent = `${first} ${middle} ${last} ${suffix}`;
-                leftPanel.querySelector('p').textContent = formData.get('email') || '-';
+    if(res.success){
+        Swal.fire({
+            icon: 'success',
+            title: 'Saved!',
+            text: res.message,
+            timer: 2000,
+            showConfirmButton: false,
+            willClose: () => {
+                // Refresh the page after SweetAlert closes
+                window.location.reload();
             }
+        });
 
-            editBtn.classList.remove('hidden');
-            saveBtn.classList.add('hidden');
-            cancelBtn.classList.add('hidden');
-        } else {
-            Swal.fire('Error', res.message || 'Something went wrong while saving.', 'error');
+        if(res.photo){
+            const photoUrl = `<?= base_url('uploads') ?>/${res.photo}?t=${Date.now()}`;
+
+            /* ===== HEADER AVATAR ===== */
+            const accountMenu = document.querySelector('.account-menu button');
+            let headerImg = accountMenu.querySelector('img');
+
+            if(!headerImg){
+                accountMenu.querySelector('div')?.remove(); // remove SVG wrapper
+                headerImg = document.createElement('img');
+                headerImg.className = 'w-8 h-8 rounded-full border-2 border-white object-cover';
+                accountMenu.prepend(headerImg);
+            }
+            headerImg.src = photoUrl;
+
+            /* ===== LEFT PANEL PHOTO ===== */
+            const profilePic = document.querySelector('.profile-pic');
+            let leftImg = profilePic.querySelector('img');
+
+            if(!leftImg){
+                profilePic.innerHTML = '';
+                leftImg = document.createElement('img');
+                leftImg.className = 'w-full h-full object-cover rounded-full';
+                profilePic.appendChild(leftImg);
+            }
+            leftImg.src = photoUrl;
         }
-    })
-    .catch(() => Swal.fire('Error', 'Unable to update profile.', 'error'));
+
+        // Optional: hide buttons immediately (SweetAlert will show)
+        editBtn.classList.remove('hidden');
+        saveBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+
+    } else {
+        Swal.fire('Error', res.message || 'Something went wrong while saving.', 'error');
+    }
+})
+.catch(() => Swal.fire('Error', 'Unable to update profile.', 'error'));
 });
 </script>
+
 </div>
 </div>
 </div>

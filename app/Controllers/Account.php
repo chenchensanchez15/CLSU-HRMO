@@ -116,15 +116,12 @@ class Account extends BaseController
         ->set($jobApplicationData)
         ->update();
 
-    return $this->response->setJSON([
-        'success' => true,
-        'message' => 'Profile and job applications updated successfully!'
-    ]);
+   return $this->response->setJSON([
+    'success' => true,
+    'message' => 'Profile and job applications updated successfully!',
+    'photo'   => $photoName ?? ($profile['photo'] ?? null)
+]);
 }
-
-
-
-
     public function changePassword()
     {
         $session = session();
