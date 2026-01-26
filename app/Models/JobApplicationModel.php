@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use CodeIgniter\Model;
@@ -7,11 +6,13 @@ use CodeIgniter\Model;
 class JobApplicationModel extends Model
 {
     protected $table = 'job_applications';
-    protected $primaryKey = 'id';
+    
+    // <-- Corrected primary key
+    protected $primaryKey = 'id_job_application';
 
     protected $allowedFields = [
         'user_id',
-        'job_position_id',
+        'job_vacancy_id',
         'first_name',
         'middle_name',
         'last_name',

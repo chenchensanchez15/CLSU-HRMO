@@ -4,26 +4,22 @@ namespace App\Models;
 
 use CodeIgniter\Model;
 
-class ApplicantWorkExperienceModel extends Model
+class ApplicationWorkExperienceModel extends Model
 {
-    protected $table      = 'applicant_work_experience';
-    protected $primaryKey = 'id';
+    protected $table = 'application_work_experience';
+    protected $primaryKey = 'id_application_work';
 
     protected $allowedFields = [
-        'user_id',
+        'job_application_id',
         'position_title',
         'office',
         'date_from',
         'date_to',
         'status_of_appointment',
-        'govt_service',
+        'govt_service'
     ];
 
-    // Auto timestamps
     protected $useTimestamps = true;
     protected $createdField  = 'created_at';
     protected $updatedField  = 'updated_at';
-
-    // (Optional but recommended)
-    protected $returnType = 'array';
 }

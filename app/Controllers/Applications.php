@@ -9,13 +9,13 @@ use App\Models\ApplicantModel;
 use App\Models\ApplicantFamModel;
 use App\Models\ApplicantEducationModel;
 use App\Models\ApplicantWorkExperienceModel;
-use App\Models\ApplicantDocumentModel; 
+use App\Models\ApplicantDocumentsModel; 
 
 class Applications extends BaseController
 {
     protected $jobPositions;
     protected $jobApplications;
-    protected $applicantProfiles;
+    protected $applicantPersonal;
     protected $familyModel;
     protected $educationModel;
     protected $workModel;
@@ -25,60 +25,185 @@ class Applications extends BaseController
     {
         $this->jobPositions = new JobPositionModel();          
         $this->jobApplications = new JobApplicationModel();   
-        $this->applicantProfiles = new ApplicantModel();      
+        $this->applicantPersonal = new ApplicantModel();      
         $this->familyModel = new ApplicantFamModel();         
         $this->educationModel = new ApplicantEducationModel();
         $this->workModel = new ApplicantWorkExperienceModel();
-        $this->documentModel = new ApplicantDocumentModel(); 
+        $this->documentModel = new ApplicantDocumentsModel(); 
+    }
+    public function apply($id = null)
+    {
+        if (!$id) return redirect()->to('/jobs');
+
+        $job = $this->jobPositions->find($id);
+
+        if (!$job) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
+        }
+
+        $user_id = session()->get('user_id');
+        if (!$user_id) return redirect()->to('/login');
+
+        $profile = $this->applicantPersonal->where('user_id', $user_id)->first();
+
+        return view('apply', [
+            'job'     => $job,
+            'profile' => $profile
+        ]);
     }
 
-public function apply($item_no = null)
+    public function submit($id = null)
 {
-    if (!$item_no) {
-        return redirect()->to('/jobs');
-    }
-
-    $job = $this->jobPositions
-        ->where('item_no', $item_no)
-        ->first();
-
+    $job = $this->jobPositions->find($id);
     if (!$job) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
+        return $this->response->setStatusCode(404)->setBody('Job not found');
     }
 
     $user_id = session()->get('user_id');
     if (!$user_id) {
-        return redirect()->to('/login');
+        return $this->response->setStatusCode(403)->setBody('User not logged in');
     }
-
-    // ✅ CORRECT: fetch applicant profile by user_id
-    $profile = $this->applicantProfiles
-        ->where('user_id', $user_id)
-        ->first();
-
-    return view('apply', [
-        'job'     => $job,
-        'profile' => $profile
-    ]);
-}
-
-
-public function submit($item_no = null)
-{
-    $job = $this->jobPositions->where('item_no', $item_no)->first();
-    if (!$job) return $this->response->setStatusCode(404)->setBody('Job not found');
-
-    $user_id = session()->get('user_id');
-    if (!$user_id) return $this->response->setStatusCode(403)->setBody('User not logged in');
 
     $db = \Config\Database::connect();
 
-    // Fetch applicant profile to auto-fill missing info
-    $profile = $this->applicantProfiles->where('user_id', $user_id)->first();
+    // =========================
+    // INSERT INTO job_applications
+    // =========================
+    $this->jobApplications->insert([
+        'user_id' => $user_id,
+        'job_vacancy_id' => $job['id'],
+        'application_status' => 'Submitted',
+        'applied_at' => date('Y-m-d H:i:s'),
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ]);
 
-    $files = ['resume', 'tor', 'diploma', 'certificate'];
+    $application_id = $this->jobApplications->getInsertID(); // ID for job_applications
+
+$db->table('application_personal')->insert([
+    'job_application_id' => $application_id,
+    'first_name' => $this->request->getPost('first_name'),
+    'middle_name' => $this->request->getPost('middle_name'), // matches form
+    'last_name' => $this->request->getPost('last_name'),
+    'extension' => $this->request->getPost('extension'), // match input name
+    'sex' => $this->request->getPost('sex'),
+    'date_of_birth' => $this->request->getPost('date_of_birth'), // match input name
+    'civil_status' => $this->request->getPost('civil_status'),
+    'email' => $this->request->getPost('email'),
+    'phone' => $this->request->getPost('phone'),
+    'citizenship' => $this->request->getPost('citizenship'),
+    'residential_address' => $this->request->getPost('residential_address') ?? '-',
+    'permanent_address' => $this->request->getPost('permanent_address') ?? '-',
+    'created_at' => date('Y-m-d H:i:s'),
+    'updated_at' => date('Y-m-d H:i:s')
+]);
+
+
+    // =========================
+    // INSERT INTO application_fam
+    // =========================
+    $familyMembers = [
+        'Spouse' => [
+            'first_name' => $this->request->getPost('spouse_first_name'),
+            'middle_name' => $this->request->getPost('spouse_middle_name'),
+            'last_name' => $this->request->getPost('spouse_surname'),
+            'extension' => $this->request->getPost('spouse_ext_name'),
+            'occupation' => $this->request->getPost('spouse_occupation'),
+            'contact_no' => $this->request->getPost('spouse_contact')
+        ],
+        'Father' => [
+            'first_name' => $this->request->getPost('father_first_name'),
+            'middle_name' => $this->request->getPost('father_middle_name'),
+            'last_name' => $this->request->getPost('father_surname'),
+            'extension' => $this->request->getPost('father_ext_name'),
+            'occupation' => $this->request->getPost('father_occupation') ?? '-',
+            'contact_no' => $this->request->getPost('father_contact') ?? '-'
+        ],
+        'Mother' => [
+            'first_name' => $this->request->getPost('mother_first_name'),
+            'middle_name' => $this->request->getPost('mother_middle_name'),
+            'last_name' => $this->request->getPost('mother_maiden_surname'),
+            'extension' => null,
+            'occupation' => $this->request->getPost('mother_occupation') ?? '-',
+            'contact_no' => $this->request->getPost('mother_contact') ?? '-'
+        ]
+    ];
+
+    foreach ($familyMembers as $relationship => $member) {
+        $member['job_application_id'] = $application_id;
+        $member['relationship'] = $relationship;
+        $member['created_at'] = date('Y-m-d H:i:s');
+        $member['updated_at'] = date('Y-m-d H:i:s');
+        $db->table('application_fam')->insert($member);
+    }
+// =========================
+// INSERT INTO application_education
+// =========================
+$educationLevels = [
+    'Elementary' => 'elementary',
+    'Secondary' => 'secondary',
+    'Vocational / Trade' => 'vocational',
+    'College' => 'college',
+    'Graduate Studies' => 'graduate'
+];
+
+foreach ($educationLevels as $level => $key) {
+    $school = $this->request->getPost($key.'_school');
+    $degree = $this->request->getPost($key.'_degree');
+    $from = $this->request->getPost($key.'_period_from');
+    $to = $this->request->getPost($key.'_period_to');
+    $units = $this->request->getPost($key.'_units');
+    $year = $this->request->getPost($key.'_year');
+    $awards = $this->request->getPost($key.'_awards');
+
+    // Insert if at least school or degree is filled
+    if ($school || $degree) {
+        $db->table('application_education')->insert([
+            'job_application_id' => $application_id,
+            'level' => $level,
+            'school_name' => $school ?: 'N/A',
+            'degree_course' => $degree ?: 'N/A',
+            'period_from' => $from ?: 'N/A',
+            'period_to' => $to ?: 'N/A',
+            'highest_level_units' => $units ?: 'N/A',
+            'year_graduated' => $year ?: 'N/A',
+            'awards' => $awards ?: 'N/A',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+}
+
+// =========================
+// INSERT INTO application_work_experience (multiple entries)
+// =========================
+$positions = $this->request->getPost('position_title') ?? [];
+$offices = $this->request->getPost('office') ?? [];
+$dates_from = $this->request->getPost('date_from') ?? [];
+$dates_to = $this->request->getPost('date_to') ?? [];
+$statuses = $this->request->getPost('status_of_appointment') ?? [];
+$govt_services = $this->request->getPost('govt_service') ?? [];
+
+for ($i = 0; $i < count($positions); $i++) {
+    $db->table('application_work_experience')->insert([
+        'job_application_id' => $application_id,
+        'position_title' => !empty($positions[$i]) ? $positions[$i] : 'N/A',
+        'office' => !empty($offices[$i]) ? $offices[$i] : 'N/A',
+        'date_from' => !empty($dates_from[$i]) ? date('Y-m-d', strtotime($dates_from[$i])) : '0000-00-00',
+        'date_to' => !empty($dates_to[$i]) ? date('Y-m-d', strtotime($dates_to[$i])) : '0000-00-00',
+        'status_of_appointment' => !empty($statuses[$i]) ? $statuses[$i] : 'N/A',
+        'govt_service' => !empty($govt_services[$i]) ? $govt_services[$i] : 'N/A',
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ]);
+}
+
+    // =========================
+    // FILE UPLOADS: application_documents
+    // =========================
+    $files = ['resume','tor','diploma','certificate'];
     $uploadedFiles = [];
-    $uploadPath = WRITEPATH . 'uploads/';
+    $uploadPath = WRITEPATH.'uploads/';
 
     foreach ($files as $fileInput) {
         $file = $this->request->getFile($fileInput);
@@ -91,114 +216,15 @@ public function submit($item_no = null)
         }
     }
 
-    // Insert main job application
-    $this->jobApplications->insert([
-        'user_id' => $user_id,
-        'job_position_id' => $job['id'],
-        'first_name' => $this->request->getPost('first_name') ?? $profile['first_name'],
-        'middle_name' => $this->request->getPost('middle_name') ?? $profile['middle_name'],
-        'last_name' => $this->request->getPost('last_name') ?? $profile['last_name'],
-        'suffix' => $this->request->getPost('name_extension') ?? $profile['suffix'],
-        'date_of_birth' => $this->request->getPost('birth_date') ?? $profile['date_of_birth'],
-        'place_of_birth' => $this->request->getPost('place_of_birth') ?? $profile['place_of_birth'],
-        'sex' => $this->request->getPost('sex') ?? $profile['sex'],
-        'civil_status' => $this->request->getPost('civil_status') ?? $profile['civil_status'],
-        'citizenship' => $this->request->getPost('citizenship') ?? $profile['citizenship'],
-        'email' => $this->request->getPost('email') ?? $profile['email'],
-        'phone' => $this->request->getPost('phone') ?? $profile['phone'],
-        'height' => $this->request->getPost('height') ?? $profile['height'],
-        'weight' => $this->request->getPost('weight') ?? $profile['weight'],
-        'blood_type' => $this->request->getPost('blood_type') ?? $profile['blood_type'],
-        'application_status' => 'Submitted. For Evaluation',
-        'applied_at' => date('Y-m-d H:i:s'),
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s'),
-    ]);
-
-    $application_id = $this->jobApplications->getInsertID();
-
-        // Insert family members
-    $familyMembers = [
-        'Spouse' => [
-            'last_name' => $this->request->getPost('spouse_surname'),
-            'first_name' => $this->request->getPost('spouse_first_name'),
-            'middle_name' => $this->request->getPost('spouse_middle_name'),
-            'extension' => $this->request->getPost('spouse_ext_name'),
-            'occupation' => $this->request->getPost('spouse_occupation'),
-            'contact_number' => $this->request->getPost('spouse_contact')
-        ],
-        'Father' => [
-            'last_name' => $this->request->getPost('father_surname'),
-            'first_name' => $this->request->getPost('father_first_name'),
-            'middle_name' => $this->request->getPost('father_middle_name'),
-            'extension' => $this->request->getPost('father_ext_name'),
-            'occupation' => $this->request->getPost('father_occupation') ?? '-',
-            'contact_number' => $this->request->getPost('father_contact') ?? '-'
-        ],
-        'Mother' => [
-            'last_name' => $this->request->getPost('mother_maiden_surname'),
-            'first_name' => $this->request->getPost('mother_first_name'),
-            'middle_name' => $this->request->getPost('mother_middle_name'),
-            'extension' => null,
-            'occupation' => $this->request->getPost('mother_occupation') ?? '-',
-            'contact_number' => $this->request->getPost('mother_contact') ?? '-'
-        ]
-    ];
-
-    foreach ($familyMembers as $relationship => $member) {
-        $member['application_id'] = $application_id;
-        $member['relationship'] = $relationship;
-        $db->table('applicant_fam')->insert($member);
-    }
-
-        $educationLevels = [
-        'Elementary'      => ['elementary_school','elementary_location','elementary_year','elementary_awards'],
-        'High School'     => ['highschool_school','highschool_location','highschool_year','highschool_awards'],
-        'College'         => ['college_school','college_location','college_year','college_awards'],
-        'Highest Degree'  => ['highest_school','highest_location','highest_year','highest_awards'],
-    ];
-
-    foreach ($educationLevels as $level => $fields) {
-        $school = $this->request->getPost($fields[0]) ?? null;
-        $location = $this->request->getPost($fields[1]) ?? null;
-        $year = $this->request->getPost($fields[2]) ?? null;
-        $awards = $this->request->getPost($fields[3]) ?? null;
-
-        if ($school || $location || $year || $awards) {
- 
-        $dbLevel = ($level === 'Highest Degree') ? $this->request->getPost('highest_degree') ?: 'Highest Degree' : $level;
-
-        $db->table('applicant_education')->insert([
-            'application_id' => $application_id,
-            'level' => $dbLevel,
-            'school_name' => $school,
-            'location' => $location,
-            'year_graduated' => $year,
-            'awards' => $awards,
-        ]);
-
-        }
-    }
-
-    // Insert work experience
-    $db->table('applicant_work_experience')->insert([
-        'application_id' => $application_id,
-        'current_work' => $this->request->getPost('current_work'),
-        'previous_work' => $this->request->getPost('previous_work'),
-        'duration' => $this->request->getPost('work_duration'),
-        'awards' => $this->request->getPost('work_awards'),
-        'created_at' => date('Y-m-d H:i:s'),
-        'updated_at' => date('Y-m-d H:i:s'),
-    ]);
-
-    // Insert documents
-    $db->table('applicant_documents')->insert([
-        'application_id' => $application_id,
+    $db->table('application_documents')->insert([
+        'job_application_id' => $application_id,
         'resume' => $uploadedFiles['resume'],
         'tor' => $uploadedFiles['tor'],
         'diploma' => $uploadedFiles['diploma'],
         'certificate' => $uploadedFiles['certificate'],
         'uploaded_at' => date('Y-m-d H:i:s'),
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
     ]);
 
     return $this->response->setJSON([
@@ -206,7 +232,6 @@ public function submit($item_no = null)
         'application_id' => $application_id
     ]);
 }
-
 
 public function view($application_id = null)
 {
@@ -216,31 +241,96 @@ public function view($application_id = null)
 
     $db = \Config\Database::connect();
 
+    // -------------------------
     // Fetch the application
+    // -------------------------
     $app = $this->jobApplications->find($application_id);
     if (!$app) {
         return $this->response->setStatusCode(404)->setBody('Application not found');
     }
-
+ // -------------------------
+    // Fetch personal information
+    // -------------------------
+    $app['personal'] = $db->table('application_personal')
+                           ->where('job_application_id', $application_id)
+                           ->get()
+                           ->getRowArray() ?? [];
+    // -------------------------
     // Fetch related applicant data
-    $app['family']    = $db->table('applicant_fam')->where('application_id', $application_id)->get()->getResultArray();
-    $app['education'] = $db->table('applicant_education')->where('application_id', $application_id)->get()->getResultArray();
-    $app['work']      = $db->table('applicant_work_experience')->where('application_id', $application_id)->get()->getRowArray();
-    $app['documents'] = $db->table('applicant_documents')->where('application_id', $application_id)->get()->getRowArray();
+    // -------------------------
+    $app['family'] = $db->table('application_fam')
+                        ->where('job_application_id', $application_id)
+                        ->get()
+                        ->getResultArray() ?? [];
 
-    // ✅ Fetch job position details correctly
-    $jobPosition = $db->table('job_positions')->where('id', $app['job_position_id'])->get()->getRowArray();
-    $app['job'] = $jobPosition; // now $app['job'] contains the full job info
+    $app['education'] = $db->table('application_education')
+                           ->where('job_application_id', $application_id)
+                           ->orderBy('id_application_education', 'ASC')
+                           ->get()
+                           ->getResultArray() ?? [];
 
-    // Fetch user info
-    $userModel = new \App\Models\UserModel();
-    $user = $userModel->find($app['user_id']);
+    $app['work'] = $db->table('application_work_experience')
+                      ->where('job_application_id', $application_id)
+                      ->orderBy('date_from', 'DESC')
+                      ->get()
+                      ->getResultArray() ?? []; // fetch all work experiences
 
+    $app['documents'] = $db->table('application_documents')
+                           ->where('job_application_id', $application_id)
+                           ->get()
+                           ->getRowArray() ?? [
+                               'resume'      => null,
+                               'tor'         => null,
+                               'diploma'     => null,
+                               'certificate' => null,
+                               'uploaded_at' => null
+                           ];
+
+    // -------------------------
+    // Fetch job details
+    // -------------------------
+    $job = $db->table('job_vacancies')
+              ->where('id', $app['job_vacancy_id'])
+              ->get()
+              ->getRowArray() ?? [
+                  'position_title' => '-',
+                  'office'         => '-',
+                  'department'     => '-',
+                  'monthly_salary' => 0,
+                  'application_deadline' => null
+              ];
+
+    // -------------------------
     // Fetch applicant profile
+    // -------------------------
     $profileModel = new \App\Models\ApplicantModel();
-    $profile = $profileModel->where('user_id', $app['user_id'])->first();
+    $profile = $profileModel->where('user_id', $app['user_id'])->first() ?? [];
 
-    // Check profile photo
+    // -------------------------
+    // Fetch trainings
+    // -------------------------
+    $trainings = [];
+    $applicant_id = $profile['id'] ?? null;
+    if ($applicant_id) {
+        $trainings = $db->table('applicant_trainings at')
+                        ->join('trainings t', 'at.training_id = t.id_training')
+                        ->join('lib_training_category tc', 't.training_category_id = tc.id_training_category')
+                        ->select('at.training_hours, at.training_sponsor, at.training_remarks, at.training_certificate_file, t.training_name, t.training_facilitator, t.training_datefrom, t.training_dateto, tc.training_category_name')
+                        ->where('at.applicant_id', $applicant_id)
+                        ->orderBy('t.training_datefrom', 'DESC')
+                        ->get()
+                        ->getResultArray();
+
+        // Format dates
+        foreach ($trainings as &$tr) {
+            $tr['training_datefrom'] = !empty($tr['training_datefrom']) ? date('F d, Y', strtotime($tr['training_datefrom'])) : '-';
+            $tr['training_dateto']   = !empty($tr['training_dateto']) ? date('F d, Y', strtotime($tr['training_dateto'])) : '-';
+        }
+    }
+
+    // -------------------------
+    // Profile photo
+    // -------------------------
     $profilePhoto = null;
     if (!empty($profile['photo'])) {
         $photoPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $profile['photo'];
@@ -249,15 +339,17 @@ public function view($application_id = null)
         }
     }
 
+    // -------------------------
     // Pass all data to the view
+    // -------------------------
     return view('applications/view', [
         'app'          => $app,
-        'user'         => $user,
+        'job'          => $job,
         'profile'      => $profile,
-        'profilePhoto' => $profilePhoto
+        'profilePhoto' => $profilePhoto,
+        'trainings'    => $trainings
     ]);
 }
-
 public function edit($application_id = null)
 {
     if (!$application_id) {
@@ -277,12 +369,11 @@ public function edit($application_id = null)
     // =========================
     // Family Background
     // =========================
-    $family = $db->table('applicant_fam')
-        ->where('application_id', $application_id)
-        ->get()
-        ->getResultArray();
+    $family = $db->table('application_fam')
+                 ->where('job_application_id', $application_id)
+                 ->get()
+                 ->getResultArray();
 
-    // Separate family by relationship for easier prefill
     $spouse = $father = $mother = [];
     foreach ($family as $fam) {
         if ($fam['relationship'] === 'Spouse') {
@@ -294,79 +385,88 @@ public function edit($application_id = null)
         }
     }
 
-  // =========================
-// Educational Background
-// =========================
-$education = $db->table('applicant_education')
-    ->where('application_id', $application_id)
-    ->get()
-    ->getResultArray();
+    // =========================
+    // Educational Background
+    // =========================
+    $educationRows = $db->table('application_education')
+                        ->where('job_application_id', $application_id)
+                        ->get()
+                        ->getResultArray();
 
-// Separate education by level
-$elementary = $highschool = $college = $highest = [];
+    $education_data = [
+        'elementary' => [],
+        'secondary' => [],
+        'vocational' => [],
+        'college' => [],
+        'graduate' => []
+    ];
 
-// Loop through all education rows
-foreach ($education as $edu) {
-    if ($edu['level'] === 'Elementary') {
-        $elementary = $edu;
-    } elseif ($edu['level'] === 'High School') {
-        $highschool = $edu;
-    } elseif ($edu['level'] === 'College') {
-        $college = $edu;
-    } else {
-        // Anything that is not Elementary, High School, College → treat as Highest Degree
-        $highest = $edu;
+    foreach ($educationRows as $edu) {
+        switch ($edu['level']) {
+            case 'Elementary':
+                $education_data['elementary'] = $edu;
+                break;
+            case 'Secondary':
+            case 'High School':
+                $education_data['secondary'] = $edu;
+                break;
+            case 'Vocational/Trade':
+                $education_data['vocational'] = $edu;
+                break;
+            case 'College':
+                $education_data['college'] = $edu;
+                break;
+            case 'Graduate Studies':
+                $education_data['graduate'] = $edu;
+                break;
+        }
     }
-}
 
     // =========================
-    // Work Experience (SINGLE ROW)
+    // Work Experience
     // =========================
-    $applicant_work = $db->table('applicant_work_experience')
-        ->where('application_id', $application_id)
-        ->get()
-        ->getRowArray();
+    $applicant_work = $db->table('application_work_experience')
+                         ->where('job_application_id', $application_id)
+                         ->get()
+                         ->getRowArray();
 
     // =========================
     // Documents
     // =========================
-    $documents = $db->table('applicant_documents')
-        ->where('application_id', $application_id)
-        ->get()
-        ->getRowArray();
+    $documents = $db->table('application_documents')
+                    ->where('job_application_id', $application_id)
+                    ->get()
+                    ->getRowArray();
 
     // =========================
     // Job Position Info
     // =========================
-    $job = $db->table('job_positions')
-        ->where('id', $app['job_position_id'])
-        ->get()
-        ->getRowArray();
+    $job = $db->table('job_vacancies')
+              ->where('id', $app['job_vacancy_id'])
+              ->get()
+              ->getRowArray();
 
     // =========================
     // Applicant Profile
     // =========================
     $profileModel = new \App\Models\ApplicantModel();
     $profile = $profileModel
-        ->where('user_id', $app['user_id'])
+        ->where('id', $application_id) // Assuming profile table's PK matches application_id
         ->first();
 
     // =========================
-    // Pass EVERYTHING to view
+    // Pass everything to the view
     // =========================
     return view('applications/edit', [
-        'app'             => $app,
-        'job'             => $job,
-        'profile'         => $profile,
-        'spouse'          => $spouse,
-        'father'          => $father,
-        'mother'          => $mother,
-        'elementary'      => $elementary,
-        'highschool'      => $highschool,
-        'college'         => $college,
-        'highest'         => $highest,
-        'applicant_work'  => $applicant_work,
-        'documents'       => $documents
+        'app'            => $app,
+        'job'            => $job,
+        'profile'        => $profile,
+        'spouse'         => $spouse,
+        'father'         => $father,
+        'mother'         => $mother,
+        'education_data' => $education_data,
+        'applicant_work' => $applicant_work,
+        'documents'      => $documents
     ]);
 }
 
@@ -376,35 +476,32 @@ public function update($application_id = null)
         return redirect()->to('applications');
     }
 
+    // Make sure $db exists
     $db = \Config\Database::connect();
 
+    // Find the application
     $jobApplication = $this->jobApplications->find($application_id);
     if (!$jobApplication) {
         throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Application not found');
     }
 
     // -------------------
-    // Update Main Applicant Info
+    // Update main applicant info
     // -------------------
     $appData = [
-        'job_position_id' => $this->request->getPost('job_position_id'),
-        'first_name'      => $this->request->getPost('first_name'),
-        'middle_name'     => $this->request->getPost('middle_name'),
-        'last_name'       => $this->request->getPost('last_name'),
-        'suffix'          => $this->request->getPost('name_extension'),
-        'date_of_birth'   => $this->request->getPost('birth_date'),
-        'place_of_birth'  => $this->request->getPost('place_of_birth'),
-        'sex'             => $this->request->getPost('sex'),
-        'civil_status'    => $this->request->getPost('civil_status'),
-        'citizenship'     => $this->request->getPost('citizenship'),
-        'email'           => $this->request->getPost('email'),
-        'phone'           => $this->request->getPost('phone'),
-        'height'          => $this->request->getPost('height'),
-        'weight'          => $this->request->getPost('weight'),
-        'blood_type'      => $this->request->getPost('blood_type'),
-        'updated_at'      => date('Y-m-d H:i:s')
+        'job_vacancy_id' => $this->request->getPost('job_vacancy_id') ?: $jobApplication['job_vacancy_id'],
+        'first_name'     => $this->request->getPost('first_name'),
+        'middle_name'    => $this->request->getPost('middle_name'),
+        'last_name'      => $this->request->getPost('last_name'),
+        'suffix'         => $this->request->getPost('name_extension'),
+        'date_of_birth'  => $this->request->getPost('birth_date'),
+        'sex'            => $this->request->getPost('sex'),
+        'civil_status'   => $this->request->getPost('civil_status'),
+        'citizenship'    => $this->request->getPost('citizenship'),
+        'email'          => $this->request->getPost('email'),
+        'phone'          => $this->request->getPost('phone'),
+        'updated_at'     => date('Y-m-d H:i:s')
     ];
-
     $this->jobApplications->update($application_id, $appData);
 
     // =========================
@@ -449,8 +546,7 @@ public function update($application_id = null)
         }
     }
     
-    
- // -------------------
+    // -------------------
 // Update Educational Background (no duplicates)
 // -------------------
 $eduTable = $db->table('applicant_education');
@@ -460,119 +556,99 @@ $existingEducation = $eduTable->where('application_id', $application_id)
                               ->get()
                               ->getResultArray();
 
-// Map existing rows by level for Elementary, High School, College
+// Map existing rows by level for easy update
 $existingByLevel = [];
-$highestId = null;
-
 foreach ($existingEducation as $edu) {
-    if (in_array($edu['level'], ['Elementary', 'High School', 'College'])) {
-        $existingByLevel[$edu['level']] = $edu['id'];
-    } else {
-        // Any other level → treat as Highest Degree
-        $highestId = $edu['id'];
-    }
+    $existingByLevel[$edu['level']] = $edu['id'];
 }
 
-// Define form fields
-$levels = [
-    'Elementary'      => ['elementary_school','elementary_location','elementary_year','elementary_awards'],
-    'High School'     => ['highschool_school','highschool_location','highschool_year','highschool_awards'],
-    'College'         => ['college_school','college_location','college_year','college_awards'],
-    'Highest Degree'  => ['highest_school','highest_location','highest_year','highest_awards']
+// Define form fields mapping
+$educationLevels = [
+    'Elementary'       => ['school' => 'elementary_school', 'degree' => 'elementary_degree', 'from' => 'elementary_from', 'to' => 'elementary_to', 'units' => 'elementary_units', 'year' => 'elementary_year', 'awards' => 'elementary_awards'],
+    'Secondary'        => ['school' => 'secondary_school', 'degree' => 'secondary_degree', 'from' => 'secondary_from', 'to' => 'secondary_to', 'units' => 'secondary_units', 'year' => 'secondary_year', 'awards' => 'secondary_awards'],
+    'Vocational/Trade' => ['school' => 'vocational_school', 'degree' => 'vocational_degree', 'from' => 'vocational_from', 'to' => 'vocational_to', 'units' => 'vocational_units', 'year' => 'vocational_year', 'awards' => 'vocational_awards'],
+    'College'          => ['school' => 'college_school', 'degree' => 'college_degree', 'from' => 'college_from', 'to' => 'college_to', 'units' => 'college_units', 'year' => 'college_year', 'awards' => 'college_awards'],
+    'Graduate Studies' => ['school' => 'graduate_school', 'degree' => 'graduate_degree', 'from' => 'graduate_from', 'to' => 'graduate_to', 'units' => 'graduate_units', 'year' => 'graduate_year', 'awards' => 'graduate_awards']
 ];
 
-foreach ($levels as $originalLevel => $fields) {
-    $school   = $this->request->getPost($fields[0]) ?: '-';
-    $location = $this->request->getPost($fields[1]) ?: '-';
-    $year     = $this->request->getPost($fields[2]) ?: '-';
-    $awards   = $this->request->getPost($fields[3]) ?: '-';
+foreach ($educationLevels as $level => $fields) {
+    $eduData = [
+        'school_name'        => $this->request->getPost($fields['school']) ?: '-',
+        'degree_course'      => $this->request->getPost($fields['degree']) ?: '-',
+        'period_from'        => $this->request->getPost($fields['from']) ?: '-',
+        'period_to'          => $this->request->getPost($fields['to']) ?: '-',
+        'highest_level_units'=> $this->request->getPost($fields['units']) ?: '-',
+        'year_graduated'     => $this->request->getPost($fields['year']) ?: '-',
+        'awards'             => $this->request->getPost($fields['awards']) ?: '-'
+    ];
 
-    // Rename Highest Degree if user typed a custom name
-    $dbLevel = ($originalLevel === 'Highest Degree') ? ($this->request->getPost('highest_degree') ?: 'Highest Degree') : $originalLevel;
-
-    if ($originalLevel === 'Highest Degree') {
-        if ($highestId) {
-            // Update existing Highest Degree row
-            $eduTable->where('id', $highestId)->update([
-                'level'          => $dbLevel,
-                'school_name'    => $school,
-                'location'       => $location,
-                'year_graduated' => $year,
-                'awards'         => $awards
-            ]);
-        } else {
-            // Insert new Highest Degree row if none exists
-            $eduTable->insert([
-                'application_id' => $application_id,
-                'level'          => $dbLevel,
-                'school_name'    => $school,
-                'location'       => $location,
-                'year_graduated' => $year,
-                'awards'         => $awards
-            ]);
-        }
+    if (isset($existingByLevel[$level])) {
+        // Update existing row
+        $eduTable->where('id', $existingByLevel[$level])->update($eduData);
     } else {
-        // Elementary, High School, College
-        if (isset($existingByLevel[$originalLevel])) {
-            // Update existing row
-            $eduTable->where('id', $existingByLevel[$originalLevel])->update([
-                'school_name'    => $school,
-                'location'       => $location,
-                'year_graduated' => $year,
-                'awards'         => $awards
-            ]);
-        } else {
-            // Insert new row if it doesn't exist
-            $eduTable->insert([
-                'application_id' => $application_id,
-                'level'          => $dbLevel,
-                'school_name'    => $school,
-                'location'       => $location,
-                'year_graduated' => $year,
-                'awards'         => $awards
-            ]);
+        // Insert new row if it doesn't exist
+        $eduData['application_id'] = $application_id;
+        $eduData['level'] = $level;
+        $eduTable->insert($eduData);
+    }
+}
+
+$workTable = $db->table('applicant_work_experience');
+$existingWork = $workTable->where('application_id', $application_id)
+                          ->get()
+                          ->getRowArray();
+
+$workData = [
+    'current_work'  => $this->request->getPost('current_work') ?: '-',
+    'previous_work' => $this->request->getPost('previous_work') ?: '-',
+    'duration'      => $this->request->getPost('work_duration') ?: '-',
+    'awards'        => $this->request->getPost('work_awards') ?: '-'
+];
+
+if ($existingWork) {
+    // Update existing work row
+    $workTable->where('application_id', $application_id)
+              ->update($workData);
+} else {
+    // Insert new row if none exists
+    $workData['application_id'] = $application_id;
+    $workTable->insert($workData);
+}
+// =========================
+// Update Documents (KEEP OLD IF NO NEW UPLOAD)
+// =========================
+$docTable = $db->table('applicant_documents');
+$existingDocs = $docTable->where('application_id', $application_id)
+                         ->get()
+                         ->getRowArray() ?? [];
+
+$files = ['resume','tor','diploma','certificate'];
+$uploadPath = WRITEPATH . 'uploads/';
+$docData = [];
+
+foreach ($files as $fileInput) {
+    $file = $this->request->getFile($fileInput);
+
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+        // New upload → replace
+        $newName = $file->getRandomName();
+        $file->move($uploadPath, $newName);
+        $docData[$fileInput] = $newName;
+    } else {
+        // No upload → keep existing
+        if (!empty($existingDocs[$fileInput])) {
+            $docData[$fileInput] = $existingDocs[$fileInput];
         }
     }
 }
 
-
-    // =========================
-    // Update Work Experience (existing only)
-    // =========================
-    $workTable = $db->table('applicant_work_experience');
-    $workData = [
-        'current_work' => $this->request->getPost('current_work'),
-        'previous_work' => $this->request->getPost('previous_work'),
-        'duration' => $this->request->getPost('work_duration'),
-        'awards' => $this->request->getPost('work_awards')
-    ];
-
-    $existing = $workTable->where('application_id', $application_id)->countAllResults();
-    if ($existing > 0) {
-        $workTable->where('application_id', $application_id)->update($workData);
-    }
-
-
-    // =========================
-    // Redirect to dashboard with success
-    // =========================
-     $files = ['resume','tor','diploma','certificates'];
-    $uploadPath = WRITEPATH . 'uploads/';
-    $docTable = $db->table('applicant_documents');
-    $docData = [];
-
-    foreach ($files as $fileInput) {
-        $file = $this->request->getFile($fileInput);
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $newName = $file->getRandomName();
-            $file->move($uploadPath, $newName);
-            $docData[$fileInput] = $newName;
-        }
-    }
-
-    if (!empty($docData)) {
-        $docTable->where('application_id', $application_id)->update($docData);
-    }
+// Update or insert safely
+if (!empty($existingDocs)) {
+    $docTable->where('application_id', $application_id)->update($docData);
+} else {
+    $docData['application_id'] = $application_id;
+    $docTable->insert($docData);
+}
 
     return redirect()->to('dashboard')->with('success', 'Application updated successfully!');
 }
@@ -653,13 +729,12 @@ public function viewDocument($application_id, $doc)
                           ->setBody(file_get_contents($filePath));
 }
 
-
 public function viewResume($profile_id)
 {
     $db = \Config\Database::connect();
 
     // Fetch the resume from applicant_profiles
-    $profile = $db->table('applicant_profiles')
+    $profile = $db->table('applicant_personal')
                   ->select('resume, user_id')
                   ->where('id', $profile_id)
                   ->get()
@@ -669,25 +744,32 @@ public function viewResume($profile_id)
         throw new \CodeIgniter\Exceptions\PageNotFoundException('Resume not uploaded');
     }
 
-    // 🔒 Check if the current user is allowed
+    // 🔒 Ensure the current user owns this resume
     $current_user_id = session()->get('user_id');
     if (!$current_user_id || $current_user_id != $profile['user_id']) {
         throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
     }
 
+    // File path
     $file = $profile['resume'];
     $filePath = FCPATH . 'uploads/' . $file;
 
+    // Check if file exists
     if (!file_exists($filePath)) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException('Resume file not found on server');
+        // Try fallback to WRITEPATH in case it was uploaded there
+        $filePath = WRITEPATH . 'uploads/' . $file;
+        if (!file_exists($filePath)) {
+            throw new \CodeIgniter\Exceptions\PageNotFoundException('Resume file not found on server');
+        }
     }
 
-    // Stream resume inline
+    // Stream file inline
     $mime = mime_content_type($filePath) ?: 'application/pdf';
     return $this->response->setHeader('Content-Type', $mime)
                           ->setHeader('Content-Disposition', 'inline; filename="' . basename($file) . '"')
                           ->setBody(file_get_contents($filePath));
 }
+
 
 public function viewPhoto($user_id)
 {
@@ -701,7 +783,7 @@ public function viewPhoto($user_id)
     $db = \Config\Database::connect();
 
     // 2️⃣ Fetch the user's photo
-    $profile = $db->table('applicant_profiles')
+    $profile = $db->table('applicant_personal')
                   ->select('photo, user_id')
                   ->where('user_id', $user_id)
                   ->get()

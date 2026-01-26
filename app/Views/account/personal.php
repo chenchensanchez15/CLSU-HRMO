@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <title>Applicant Dashboard | CLSU HRMO</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <script>
 tailwind.config = {
     theme: {
@@ -66,7 +69,6 @@ window.onclick = function(event) {
             <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold">CLSU Online Job Application</span>
-                <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>
             </div>
         </div>
         <div class="flex items-center gap-12">
@@ -76,11 +78,9 @@ window.onclick = function(event) {
    class="<?= service('uri')->getSegment(1) === 'account' && service('uri')->getSegment(2) === 'personal'
         ? 'text-clsuGold border-b-2 border-clsuGold pb-0.5'
         : 'hover:underline' ?>">
-    Personal
+    Profile
 </a>
-
-                <a href="#" class="hover:underline">Trainings</a>
-            </nav>
+    </nav>
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
                     <?php 
@@ -110,17 +110,26 @@ window.onclick = function(event) {
 <div class="w-full min-h-screen flex flex-col lg:flex-row gap-2 p-4 mx-auto flex-1">
 
 <div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
-    <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-hidden flex items-center justify-center mb-4">
-        <?php
-        $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-        if(!empty($profile['photo']) && file_exists($photoPath)): ?>
-            <img src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
-        <?php else: ?>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
-                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
-            </svg>
-        <?php endif; ?>
-    </div>
+<div class="profile-pic relative w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-visible flex items-center justify-center mb-4">
+    <?php
+    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
+    if (!empty($profile['photo']) && file_exists($photoPath)): ?>
+        <img id="profilePhoto" src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
+    <?php else: ?>
+        <svg id="profilePhoto" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+        </svg>
+    <?php endif; ?>
+
+    <button id="editPhotoBtn" class="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/4 bg-clsuGold rounded-full p-1 shadow-md hover:bg-yellow-400 z-10" title="Change Photo">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 11l5 5L21 9l-5-5-7 7z" />
+        </svg>
+    </button>
+
+    <input type="file" id="photoInput" name="photo" class="hidden" accept="image/*">
+</div>
+
     <h3 class="text-clsuGreen font-bold mb-1">
         <?= esc($user['first_name'] ?? '') ?>
         <?= !empty($user['middle_name'] ?? $profile['middle_name'] ?? '') ? esc(substr($user['middle_name'] ?? $profile['middle_name'],0,1)).'. ' : '' ?>
@@ -132,30 +141,45 @@ window.onclick = function(event) {
 
 <!-- Right Panel -->
 <div class="right w-full flex-1 space-y-6">
-  <div class="w-full bg-white shadow rounded-lg p-5 text-gray-700 text-sm">
-    <h2 class="text-xl font-bold text-clsuGreen mb-2">Personal Information</h2>
+    <!-- Inside Right Panel, replace current Personal Information section -->
+<div class="right w-full flex-1 space-y-6">
 
-    <!-- Name -->
-    <div class="overflow-x-auto mb-4">
-      <table class="table-auto w-full text-left border-collapse text-xs" id="table-name">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="px-2 py-1 border">First Name</th>
-            <th class="px-2 py-1 border">Middle Name</th>
-            <th class="px-2 py-1 border">Last Name</th>
-            <th class="px-2 py-1 border">Suffix</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-2 py-1 border" data-key="first_name"><?= esc($profile['first_name'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="middle_name"><?= esc($profile['middle_name'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="last_name"><?= esc($profile['last_name'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="suffix"><?= esc($profile['suffix'] ?? '-') ?></td>
-          </tr>
-        </tbody>
-      </table>
+  <!-- TABS -->
+  <div class="bg-white shadow rounded-lg p-5 text-gray-700 text-sm">
+    <div class="flex flex-wrap border-b text-sm font-semibold mb-4">
+      <button class="tab-btn px-4 py-2 text-clsuGreen border-b-2 border-clsuGreen" data-tab="personal">Personal</button>
+      <button class="tab-btn px-4 py-2 text-gray-600 hover:text-clsuGreen" data-tab="education">Education</button>
+      <button class="tab-btn px-4 py-2 text-gray-600 hover:text-clsuGreen" data-tab="work">Work Experience</button>
+      <button class="tab-btn px-4 py-2 text-gray-600 hover:text-clsuGreen" data-tab="civil">Civil Service</button>
+      <button class="tab-btn px-4 py-2 text-gray-600 hover:text-clsuGreen" data-tab="trainings">Trainings</button>
+      <button class="tab-btn px-4 py-2 text-gray-600 hover:text-clsuGreen" data-tab="files">Files</button>
     </div>
+
+    <!-- TAB CONTENTS -->
+    <div class="tab-content" id="tab-personal">
+      <!-- === Personal Information table === -->
+      <h2 class="text-xl font-bold text-clsuGreen mb-2">Personal Information</h2>
+      <!-- Name Table -->
+      <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs" id="table-name">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="px-2 py-1 border">First Name</th>
+              <th class="px-2 py-1 border">Middle Name</th>
+              <th class="px-2 py-1 border">Last Name</th>
+              <th class="px-2 py-1 border">Suffix</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="px-2 py-1 border" data-key="first_name"><?= esc($profile['first_name'] ?? '-') ?></td>
+              <td class="px-2 py-1 border" data-key="middle_name"><?= esc($profile['middle_name'] ?? '-') ?></td>
+              <td class="px-2 py-1 border" data-key="last_name"><?= esc($profile['last_name'] ?? '-') ?></td>
+              <td class="px-2 py-1 border" data-key="suffix"><?= esc($profile['suffix'] ?? '-') ?></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
     <!-- Basic Info -->
     <div class="overflow-x-auto mb-4">
@@ -164,7 +188,6 @@ window.onclick = function(event) {
           <tr class="bg-gray-100">
             <th class="px-2 py-1 border">Sex</th>
             <th class="px-2 py-1 border">Date of Birth</th>
-            <th class="px-2 py-1 border">Place of Birth</th>
             <th class="px-2 py-1 border">Civil Status</th>
           </tr>
         </thead>
@@ -172,7 +195,6 @@ window.onclick = function(event) {
           <tr>
             <td class="px-2 py-1 border" data-key="sex"><?= esc($profile['sex'] ?? '-') ?></td>
             <td class="px-2 py-1 border" data-key="date_of_birth"><?= esc($profile['date_of_birth'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="place_of_birth"><?= esc($profile['place_of_birth'] ?? '-') ?></td>
             <td class="px-2 py-1 border" data-key="civil_status"><?= esc($profile['civil_status'] ?? '-') ?></td>
           </tr>
         </tbody>
@@ -199,26 +221,6 @@ window.onclick = function(event) {
       </table>
     </div>
 
-    <!-- Physical Info -->
-    <div class="overflow-x-auto mb-4">
-      <table class="table-auto w-full text-left border-collapse text-xs" id="table-physical">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="px-2 py-1 border">Height (cm)</th>
-            <th class="px-2 py-1 border">Weight (kg)</th>
-            <th class="px-2 py-1 border" colspan="2">Blood Type</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-2 py-1 border" data-key="height"><?= esc($profile['height'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" data-key="weight"><?= esc($profile['weight'] ?? '-') ?></td>
-            <td class="px-2 py-1 border" colspan="2" data-key="blood_type"><?= esc($profile['blood_type'] ?? '-') ?></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
     <!-- Addresses -->
     <div class="overflow-x-auto mb-4">
       <table class="table-auto w-full text-left border-collapse text-xs" id="table-addresses">
@@ -236,47 +238,861 @@ window.onclick = function(event) {
         </tbody>
       </table>
     </div>
-<!-- Resume & Photo -->
-<div class="overflow-x-auto mb-3">
-  <table class="table-auto w-full text-left border-collapse text-xs" id="table-resume">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="px-2 py-1 border">Resume</th>
-        <th class="px-2 py-1 border">Picture</th>
-      </tr>
-    </thead>
-    <tbody>
-    <tr>
-    <td class="px-2 py-1 border" data-key="resume">
-    <!-- Resume -->
-<?php if (!empty($profile['resume'])): ?>
-<a href="<?= site_url('applications/viewResume/'.$profile['id']) ?>" target="_blank" class="text-blue-600 hover:underline">
-    <?= esc($profile['resume']) ?>
-</a>
-<?php else: ?>
--
-<?php endif; ?>
 
+      <div class="flex justify-end -mt-1 gap-2">
+        <button id="cancelBtn" class="bg-gray-400 px-4 py-1.5 rounded text-xs font-semibold hidden">Cancel</button>
+        <button id="saveBtn" class="bg-clsuGreen px-4 py-1.5 rounded text-xs font-semibold hidden">Save</button>
+        <button id="editBtn" class="bg-clsuGold px-4 py-1.5 rounded text-xs font-semibold">Edit Profile</button>
+      </div>
+    </div>
+
+    
+<!-- === EDUCATION TAB === -->
+<div class="tab-content hidden" id="tab-education">
+    <h2 class="text-lg font-bold text-clsuGreen mb-2">Educational Background</h2>
+
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs" id="table-education">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th rowspan="2" class="px-1 py-1 border w-20">Level</th>
+                    <th rowspan="2" class="px-1 py-1 border w-40">Name of School<br>(Write in full)</th>
+                    <th rowspan="2" class="px-1 py-1 border w-40">Degree / Course<br>(Write in full)</th>
+                    <th colspan="2" class="px-1 py-1 border text-center w-28">Period of Attendance</th>
+                    <th rowspan="2" class="px-1 py-1 border w-28">Highest Level /<br>Units Earned</th>
+                    <th rowspan="2" class="px-1 py-1 border w-20">Year Graduated</th>
+                    <th rowspan="2" class="px-1 py-1 border w-36">Scholarship / Academic<br>Honors Received</th>
+                </tr>
+                <tr class="bg-gray-100">
+                    <th class="px-1 py-1 border w-14">From</th>
+                    <th class="px-1 py-1 border w-14">To</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $levels = ['Elementary','Secondary','Vocational/Trade','College','Graduate Studies'];
+
+                foreach($levels as $level):
+                    $edu = null;
+                    if(!empty($educationRecords)){
+                        foreach($educationRecords as $record){
+                            if($record['level'] === $level){
+                                $edu = $record;
+                                break;
+                            }
+                        }
+                    }
+
+                    if(!$edu){
+                        $edu = [
+                            'school_name' => '-',
+                            'degree_course' => '-',
+                            'period_from' => '-',
+                            'period_to' => '-',
+                            'highest_level_units' => '-',
+                            'year_graduated' => '-',
+                            'awards' => '-'
+                        ];
+                    }
+                ?>
+                <tr>
+                    <td class="px-1 py-1 border font-semibold"><?= esc($level) ?></td>
+
+                    <td class="px-1 py-1 border" data-key="school_name"><?= esc($edu['school_name']) ?></td>
+                    <td class="px-1 py-1 border" data-key="degree_course"><?= esc($edu['degree_course']) ?></td>
+                    <td class="px-1 py-1 border" data-key="period_from"><?= esc($edu['period_from']) ?></td>
+                    <td class="px-1 py-1 border" data-key="period_to"><?= esc($edu['period_to']) ?></td>
+                    <td class="px-1 py-1 border" data-key="highest_level_units"><?= esc($edu['highest_level_units']) ?></td>
+                    <td class="px-1 py-1 border" data-key="year_graduated"><?= esc($edu['year_graduated']) ?></td>
+                    <td class="px-1 py-1 border" data-key="awards"><?= esc($edu['awards']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="flex justify-end gap-2 -mt-1">
+        <button id="cancelEducationBtn" class="bg-gray-400 px-3 py-1 rounded text-xs font-semibold hidden">Cancel</button>
+        <button id="saveEducationBtn" class="bg-clsuGreen px-3 py-1 rounded text-xs font-semibold hidden">Save</button>
+        <button id="editEducationBtn" class="bg-clsuGold px-3 py-1 rounded text-xs font-semibold">Edit Education</button>
+    </div>
+</div>
+
+<!-- === WORK EXPERIENCE TAB === -->
+<div class="tab-content hidden" id="tab-work">
+    <h2 class="text-lg font-bold text-clsuGreen mb-2">Work Experience</h2>
+
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs" id="table-work">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th rowspan="2" class="px-1 py-1 border w-24">Position Title</th>
+                    <th rowspan="2" class="px-1 py-1 border w-28">Office / Company</th>
+                    <th colspan="2" class="px-1 py-1 border text-center w-28">Inclusive Dates</th>
+                    <th rowspan="2" class="px-1 py-1 border w-28">Status of Appointment</th>
+                    <th rowspan="2" class="px-1 py-1 border w-20">Government Service (Yes/No)</th>
+                    <th rowspan="2" class="px-1 py-1 border w-20">Actions</th>
+                </tr>
+                <tr class="bg-gray-100">
+                    <th class="px-1 py-1 border w-14">From</th>
+                    <th class="px-1 py-1 border w-14">To</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($workRecords)): ?>
+                    <?php foreach($workRecords as $work): ?>
+                       <?php
+    // Text fields only
+    foreach (['position_title','office','status_of_appointment','govt_service'] as $key) {
+        if (empty($work[$key])) {
+            $work[$key] = '-';
+        }
+    }
+
+    // Safe date handling (NO 1970)
+    $work['date_from'] = (!empty($work['date_from']) && $work['date_from'] !== '0000-00-00')
+        ? date('d/m/Y', strtotime($work['date_from']))
+        : '-';
+
+    $work['date_to'] = (!empty($work['date_to']) && $work['date_to'] !== '0000-00-00')
+        ? date('d/m/Y', strtotime($work['date_to']))
+        : '-';
+?>
+
+<tr data-id="<?= esc($work['id']) ?>">
+    <td class="px-1 py-1 border" data-key="position_title"><?= esc($work['position_title']) ?></td>
+    <td class="px-1 py-1 border" data-key="office"><?= esc($work['office']) ?></td>
+    <td class="px-1 py-1 border" data-key="date_from"><?= esc($work['date_from']) ?></td>
+    <td class="px-1 py-1 border" data-key="date_to"><?= esc($work['date_to']) ?></td>
+    <td class="px-1 py-1 border" data-key="status_of_appointment"><?= esc($work['status_of_appointment']) ?></td>
+    <td class="px-1 py-1 border" data-key="govt_service"><?= !empty($work['govt_service']) ? esc($work['govt_service']) : '-' ?></td>
+    <td class="px-1 py-1 border text-center">
+        <button class="editWorkBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button class="deleteWorkBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
     </td>
-    <!-- Photo -->
-        <td class="px-2 py-1 border" data-key="photo">
-          <?php if (!empty($profile['photo']) && file_exists(FCPATH.'uploads/'.$profile['photo'])): ?>
-           <a href="<?= site_url('applications/viewPhoto/'.$user['id']) ?>" target="_blank" class="text-blue-600 hover:underline">View Photo</a>
-          <?php else: ?>
-            -
-          <?php endif; ?>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+</tr>
+
+
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td class="px-1 py-1 border text-center" colspan="7">No work experience found for this applicant.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="flex justify-end gap-2 -mt-1" id="workButtons">
+        <button id="addWorkBtn" class="bg-clsuGold px-3 py-1 rounded text-xs font-semibold">Add Work Experience</button>
+    </div>
 </div>
 
-<!-- Update & Cancel Buttons -->
-<div class="flex justify-end -mt-1 gap-2">
-  <button id="cancelBtn" class="bg-gray-400 px-4 py-1.5 rounded text-xs font-semibold hidden">Cancel</button>
-  <button id="saveBtn" class="bg-clsuGreen px-4 py-1.5 rounded text-xs font-semibold hidden">Save</button>
-  <button id="editBtn" class="bg-clsuGold px-4 py-1.5 rounded text-xs font-semibold">Update Profile</button>
+<!-- Modal Overlay -->
+<div id="editWorkModal"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    <!-- Modal Box -->
+    <div
+        class="bg-white rounded-2xl w-11/12 max-w-md p-6 transform scale-95 opacity-0 transition-all duration-300">
+        <h3 class="text-lg font-bold text-clsuGreen mb-4">Edit Work Experience</h3>
+  <form id="editWorkForm" class="space-y-3">
+    <div>
+        <label class="text-xs font-semibold">Position Title</label>
+        <input type="text" name="position_title" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter position title" required>
+    </div>
+    <div>
+        <label class="text-xs font-semibold">Office / Company</label>
+        <input type="text" name="office" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter office or company" required>
+    </div>
+    <div class="flex gap-2">
+        <div class="flex-1">
+            <label class="text-xs font-semibold">From</label>
+            <input type="date" name="date_from" class="w-full border px-2 py-1 rounded text-xs" required>
+        </div>
+        <div class="flex-1">
+            <label class="text-xs font-semibold">To</label>
+            <input type="date" name="date_to" class="w-full border px-2 py-1 rounded text-xs" required>
+        </div>
+    </div>
+    <div>
+        <label class="text-xs font-semibold">Status of Appointment</label>
+        <input type="text" name="status_of_appointment" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter status" required>
+    </div>
+    <div>
+        <label class="text-xs font-semibold">Government Service (Yes /No)</label>
+        <select name="govt_service" class="w-full border px-2 py-1 rounded text-xs" required>
+            <option value="" disabled selected>Select Yes or No</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+        </select>
+    </div>
+    <div class="flex justify-end gap-2 mt-3">
+        <button type="button" id="cancelEditModal" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs font-semibold transition-colors">
+            Cancel
+        </button>
+        <button type="submit" class="bg-clsuGreen hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors">Save</button>
+    </div>
+</form>
+
+    </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const table = document.getElementById('table-work');
+    const editModal = document.getElementById('editWorkModal');
+    const modalBox = editModal.querySelector('div');
+    const cancelBtn = document.getElementById('cancelEditModal');
+    const editForm = document.getElementById('editWorkForm');
+    const addWorkBtn = document.getElementById('addWorkBtn');
+
+    let currentEditingRow = null;
+    let isAddingNew = false;
+
+    // Open modal and fill data
+    function openEditModal(row = null) {
+        currentEditingRow = row;
+        isAddingNew = row === null;
+
+        if (row) {
+            const govtText = row.querySelector('[data-key="govt_service"]').textContent.trim();
+            const data = {
+                position_title: row.querySelector('[data-key="position_title"]').textContent.trim(),
+                office: row.querySelector('[data-key="office"]').textContent.trim(),
+                date_from: row.querySelector('[data-key="date_from"]').textContent.split('/').reverse().join('-'),
+                date_to: row.querySelector('[data-key="date_to"]').textContent.split('/').reverse().join('-'),
+                status_of_appointment: row.querySelector('[data-key="status_of_appointment"]').textContent.trim(),
+                govt_service: govtText !== '-' ? govtText : ''
+            };
+
+            editForm.position_title.value = data.position_title;
+            editForm.office.value = data.office;
+            editForm.date_from.value = data.date_from;
+            editForm.date_to.value = data.date_to;
+            editForm.status_of_appointment.value = data.status_of_appointment;
+            editForm.govt_service.value = data.govt_service;
+        } else {
+            // Clear form for adding
+            editForm.reset();
+        }
+
+        // Show modal
+        editModal.classList.remove('pointer-events-none', 'opacity-0');
+        setTimeout(() => {
+            modalBox.classList.remove('scale-95', 'opacity-0');
+            modalBox.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeEditModal() {
+        modalBox.classList.add('scale-95', 'opacity-0');
+        editModal.classList.add('opacity-0');
+        setTimeout(() => editModal.classList.add('pointer-events-none'), 300);
+    }
+
+    cancelBtn.addEventListener('click', closeEditModal);
+    editModal.addEventListener('click', e => { if(e.target === editModal) closeEditModal(); });
+
+    // Edit existing row
+    table.addEventListener('click', e => {
+        const btn = e.target.closest('.editWorkBtn');
+        if(!btn) return;
+        const row = btn.closest('tr');
+        openEditModal(row);
+    });
+
+    // Delete row
+    table.addEventListener('click', e => {
+        const btn = e.target.closest('.deleteWorkBtn');
+        if(!btn) return;
+        const row = btn.closest('tr');
+        const rowId = row.dataset.id;
+
+     Swal.fire({
+    text: 'This will permanently delete this record!',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Yes, delete it!'
+}).then(result => {
+    if (result.isConfirmed) {
+        fetch('<?= base_url("account/deleteWorkExperience") ?>/' + rowId, {
+            method: 'DELETE',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => res.json())
+        .then(res => {
+            if (res.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Deleted!',
+                    text: res.message,
+                    timer: 1200,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload(); // 🔄 refresh page
+                });
+            } else {
+                Swal.fire('Error', res.message || 'Unable to delete.', 'error');
+            }
+        })
+        .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
+    }
+});
+
+    });
+
+    // Add new row
+    addWorkBtn.addEventListener('click', () => openEditModal(null));
+
+    // Form submit (edit or add)
+    editForm.addEventListener('submit', e => {
+        e.preventDefault();
+
+        const formData = new FormData(editForm);
+        if(!isAddingNew && currentEditingRow) formData.append('id', currentEditingRow.dataset.id);
+
+        fetch('<?= base_url("account/updateWorkExperience") ?>', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With':'XMLHttpRequest' }
+        }).then(res => res.json())
+          .then(res => {
+              if(res.success){
+                  const fromDate = editForm.date_from.value ? new Date(editForm.date_from.value).toLocaleDateString('en-GB') : '-';
+                  const toDate = editForm.date_to.value ? new Date(editForm.date_to.value).toLocaleDateString('en-GB') : '-';
+
+                  if(isAddingNew){
+                      // Append new row to table
+                      const newRow = table.querySelector('tbody').insertRow();
+                      newRow.dataset.id = res.id || ''; // Optional: return new ID from server
+                      newRow.innerHTML = `
+                        <td class="px-1 py-1 border" data-key="position_title">${editForm.position_title.value || '-'}</td>
+                        <td class="px-1 py-1 border" data-key="office">${editForm.office.value || '-'}</td>
+                        <td class="px-1 py-1 border" data-key="date_from">${fromDate}</td>
+                        <td class="px-1 py-1 border" data-key="date_to">${toDate}</td>
+                        <td class="px-1 py-1 border" data-key="status_of_appointment">${editForm.status_of_appointment.value || '-'}</td>
+                        <td class="px-1 py-1 border" data-key="govt_service">${editForm.govt_service.value}</td>
+                        <td class="px-1 py-1 border text-center">
+                            <button class="editWorkBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="deleteWorkBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                      `;
+                  } else {
+                      // Update existing row
+                      currentEditingRow.querySelector('[data-key="position_title"]').textContent = editForm.position_title.value || '-';
+                      currentEditingRow.querySelector('[data-key="office"]').textContent = editForm.office.value || '-';
+                      currentEditingRow.querySelector('[data-key="date_from"]').textContent = fromDate;
+                      currentEditingRow.querySelector('[data-key="date_to"]').textContent = toDate;
+                      currentEditingRow.querySelector('[data-key="status_of_appointment"]').textContent = editForm.status_of_appointment.value || '-';
+                      currentEditingRow.querySelector('[data-key="govt_service"]').textContent = editForm.govt_service.value;
+                  }
+
+          Swal.fire({
+    icon: 'success',
+    title: 'Saved!',
+    text: res.message,
+    timer: 1200,
+    showConfirmButton: false
+}).then(() => {
+    location.reload(); // 🔄 refresh page
+});
+
+              } else {
+                  Swal.fire('Error', res.message || 'Unable to save work experience.', 'error');
+              }
+          }).catch(()=> Swal.fire('Error','Something went wrong.','error'));
+    });
+});
+
+</script>
+
+<div class="tab-content hidden" id="tab-civil">
+    <h2 class="text-lg font-bold text-clsuGreen mb-2">Civil Service Eligibility</h2>
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs" id="table-civil">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-1 py-1 border w-28">Eligibility</th>
+                    <th class="px-1 py-1 border w-20">Rating / Exam</th>
+                    <th class="px-1 py-1 border w-20">Date of Examination</th>
+                    <th class="px-1 py-1 border w-24">Place of Examination</th>
+                    <th class="px-1 py-1 border w-20">License / PRC No.</th>
+                    <th class="px-1 py-1 border w-20">Valid Until</th>
+                    <th class="px-1 py-1 border w-20">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($civilRecords)): ?>
+                    <?php foreach($civilRecords as $civil): ?>
+                        <tr data-id="<?= esc($civil['id']) ?>">
+                            <td class="px-1 py-1 border" data-key="eligibility"><?= esc($civil['eligibility']) ?></td>
+                            <td class="px-1 py-1 border" data-key="rating"><?= esc($civil['rating']) ?></td>
+                            <td class="px-1 py-1 border" data-key="date_of_exam"><?= esc($civil['date_of_exam']) ?></td>
+                            <td class="px-1 py-1 border" data-key="place_of_exam"><?= esc($civil['place_of_exam']) ?></td>
+                            <td class="px-1 py-1 border" data-key="license_no"><?= esc($civil['license_no']) ?></td>
+                            <td class="px-1 py-1 border" data-key="license_valid_until"><?= esc($civil['license_valid_until']) ?></td>
+                            <td class="px-1 py-1 border text-center">
+                                <button class="editCivilBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="deleteCivilBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr id="noCivilRow">
+                        <td class="px-1 py-1 border text-center text-gray-500" colspan="7">
+                            No civil service records found.
+                        </td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+
+        </table>
+    </div>
+
+    <div class="flex justify-end gap-2 -mt-1">
+        <button id="addCivilBtn" class="bg-clsuGold px-3 py-1 rounded text-xs font-semibold">Add Civil Service</button>
+    </div>
+</div>
+
+<div id="editCivilModal"
+    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    <div class="bg-white rounded-2xl w-11/12 max-w-md p-6 transform scale-95 opacity-0 transition-all duration-300">
+        <h3 class="text-lg font-bold text-clsuGreen mb-4">Civil Service</h3>
+      <form id="editCivilForm" class="space-y-3">
+    <input type="hidden" name="id" value="">
+    
+    <div>
+        <label class="text-xs font-semibold">Eligibility</label>
+        <input type="text" name="eligibility" placeholder="Enter eligibility" required class="w-full border px-2 py-1 rounded text-xs">
+    </div>
+    
+    <div>
+        <label class="text-xs font-semibold">Rating / Exam</label>
+        <input type="text" name="rating" placeholder="Enter rating or exam" required class="w-full border px-2 py-1 rounded text-xs">
+    </div>
+    
+    <div class="flex gap-2">
+        <div class="flex-1">
+            <label class="text-xs font-semibold">Date of Examination</label>
+            <input type="date" name="date_of_exam" placeholder="dd/mm/yyyy" required class="w-full border px-2 py-1 rounded text-xs">
+        </div>
+        <div class="flex-1">
+            <label class="text-xs font-semibold">Valid Until</label>
+            <input type="date" name="license_valid_until" placeholder="dd/mm/yyyy" required class="w-full border px-2 py-1 rounded text-xs">
+        </div>
+    </div>
+    
+    <div>
+        <label class="text-xs font-semibold">Place of Examination</label>
+        <input type="text" name="place_of_exam" placeholder="Enter place of examination" required class="w-full border px-2 py-1 rounded text-xs">
+    </div>
+    
+    <div>
+        <label class="text-xs font-semibold">License / PRC No.</label>
+        <input type="text" name="license_no" placeholder="Enter license or PRC number" required class="w-full border px-2 py-1 rounded text-xs">
+    </div>
+    
+    <div class="flex justify-end gap-2 mt-3">
+        <button type="button" id="cancelCivilModal"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs font-semibold transition-colors">
+            Cancel
+        </button>
+        <button type="submit"
+            class="bg-clsuGreen hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors">
+            Save
+        </button>
+    </div>
+</form>
+ </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const table = document.getElementById('table-civil');
+    const editModal = document.getElementById('editCivilModal');
+    const modalBox = editModal.querySelector('div');
+    const cancelBtn = document.getElementById('cancelCivilModal');
+    const editForm = document.getElementById('editCivilForm');
+    const addCivilBtn = document.getElementById('addCivilBtn');
+
+    let currentEditingRow = null;
+
+    function openModal(row=null){
+        currentEditingRow = row;
+
+        if(row){
+            editForm.id.value = row.dataset.id;
+            editForm.eligibility.value = row.querySelector('[data-key="eligibility"]').textContent.trim();
+            editForm.rating.value = row.querySelector('[data-key="rating"]').textContent.trim();
+            editForm.date_of_exam.value =
+                row.querySelector('[data-key="date_of_exam"]').textContent !== '-'
+                ? row.querySelector('[data-key="date_of_exam"]').textContent.split('/').reverse().join('-')
+                : '';
+            editForm.license_valid_until.value =
+                row.querySelector('[data-key="license_valid_until"]').textContent !== '-'
+                ? row.querySelector('[data-key="license_valid_until"]').textContent.split('/').reverse().join('-')
+                : '';
+            editForm.place_of_exam.value = row.querySelector('[data-key="place_of_exam"]').textContent.trim();
+            editForm.license_no.value = row.querySelector('[data-key="license_no"]').textContent.trim();
+        } else {
+            editForm.reset();
+        }
+
+        editModal.classList.remove('pointer-events-none','opacity-0');
+        setTimeout(()=> modalBox.classList.remove('scale-95','opacity-0'),10);
+    }
+
+    function closeModal(){
+        modalBox.classList.add('scale-95','opacity-0');
+        editModal.classList.add('opacity-0');
+        setTimeout(()=> editModal.classList.add('pointer-events-none'),300);
+    }
+
+    addCivilBtn.addEventListener('click', ()=>openModal());
+    cancelBtn.addEventListener('click', closeModal);
+    editModal.addEventListener('click', e => { if(e.target===editModal) closeModal(); });
+
+    table.addEventListener('click', e=>{
+        const editBtn = e.target.closest('.editCivilBtn');
+        const deleteBtn = e.target.closest('.deleteCivilBtn');
+
+        if(editBtn){
+            openModal(editBtn.closest('tr'));
+        }
+
+        if(deleteBtn){
+            const row = deleteBtn.closest('tr');
+            const id = row.dataset.id;
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will permanently delete this record!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(result=>{
+                if(result.isConfirmed){
+                    fetch('<?= base_url("account/deleteCivilService") ?>/'+id,{
+                        method:'DELETE',
+                        headers:{'X-Requested-With':'XMLHttpRequest'}
+                    })
+                    .then(r=>r.json())
+                    .then(res=>{
+                        if(res.success){
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Deleted!',
+                                text: res.message,
+                                timer: 1200,
+                                showConfirmButton: false
+                            }).then(()=> location.reload());
+                        } else {
+                            Swal.fire('Error',res.message,'error');
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    editForm.addEventListener('submit', e=>{
+        e.preventDefault();
+
+        const formData = new FormData(editForm);
+
+        fetch('<?= base_url("account/updateCivilService") ?>',{
+            method:'POST',
+            body: formData,
+            headers:{'X-Requested-With':'XMLHttpRequest'}
+        })
+        .then(r=>r.json())
+        .then(res=>{
+            if(res.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    text: res.message,
+                    timer: 1200,
+                    showConfirmButton: false
+                }).then(()=> location.reload());
+            } else {
+                Swal.fire('Error',res.message,'error');
+            }
+        });
+    });
+});
+</script>
+    
+    <div class="tab-content hidden" id="tab-trainings">
+    <h2 class="text-xl font-bold text-clsuGreen mb-2">Trainings</h2>
+    <div class="overflow-x-auto">
+        <table class="table-auto w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-2 py-1 border">Training Name</th>
+                    <th class="px-2 py-1 border">Hours</th>
+                    <th class="px-2 py-1 border">Sponsor</th>
+                    <th class="px-2 py-1 border">Remarks</th>
+                    <th class="px-2 py-1 border">Certificate</th>
+                    <th class="px-2 py-1 border">Date Added</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($trainingRecords)): ?>
+                    <?php foreach($trainingRecords as $training): ?>
+                        <tr>
+                            <td class="px-2 py-1 border"><?= esc($training['training_name']) ?></td>
+                            <td class="px-2 py-1 border"><?= esc($training['training_hours']) ?></td>
+                            <td class="px-2 py-1 border"><?= esc($training['training_sponsor']) ?></td>
+                            <td class="px-2 py-1 border"><?= esc($training['training_remarks']) ?></td>
+                            <td class="px-2 py-1 border">
+                                <?php if(!empty($training['training_certificate_file'])): ?>
+                                    <a href="<?= base_url('uploads/' . $training['training_certificate_file']) ?>" target="_blank" class="text-blue-600 hover:underline">View</a>
+                                <?php else: ?>
+                                    -
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-2 py-1 border"><?= esc($training['addeddate']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td class="px-2 py-1 border text-center" colspan="6">No trainings found for this applicant.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="tab-content hidden" id="tab-files">
+    <h2 class="text-xl font-bold text-clsuGreen mb-2">Files / Documents</h2>
+
+    <div id="filesContent">
+        <!-- Resume -->
+        <div class="overflow-x-auto mb-2">
+            <table class="table-auto w-full border-collapse text-xs">
+                <tbody>
+                    <tr>
+                        <th class="px-2 py-1 border text-left w-1/3">1. Resume (PDF)</th>
+                        <td class="px-2 py-1 border view-mode">
+                            <?= !empty($fileRecords['resume']) 
+                                ? '<a href="'.base_url('uploads/'.$fileRecords['resume']).'" target="_blank" class="text-blue-600 hover:underline">'.esc($fileRecords['resume']).'</a>'
+                                : '<span class="text-gray-500">-</span>'; ?>
+                        </td>
+                        <td class="px-2 py-1 border edit-mode hidden">
+                            <input type="file" name="resume" accept=".pdf" class="px-2 py-1 w-full text-xs">
+                            <span class="text-xs text-gray-500">
+                                <?= !empty($fileRecords['resume']) ? 'Current: '.esc($fileRecords['resume']) : 'No file chosen'; ?>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TOR -->
+        <div class="overflow-x-auto mb-2">
+            <table class="table-auto w-full border-collapse text-xs">
+                <tbody>
+                    <tr>
+                        <th class="px-2 py-1 border text-left w-1/3">2. Transcript of Records (TOR) (PDF)</th>
+                        <td class="px-2 py-1 border view-mode">
+                            <?= !empty($fileRecords['tor']) 
+                                ? '<a href="'.base_url('uploads/'.$fileRecords['tor']).'" target="_blank" class="text-blue-600 hover:underline">'.esc($fileRecords['tor']).'</a>'
+                                : '<span class="text-gray-500">-</span>'; ?>
+                        </td>
+                        <td class="px-2 py-1 border edit-mode hidden">
+                            <input type="file" name="tor" accept=".pdf" class="px-2 py-1 w-full text-xs">
+                            <span class="text-xs text-gray-500">
+                                <?= !empty($fileRecords['tor']) ? 'Current: '.esc($fileRecords['tor']) : 'No file chosen'; ?>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Diploma -->
+        <div class="overflow-x-auto mb-2">
+            <table class="table-auto w-full border-collapse text-xs">
+                <tbody>
+                    <tr>
+                        <th class="px-2 py-1 border text-left w-1/3">3. Diploma (PDF)</th>
+                        <td class="px-2 py-1 border view-mode">
+                            <?= !empty($fileRecords['diploma']) 
+                                ? '<a href="'.base_url('uploads/'.$fileRecords['diploma']).'" target="_blank" class="text-blue-600 hover:underline">'.esc($fileRecords['diploma']).'</a>'
+                                : '<span class="text-gray-500">-</span>'; ?>
+                        </td>
+                        <td class="px-2 py-1 border edit-mode hidden">
+                            <input type="file" name="diploma" accept=".pdf" class="px-2 py-1 w-full text-xs">
+                            <span class="text-xs text-gray-500">
+                                <?= !empty($fileRecords['diploma']) ? 'Current: '.esc($fileRecords['diploma']) : 'No file chosen'; ?>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Certificate -->
+        <div class="overflow-x-auto mb-2">
+            <table class="table-auto w-full border-collapse text-xs">
+                <tbody>
+                    <tr>
+                        <th class="px-2 py-1 border text-left w-1/3">4. Certificate (optional, PDF)</th>
+                        <td class="px-2 py-1 border view-mode">
+                            <?= !empty($fileRecords['certificate']) 
+                                ? '<a href="'.base_url('uploads/'.$fileRecords['certificate']).'" target="_blank" class="text-blue-600 hover:underline">'.esc($fileRecords['certificate']).'</a>'
+                                : '<span class="text-gray-500">-</span>'; ?>
+                        </td>
+                        <td class="px-2 py-1 border edit-mode hidden">
+                            <input type="file" name="certificate" accept=".pdf" class="px-2 py-1 w-full text-xs">
+                            <span class="text-xs text-gray-500">
+                                <?= !empty($fileRecords['certificate']) ? 'Current: '.esc($fileRecords['certificate']) : 'No file chosen'; ?>
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Uploaded date -->
+        <p class="text-xs text-gray-500 mb-2 view-mode">
+            <?= (!empty($fileRecords['uploaded_at']) && $fileRecords['uploaded_at'] != '0000-00-00 00:00:00') 
+                ? 'Uploaded on: '.date('d/m/Y H:i', strtotime($fileRecords['uploaded_at'])) 
+                : 'Upload date not available'; ?>
+        </p>
+    </div>
+
+    <!-- Update / Save / Cancel buttons -->
+    <div class="flex justify-end gap-2 mt-2">
+
+        <button id="updateFilesBtn" class="bg-clsuGold px-3 py-1 rounded text-xs font-semibold hover:bg-yellow-500">Edit Files</button>
+<!-- Save & Cancel buttons (hidden by default) -->
+<button type="button" id="cancelFilesBtn" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500 hidden">Cancel</button>
+<button type="button" id="saveFilesBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800 hidden">Save</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const updateBtn = document.getElementById('updateFilesBtn');
+    const saveBtn = document.getElementById('saveFilesBtn');
+    const cancelBtn = document.getElementById('cancelFilesBtn');
+
+    const viewEls = document.querySelectorAll('#tab-files .view-mode');
+    const editEls = document.querySelectorAll('#tab-files .edit-mode');
+
+    // Show file inputs
+    updateBtn.addEventListener('click', () => {
+        viewEls.forEach(el => el.classList.add('hidden'));
+        editEls.forEach(el => el.classList.remove('hidden'));
+
+        updateBtn.classList.add('hidden');
+        saveBtn.classList.remove('hidden');
+        cancelBtn.classList.remove('hidden');
+    });
+
+    // Cancel editing
+    cancelBtn.addEventListener('click', () => {
+        viewEls.forEach(el => el.classList.remove('hidden'));
+        editEls.forEach(el => el.classList.add('hidden'));
+
+        updateBtn.classList.remove('hidden');
+        saveBtn.classList.add('hidden');
+        cancelBtn.classList.add('hidden');
+    });
+
+    // Save files via AJAX
+    saveBtn.addEventListener('click', async () => {
+        const formData = new FormData();
+
+        // Collect all file inputs dynamically
+        editEls.forEach(td => {
+            const input = td.querySelector('input[type="file"]');
+            if (input && input.files[0]) {
+                formData.append(input.name, input.files[0]);
+            }
+        });
+
+        try {
+            const res = await fetch('<?= base_url("account/updateFiles") ?>', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if(data.status === 'success'){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    text: data.message || 'Documents updated successfully!',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => location.reload());
+            } else {
+                Swal.fire('Error', data.message || 'Failed to update files', 'error');
+            }
+        } catch(err) {
+            Swal.fire('Error', 'Something went wrong', 'error');
+            console.error(err);
+        }
+    });
+});
+
+
+</script>
+
+
+  </div>
+</div>
+
+<script>
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+// Function to activate a tab
+function activateTab(tabName) {
+    // Hide all contents
+    tabContents.forEach(tc => tc.classList.add('hidden'));
+
+    // Reset button styles
+    tabButtons.forEach(b => {
+        b.classList.remove('text-clsuGreen','border-b-2','border-clsuGreen');
+        b.classList.add('text-gray-600');
+    });
+
+    // Show selected tab
+    document.getElementById('tab-' + tabName).classList.remove('hidden');
+
+    // Highlight active button
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+    if(activeBtn){
+        activeBtn.classList.add('text-clsuGreen','border-b-2','border-clsuGreen');
+        activeBtn.classList.remove('text-gray-600');
+    }
+
+    // Save active tab to localStorage
+    localStorage.setItem('activeTab', tabName);
+}
+
+// Click event for tabs
+tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+        activateTab(btn.dataset.tab);
+    });
+});
+
+// Restore tab after refresh
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTab = localStorage.getItem('activeTab') || 'personal';
+    activateTab(savedTab);
+});
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -309,14 +1125,6 @@ editBtn.addEventListener('click', () => {
                 case 'date_of_birth':
                     td.innerHTML = `<input type="date" value="${value}" class="w-full px-1 text-xs"/>`;
                     break;
-                case 'height':
-                case 'weight':
-                    td.innerHTML = `<input type="number" step="0.01" value="${value}" class="w-full px-1 text-xs"/>`;
-                    break;
-                case 'blood_type':
-                    td.innerHTML = `<select class="w-full  px-1 text-xs">${bloodTypeOptions.map(b => `<option value="${b}" ${b===value?'selected':''}>${b}</option>`).join('')}</select>`;
-                    break;
-                case 'resume':
                 case 'photo':
                     td.innerHTML = `<input type="file" name="${td.dataset.key}" class="w-full text-xs"/>`;
                     break;
@@ -434,6 +1242,159 @@ saveBtn.addEventListener('click', () => {
         </div>
     </div>
 </footer>
+
+<script>
+const editPhotoBtn = document.getElementById('editPhotoBtn');
+const photoInput = document.getElementById('photoInput');
+const profilePhoto = document.getElementById('profilePhoto');
+
+editPhotoBtn.addEventListener('click', () => {
+    Swal.fire({
+        title: 'Edit Profile Picture?',
+        text: "Do you want to change your profile picture?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, change it!',
+        cancelButtonText: 'Cancel',
+    }).then((result) => {
+        if(result.isConfirmed){
+            photoInput.click();
+        }
+    });
+});
+
+photoInput.addEventListener('change', () => {
+    if(photoInput.files.length > 0){
+        const file = photoInput.files[0];
+
+        // Preview immediately
+        const reader = new FileReader();
+        reader.onload = e => {
+            if(profilePhoto.tagName === 'IMG'){
+                profilePhoto.src = e.target.result;
+            } else {
+                const img = document.createElement('img');
+                img.id = 'profilePhoto';
+                img.src = e.target.result;
+                img.className = 'w-full h-full object-cover rounded-full';
+                profilePhoto.replaceWith(img);
+            }
+        };
+        reader.readAsDataURL(file);
+
+        // Send via AJAX to update only photo
+        const formData = new FormData();
+        formData.append('photo', file);
+
+        fetch('<?= base_url('account/updatePhoto') ?>', {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Profile Updated!',
+                    text: 'Your profile photo has been updated.',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: data.message
+                });
+            }
+        })
+        .catch(err => {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Something went wrong.'
+            });
+            console.error(err);
+        });
+    }
+});
+</script>
+
+
+<script>
+const editEduBtn = document.getElementById('editEducationBtn');
+const saveEduBtn = document.getElementById('saveEducationBtn');
+const cancelEduBtn = document.getElementById('cancelEducationBtn');
+let originalEduData = [];
+
+editEduBtn.addEventListener('click', () => {
+    originalEduData = [];
+    const rows = document.querySelectorAll('#table-education tbody tr');
+
+    rows.forEach(row => {
+        const rowData = {};
+        row.querySelectorAll('td[data-key]').forEach(td => {
+            rowData[td.dataset.key] = td.textContent.trim();
+            let value = td.textContent.trim();
+            if(value === '-') value = '';
+
+            td.innerHTML = `<input type="text" class="w-full px-1 text-xs" value="${value}"/>`;
+        });
+        originalEduData.push(rowData);
+    });
+
+    editEduBtn.classList.add('hidden');
+    saveEduBtn.classList.remove('hidden');
+    cancelEduBtn.classList.remove('hidden');
+});
+
+cancelEduBtn.addEventListener('click', () => {
+    const rows = document.querySelectorAll('#table-education tbody tr');
+    rows.forEach((row, i) => {
+        row.querySelectorAll('td[data-key]').forEach(td => {
+            td.textContent = originalEduData[i][td.dataset.key] || '-';
+        });
+    });
+
+    editEduBtn.classList.remove('hidden');
+    saveEduBtn.classList.add('hidden');
+    cancelEduBtn.classList.add('hidden');
+});
+
+saveEduBtn.addEventListener('click', () => {
+    const rows = document.querySelectorAll('#table-education tbody tr');
+    const formData = new FormData();
+
+    rows.forEach((row, i) => {
+        row.querySelectorAll('td[data-key]').forEach(td => {
+            const input = td.querySelector('input');
+            if(input) formData.append(`education[${i}][${td.dataset.key}]`, input.value.trim());
+        });
+    });
+
+    fetch('<?= base_url("account/updateEducation") ?>', {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.success){
+            Swal.fire({
+                icon: 'success',
+                title: 'Saved!',
+                text: res.message,
+                timer: 2000,
+                showConfirmButton: false,
+                willClose: () => window.location.reload()
+            });
+        } else {
+            Swal.fire('Error', res.message || 'Unable to save education.', 'error');
+        }
+    })
+    .catch(() => Swal.fire('Error', 'Something went wrong.', 'error'));
+});
+</script>
 
 </body>
 </html>

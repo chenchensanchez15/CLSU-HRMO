@@ -66,7 +66,6 @@ window.onclick = function(event) {
             <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold">CLSU Online Job Application</span>
-                <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>
             </div>
         </div>
         <div class="flex items-center gap-12">
@@ -75,8 +74,7 @@ window.onclick = function(event) {
    class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
    Home
 </a>
-                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
-                <a href="#" class="hover:underline">Trainings</a>
+                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Profile</a>
             </nav>
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
@@ -147,7 +145,6 @@ window.onclick = function(event) {
             }
         ?>
 <div class="w-full bg-transparent p-0 text-gray-700 text-sm">
-
 <!-- JOB DETAILS -->
 <div class="overflow-x-auto mb-4">
   <table class="table-auto w-full border-collapse text-xs">
@@ -161,10 +158,10 @@ window.onclick = function(event) {
     </thead>
     <tbody>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($app['job']['position_title'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['job']['office'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['job']['department'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['job']['monthly_salary'] ?? 'Php 0.00') ?></td>
+        <td class="px-2 py-1 border"><?= esc($job['position_title'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($job['office'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($job['department'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= isset($job['monthly_salary']) ? 'Php ' . number_format($job['monthly_salary'],2) : 'Php 0.00' ?></td>
       </tr>
     </tbody>
   </table>
@@ -185,103 +182,93 @@ window.onclick = function(event) {
           <?= isset($app['applied_at']) ? date('F j, Y', strtotime($app['applied_at'])) : '-' ?>
         </td>
         <td class="px-2 py-1 border">
-          <?= isset($app['job']['application_deadline']) && $app['job']['application_deadline'] != '-' 
-                ? date('F j, Y', strtotime($app['job']['application_deadline'])) 
-                : '-' ?>
+            <?= !empty($job['application_deadline']) 
+            ? date('F j, Y', strtotime($job['application_deadline'])) 
+            : '-' ?>
         </td>
         <td class="px-2 py-1 border"><?= esc($app['application_status'] ?? '-') ?></td>
       </tr>
     </tbody>
   </table>
 </div>
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Personal Information</h2>
 
-  <h2 class="text-lg font-semibold text-clsuGreen mb-2">Personal Information</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">First Name</th>
+        <th class="px-2 py-1 border">Middle Name</th>
+        <th class="px-2 py-1 border">Last Name</th>
+        <th class="px-2 py-1 border">Suffix</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['first_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['middle_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['last_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['extension'] ?? '-') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- Name -->
-  <div class="overflow-x-auto mb-4">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">First Name</th>
-          <th class="px-2 py-1 border">Middle Name</th>
-          <th class="px-2 py-1 border">Last Name</th>
-          <th class="px-2 py-1 border">Suffix</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($app['first_name'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['middle_name'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['last_name'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['suffix'] ?? '-') ?></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Sex</th>
+        <th class="px-2 py-1 border">Date of Birth</th>
+        <th class="px-2 py-1 border">Civil Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['sex'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['date_of_birth'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['civil_status'] ?? '-') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- Basic Info -->
-  <div class="overflow-x-auto mb-4">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Sex</th>
-          <th class="px-2 py-1 border">Date of Birth</th>
-          <th class="px-2 py-1 border">Place of Birth</th>
-          <th class="px-2 py-1 border">Civil Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($app['sex'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['date_of_birth'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['place_of_birth'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['civil_status'] ?? '-') ?></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Email</th>
+        <th class="px-2 py-1 border">Phone Number</th>
+        <th class="px-2 py-1 border">Citizenship</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['email'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['phone'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['citizenship'] ?? '-') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- Contact -->
-  <div class="overflow-x-auto mb-4">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Email</th>
-          <th class="px-2 py-1 border">Phone Number</th>
-          <th class="px-2 py-1 border">Citizenship</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($app['email'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['phone'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['citizenship'] ?? '-') ?></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Residential Address</th>
+        <th class="px-2 py-1 border">Permanent Address</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['residential_address'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['permanent_address'] ?? '-') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  <!-- Physical -->
-  <div class="overflow-x-auto mb-6">
-    <table class="table-auto w-full border-collapse text-xs">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-2 py-1 border">Height (m)</th>
-          <th class="px-2 py-1 border">Weight (kg)</th>
-          <th class="px-2 py-1 border">Blood Type</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td class="px-2 py-1 border"><?= esc($app['height'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['weight'] ?? '-') ?></td>
-          <td class="px-2 py-1 border"><?= esc($app['blood_type'] ?? '-') ?></td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-<!-- FAMILY BACKGROUND -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
@@ -295,10 +282,7 @@ window.onclick = function(event) {
     </thead>
     <tbody>
       <?php
-      // Force these three relationships
       $relations = ['Spouse', 'Father', 'Mother'];
-
-      // Index existing family by relationship for quick lookup
       $family_by_relation = [];
       if (!empty($app['family'])) {
           foreach ($app['family'] as $fam) {
@@ -306,28 +290,39 @@ window.onclick = function(event) {
           }
       }
 
-      // Loop through all relations
       foreach ($relations as $relation):
           $fam = $family_by_relation[$relation] ?? [];
-          // Build full name, fallback to '-' if empty
-          $fullName = trim(
-              ($fam['first_name'] ?? '') . ' ' .
-              ($fam['middle_name'] ?? '') . ' ' .
-              ($fam['last_name'] ?? '') . ' ' .
-              ($fam['extension'] ?? '')
-          );
-          if ($fullName === '') $fullName = '-';
+
+          $first = $fam['first_name'] ?? '';
+          $middle = $fam['middle_name'] ?? '';
+          $last = $fam['last_name'] ?? '';
+          $suffix = $fam['extension'] ?? '';
+
+          // If middle name and suffix are empty or N/A, show only first + last
+          if (empty($middle) || strtoupper($middle) === 'N/A') {
+              $middle = '';
+          }
+          if (empty($suffix) || strtoupper($suffix) === 'N/A') {
+              $suffix = '';
+          }
+
+          $nameParts = array_filter([$first, $middle, $last, $suffix]);
+          $fullName = $nameParts ? implode(' ', $nameParts) : '-';
+
+          $occupation = !empty($fam['occupation']) && strtoupper($fam['occupation']) !== 'N/A' ? $fam['occupation'] : '-';
+          $contact    = !empty($fam['contact_no']) && strtoupper($fam['contact_no']) !== 'N/A' ? $fam['contact_no'] : '-';
       ?>
       <tr>
         <td class="px-2 py-1 border"><?= esc($relation) ?></td>
         <td class="px-2 py-1 border"><?= esc($fullName) ?></td>
-        <td class="px-2 py-1 border"><?= esc($fam['occupation'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($fam['contact_number'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($occupation) ?></td>
+        <td class="px-2 py-1 border"><?= esc($contact) ?></td>
       </tr>
       <?php endforeach; ?>
     </tbody>
   </table>
 </div>
+
 <!-- EDUCATION -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Educational Background</h2>
 <div class="overflow-x-auto mb-6">
@@ -335,61 +330,38 @@ window.onclick = function(event) {
     <thead class="bg-gray-100">
       <tr>
         <th class="px-2 py-1 border">Level</th>
-        <th class="px-2 py-1 border">School</th>
-        <th class="px-2 py-1 border">Location</th>
+        <th class="px-2 py-1 border">School Name / Degree / Course</th>
+        <th class="px-2 py-1 border">Period of Attendance</th>
+        <th class="px-2 py-1 border">Highest Level / Units Earned</th>
         <th class="px-2 py-1 border">Year Graduated</th>
-        <th class="px-2 py-1 border">Awards</th>
+        <th class="px-2 py-1 border">Awards / Honors</th>
       </tr>
     </thead>
     <tbody>
-      <?php
-      // Fixed order for main levels
-      $main_levels = ['Elementary', 'High School', 'College'];
-
-      // Index existing education by level
-      $education_by_level = [];
-      if (!empty($app['education'])) {
-          foreach ($app['education'] as $edu) {
-              $education_by_level[$edu['level']] = $edu;
-          }
-      }
-
-      // Display main levels first
-      foreach ($main_levels as $level):
-          $edu = $education_by_level[$level] ?? [];
-      ?>
+      <?php if (!empty($app['education'])): ?>
+          <?php foreach ($app['education'] as $edu): ?>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($level) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['location'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['level'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+            <?= esc($edu['school_name'] ?? '-') ?>
+            <?= !empty($edu['degree_course']) ? ' / ' . esc($edu['degree_course']) : '' ?>
+        </td>
+        <td class="px-2 py-1 border">
+            <?= esc($edu['period_from'] ?? '-') ?> - <?= esc($edu['period_to'] ?? '-') ?>
+        </td>
+        <td class="px-2 py-1 border"><?= esc($edu['highest_level_units'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($edu['awards'] ?? '-') ?></td>
       </tr>
-      <?php endforeach; ?>
-
-      <?php
-      // Display any other custom levels after main ones
-      if (!empty($app['education'])):
-          foreach ($app['education'] as $edu):
-              if (!in_array($edu['level'], $main_levels)):
-      ?>
+          <?php endforeach; ?>
+      <?php else: ?>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($edu['level']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['location'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['awards'] ?: '-') ?></td>
+        <td class="px-2 py-1 border text-center" colspan="6">No education records found.</td>
       </tr>
-      <?php
-              endif;
-          endforeach;
-      endif;
-      ?>
+      <?php endif; ?>
     </tbody>
   </table>
 </div>
-
-
 
 <!-- WORK EXPERIENCE -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Work Experience</h2>
@@ -397,25 +369,37 @@ window.onclick = function(event) {
   <table class="table-auto w-full border-collapse text-xs">
     <thead class="bg-gray-100">
       <tr>
-        <th class="px-2 py-1 border">Current Work</th>
-        <th class="px-2 py-1 border">Previous Work</th>
-        <th class="px-2 py-1 border">Duration</th>
-        <th class="px-2 py-1 border">Awards / Achievements</th>
+        <th class="px-2 py-1 border">Position / Title</th>
+        <th class="px-2 py-1 border">Office</th>
+        <th class="px-2 py-1 border">Inclusive Dates</th>
+        <th class="px-2 py-1 border">Status of Appointment</th>
+        <th class="px-2 py-1 border">Government Service</th>
       </tr>
     </thead>
     <tbody>
+      <?php if (!empty($app['work'])): ?>
+        <?php foreach ($app['work'] as $work): ?>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($app['work']['current_work'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['work']['previous_work'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['work']['duration'] ?: '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['work']['awards'] ?: '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($work['position_title'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($work['office'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+            <?= esc($work['date_from'] ?? '-') ?> - <?= esc($work['date_to'] ?? '-') ?>
+        </td>
+        <td class="px-2 py-1 border"><?= esc($work['status_of_appointment'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= !empty($work['govt_service']) ? 'Yes' : 'No' ?></td>
       </tr>
+        <?php endforeach; ?>
+      <?php else: ?>
+      <tr>
+        <td class="px-2 py-1 border text-center" colspan="5">No work experience records found.</td>
+      </tr>
+      <?php endif; ?>
     </tbody>
   </table>
 </div>
 <!-- DOCUMENTS -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Uploaded Documents</h2>
-<div class="overflow-x-auto">
+<div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
     <thead class="bg-gray-100">
       <tr>
@@ -424,27 +408,38 @@ window.onclick = function(event) {
       </tr>
     </thead>
     <tbody>
-      <?php foreach (['resume','tor','diploma','certificate'] as $doc):
-        $file = $app['documents'][$doc] ?? '';
+      <?php
+      // List of document fields in the database
+      $docs = ['resume', 'tor', 'diploma', 'certificate'];
+
+      // Loop through each document type
+      foreach ($docs as $doc):
+          $file = $app['documents'][$doc] ?? null;
       ?>
       <tr>
         <td class="px-2 py-1 border font-semibold"><?= ucfirst($doc) ?></td>
         <td class="px-2 py-1 border">
-          <?php if ($file): ?>
+          <?php if (!empty($file)): ?>
             <a href="<?= site_url('applications/viewDocument/'.$app['id'].'/'.$doc) ?>" 
                target="_blank" 
                class="text-blue-600 hover:underline">
               <?= esc($file) ?>
             </a>
-          <?php else: ?>-
+          <?php else: ?>
+            -
           <?php endif; ?>
         </td>
       </tr>
       <?php endforeach; ?>
+
+      <?php if (empty(array_filter($app['documents'] ?? []))): ?>
+      <tr>
+        <td class="px-2 py-1 border text-center font-semibold" colspan="2">No documents uploaded.</td>
+      </tr>
+      <?php endif; ?>
     </tbody>
   </table>
 </div>
-
 </div>
 </div>
 </div>

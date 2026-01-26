@@ -8,19 +8,22 @@ class Jobs extends BaseController
     public function index()
     {
         $jobModel = new JobPositionModel();
-        $data['jobs'] = $jobModel->findAll();
-        return view('home', $data);
+        $data['jobs'] = $jobModel->where('is_posted', 1)->findAll();
+        return view('home', $data); // This is your job listing page
     }
 
-    public function view($id = null)
-    {
-        $jobModel = new JobPositionModel();
-        $data['job'] = $jobModel->find($id);
+  public function view($id = null)
+{
+    $jobModel = new \App\Models\JobPositionModel();
 
-        if (!$data['job']) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
-        }
+    // Only show jobs that are posted
+    $job = $jobModel->where('is_posted', 1)->find($id);
 
-        return view('job_view', $data);
+    if (!$job) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
     }
+
+    return view('job_view', ['job' => $job]);
+}
+
 }

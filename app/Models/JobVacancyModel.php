@@ -6,12 +6,29 @@ use CodeIgniter\Model;
 
 class JobVacancyModel extends Model
 {
-    protected $table = 'job_positions'; // Must match your table
+    protected $table = 'job_vacancies'; // Correct table
     protected $primaryKey = 'id';
     protected $allowedFields = [
-        'position_title', 'office', 'item_no', 'salary_grade', 'monthly_salary',
-        'education', 'training', 'experience', 'eligibility', 'competency',
-        'duties_responsibilities', 'application_requirements', 'application_deadline',
-        'description', 'department', 'employment_type', 'status', 'created_at'
+        'plantilla_item_no',
+        'position_title',
+        'status',
+        'office',
+        'salary_grade',
+        'monthly_salary',
+        'education',
+        'training',
+        'experience',
+        'eligibility',
+        'competency',
+        'duties_responsibilities',
+        'application_requirements',
+        'description',
+        'department',
+        'employee_type',        // THIS column exists
+        'application_deadline',
+        'is_posted',
+        'posted_at',
+        'created_at',
+        'updated_at'
     ];
 }

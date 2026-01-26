@@ -8,8 +8,7 @@ use App\Models\JobVacancyModel;
 use App\Models\ApplicantModel;
 
 class Dashboard extends BaseController
-{
- public function index()
+{  public function index()
 {
     $session = session();
 
@@ -23,20 +22,39 @@ class Dashboard extends BaseController
     $userModel = new UserModel();
     $user = $userModel->find($userId);
 
-    // Fetch applications for this user with job info
+    // Fetch user's job applications with job vacancy info
     $db = \Config\Database::connect();
-    $builder = $db->table('job_applications');
-    $builder->select('job_applications.id, job_applications.job_position_id, job_positions.position_title, job_positions.department, job_positions.item_no, job_positions.created_at as posting_date, job_positions.application_deadline as closing_date, job_applications.application_status');
-    $builder->join('job_positions', 'job_positions.id = job_applications.job_position_id', 'left');
-    $builder->where('job_applications.user_id', $userId);
-    $applications = $builder->get()->getResultArray();
+$builder = $db->table('job_applications');
+$builder->select('
+    job_applications.id_job_application,
+    job_applications.job_vacancy_id,
+    job_vacancies.position_title,
+    job_vacancies.office AS department,
+    job_vacancies.plantilla_item_no,
+    job_vacancies.salary_grade,
+    job_vacancies.monthly_salary,
+    job_vacancies.posted_at AS posting_date,
+    job_vacancies.application_deadline AS closing_date,
+    job_applications.application_status
+');
+$builder->join('job_vacancies', 'job_vacancies.id = job_applications.job_vacancy_id', 'left');
+$builder->where('job_applications.user_id', $userId);
+$applications = $builder->get()->getResultArray();
 
-    // Prepare a list of job_position_id the user already applied to
-    $appliedJobIds = array_column($applications, 'job_position_id');
+    // If no applications, make sure $applications is an empty array
+    if (!$applications) {
+        $applications = [];
+    }
 
-    // Fetch all open job vacancies
+    // List of job_vacancy_id that the user already applied to
+    $appliedJobIds = array_column($applications, 'job_vacancy_id');
+
+    // Fetch all posted job vacancies
     $vacancyModel = new JobVacancyModel();
-    $vacancies = $vacancyModel->where('status', 'Open')->findAll();
+    $vacancies = $vacancyModel
+        ->where('is_posted', 1)
+        ->orderBy('posted_at', 'DESC')
+        ->findAll();
 
     // Fetch applicant profile
     $applicantModel = new ApplicantModel();
@@ -56,27 +74,26 @@ class Dashboard extends BaseController
         'applications' => $applications,
         'vacancies' => $vacancies,
         'profile' => $profile,
-        'profilePhoto' => $profilePhoto, // Pass to view
-        'appliedJobIds' => $appliedJobIds // <-- list of already applied jobs
+        'profilePhoto' => $profilePhoto,
+        'appliedJobIds' => $appliedJobIds
     ];
 
     return view('dashboard', $data);
 }
-
+ 
+    
     public function apply()
     {
         $db = \Config\Database::connect();
 
-        // TEMP USER (you may replace with session user_id)
-        $userId = session()->get('user_id') ?? 3;
-
+        $userId = session()->get('user_id');
         $vacancyId = $this->request->getPost('vacancy_id');
 
         // Prevent duplicate application
-        $exists = $db->table('applications')
+        $exists = $db->table('job_applications')
             ->where([
                 'user_id' => $userId,
-                'vacancy_id' => $vacancyId
+                'job_vacancy_id' => $vacancyId
             ])
             ->get()
             ->getRow();
@@ -85,11 +102,13 @@ class Dashboard extends BaseController
             return redirect()->back()->with('error', 'You already applied for this position.');
         }
 
-        $db->table('applications')->insert([
+        $db->table('job_applications')->insert([
             'user_id' => $userId,
-            'vacancy_id' => $vacancyId,
-            'status' => 'Pending',
-            'applied_at' => date('Y-m-d H:i:s')
+            'job_vacancy_id' => $vacancyId,
+            'application_status' => 'Pending',
+            'applied_at' => date('Y-m-d H:i:s'),
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
         ]);
 
         return redirect()->back()->with('success', 'Application submitted successfully.');

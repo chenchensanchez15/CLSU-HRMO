@@ -67,7 +67,6 @@ window.onclick = function(event) {
             <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold">CLSU Online Job Application</span>
-                <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>
             </div>
         </div>
         <div class="flex items-center gap-12">
@@ -76,8 +75,7 @@ window.onclick = function(event) {
    class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
    Home
 </a>
-                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
-                <a href="#" class="hover:underline">Trainings</a>
+                <a href="<?= site_url('account/personal') ?>" class="hover:underline">Profile</a>
             </nav>
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
@@ -143,67 +141,68 @@ window.onclick = function(event) {
                 <th class="border-b p-2 text-left">Action</th>
             </tr>
         </thead>
-        <tbody>
-            <?php if(empty($applications)): ?>
-                <tr>
-                    <td colspan="7" class="p-2 text-gray-500 text-center">No data available in table</td>
-                </tr>
-            <?php else: $i = 1; foreach($applications as $app): ?>
-                <tr class="bg-white hover:bg-gray-50">
-                    <td class="p-2"><?= $i++ ?></td>
-                    <td class="p-2"><?= esc($app['position_title']) ?></td>
-                    <td class="p-2"><?= esc($app['department']) ?></td>
-                    <td class="p-2"><?= date('M d, Y', strtotime($app['posting_date'])) ?></td>
-                    <td class="p-2"><?= date('M d, Y', strtotime($app['closing_date'])) ?></td>
-                    <td class="p-2">
-                        <?php
-                            $status = $app['application_status'] ?? 'Submitted. For Evaluation';
+       <tbody>
+    <?php if(empty($applications)): ?>
+        <tr>
+            <td colspan="7" class="p-2 text-gray-500 text-center">No data available in table</td>
+        </tr>
+    <?php else: $i = 1; foreach($applications as $app): ?>
+        <tr class="bg-white hover:bg-gray-50">
+            <td class="p-2"><?= $i++ ?></td>
+            <td class="p-2"><?= esc($app['position_title']) ?></td>
+            <td class="p-2"><?= esc($app['department']) ?></td>
+            <td class="p-2"><?= !empty($app['posting_date']) ? date('M d, Y', strtotime($app['posting_date'])) : 'N/A' ?></td>
+            <td class="p-2"><?= !empty($app['closing_date']) ? date('M d, Y', strtotime($app['closing_date'])) : 'N/A' ?></td>
+            <td class="p-2">
+                <?php
+                    $status = $app['application_status'] ?? 'Submitted. For Evaluation';
 
-                            $statusClasses = [
-                                'Submitted. For Evaluation' => 'bg-yellow-400 text-black',
-                                'Under Evaluation' => 'bg-blue-500 text-white',
-                                'Not qualified' => 'bg-red-500 text-white',
-                                'Shortlisted.' => 'bg-blue-300 text-black',
-                                'Scheduled for Interview' => 'bg-purple-500 text-white',
-                                'Withdrawn application' => 'bg-gray-400 text-black',
-                                'Did not attend interview' => 'bg-red-600 text-white',
-                                'Interviewed. Awaiting Result' => 'bg-yellow-300 text-black',
-                                'Not selected.' => 'bg-red-400 text-white',
-                                'Job offered.' => 'bg-green-500 text-white',
-                                'Rejected job offer.' => 'bg-red-700 text-white',
-                                'ACCEPTED.' => 'bg-green-600 text-white',
-                            ];
+                    $statusClasses = [
+                        'Submitted' => 'bg-yellow-400 text-black',
+                        'Under Evaluation' => 'bg-blue-500 text-white',
+                        'Not qualified' => 'bg-red-500 text-white',
+                        'Shortlisted.' => 'bg-blue-300 text-black',
+                        'Scheduled for Interview' => 'bg-purple-500 text-white',
+                        'Withdrawn application' => 'bg-gray-400 text-black',
+                        'Did not attend interview' => 'bg-red-600 text-white',
+                        'Interviewed. Awaiting Result' => 'bg-yellow-300 text-black',
+                        'Not selected.' => 'bg-red-400 text-white',
+                        'Job offered.' => 'bg-green-500 text-white',
+                        'Rejected job offer.' => 'bg-red-700 text-white',
+                        'ACCEPTED.' => 'bg-green-600 text-white',
+                    ];
 
-                            $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
-                            $badgeClass = $statusClasses[$status] ?? 'bg-gray-400 text-white';
-                        ?>
-                        <span class="px-3 py-1 rounded-full text-xs font-semibold <?= $badgeClass ?>">
-                            <?= esc($displayText) ?>
-                        </span>
-                 <td class="p-2 whitespace-nowrap">
+                    $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
+                    $badgeClass = $statusClasses[$status] ?? 'bg-gray-400 text-white';
+                ?>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold <?= $badgeClass ?>">
+                    <?= esc($displayText) ?>
+                </span>
+            </td>
+           <td class="p-2 whitespace-nowrap">
     <div class="flex items-center gap-1">
-        
-        <a href="<?= base_url('applications/view/' . $app['id']) ?>" 
+        <a href="<?= base_url('applications/view/' . $app['id_job_application']) ?>" 
            class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center">
             <i class="fas fa-eye mr-1"></i> View
         </a>
 
         <a href="#"
-        class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
-        data-url="<?= base_url('applications/edit/' . $app['id']) ?>">
+           class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
+           data-url="<?= base_url('applications/edit/' . $app['id_job_application']) ?>">
             <i class="fas fa-pencil-alt mr-1"></i> Edit
         </a>
 
         <a href="#"
             class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center withdraw-btn"
-            data-id="<?= $app['id'] ?>">
+            data-id="<?= $app['id_job_application'] ?>">
             <i class="fas fa-times mr-1"></i> Withdraw
         </a>
     </div>
 </td>
-                </tr>
-            <?php endforeach; endif; ?>
-        </tbody>
+
+        </tr>
+    <?php endforeach; endif; ?>
+</tbody>
     </table>
    <div id="applicationsPagination" class="flex justify-end mt-4 gap-2"></div>
 </div>
@@ -211,40 +210,33 @@ window.onclick = function(event) {
 <div class="card bg-white p-6 rounded-lg">
     <h3 class="text-clsuGreen font-bold mb-4">Available Job Vacancies</h3>
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-4">
-        <div class="flex gap-2">
-            <?php 
-            $filters = ['All','Contractual','Permanent']; 
-            foreach($filters as $index => $f): 
-                $activeClass = $index === 0 ? 'bg-clsuGreen text-white' : 'bg-gray-200 text-black';
-            ?>
-                <button class="filter-btn px-2 py-2 rounded-full text-sm <?= $activeClass ?>" data-type="<?= strtolower($f) ?>">
-                    <?= $f ?>
-                </button>
-            <?php endforeach; ?>
-        </div>
+        <p class="text-gray-700 font-semibold mb-2">
+            <?= count($vacancies) ?> Vacant Positions
+        </p>
         <input type="text" placeholder="Search jobs..." class="border rounded-full px-4 py-2 text-sm w-full md:w-64 focus:ring-2 focus:ring-clsuGreen outline-none">
     </div>
-
-<div class="space-y-4"> <!-- small gap between cards -->
+    <div class="space-y-4"> <!-- small gap between cards -->
     <?php foreach($vacancies as $vac): ?>
     <div class="border rounded-xl p-4 hover:shadow-sm transition job-card" 
-         data-title="<?= strtolower($vac['position_title']) ?>" 
-         data-type="<?= strtolower($vac['employment_type']) ?>">
+         data-title="<?= strtolower($vac['position_title']) ?>"> <!-- removed data-type -->
         
         <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-2">
-            <div>
-                <h4 class="text-base font-semibold text-gray-900">
-                    <?= esc($vac['position_title']) ?> 
-                    <span class="text-sm font-normal text-gray-500"><?= esc($vac['employment_type']) ?></span>
-                </h4>
-                <p class="text-sm text-gray-500 mt-1">
-                    <?= esc($vac['office']) ?> • Posted on <?= date('M d, Y', strtotime($vac['created_at'])) ?>
-                </p>
-            </div>
-            <div class="text-right text-clsuGreen font-semibold text-base">
-                <?= esc($vac['monthly_salary']) ?>
-            </div>
-        </div>
+    <div>
+        <h4 class="text-base font-semibold text-gray-900">
+            <?= esc($vac['position_title'] ?? 'No Position Title') ?> 
+        </h4>
+        <p class="text-sm text-gray-500 mt-1">
+            <?= esc($vac['office'] ?? 'No Office') ?>
+            <?php if(!empty($vac['posted_at']) && $vac['posted_at'] != '0000-00-00 00:00:00'): ?>
+                • Posted on <?= date('M d, Y', strtotime($vac['posted_at'])) ?>
+            <?php endif; ?>
+        </p>
+    </div>
+    <div class="text-right text-clsuGreen font-semibold text-base">
+        <?= isset($vac['monthly_salary']) ? '₱' . number_format($vac['monthly_salary'], 2) : '₱0.00' ?>
+    </div>
+</div>
+
 
         <p class="text-sm text-gray-700 mt-2">
             <?= esc($vac['description']) ?> 
@@ -256,17 +248,50 @@ window.onclick = function(event) {
                 Deadline: <?= date('F j, Y', strtotime($vac['application_deadline'])) ?>
             </p>
 
-    <?php if(in_array($vac['id'], $appliedJobIds)): ?>
+
+   <?php 
+// Define inactive statuses
+$inactiveStatuses = [
+    'Not qualified',
+    'Withdrawn application',
+    'Did not attend interview',
+    'Not selected.',
+    'Rejected job offer.'
+];
+$applied = false;
+$appStatus = null;
+
+foreach ($applications as $app) {
+    if ($app['job_vacancy_id'] == $vac['id']) {
+
+        // Normalize status
+        $status = trim($app['application_status']);
+        if ($status === 'Submitted. For Evaluation') {
+            $status = 'Submitted';
+        }
+
+        // If status is ACTIVE, mark as applied
+        if (!in_array($status, $inactiveStatuses)) {
+            $applied = true;
+            $appStatus = $status;
+            break; // stop ONLY when active found
+        }
+    }
+}
+
+?>
+<?php if($applied && !in_array($appStatus, $inactiveStatuses)): ?>
     <span class="px-3 py-1 rounded-lg bg-yellow-400 text-black text-sm font-semibold cursor-not-allowed">
         Submitted
     </span>
 <?php else: ?>
-    <form method="GET" action="<?= base_url('applications/apply/' . $vac['item_no']) ?>">
+    <form method="GET" action="<?= base_url('applications/apply/' . $vac['id']) ?>">
         <button class="bg-clsuGreen text-white px-4 py-1 rounded-lg text-sm hover:bg-green-800">
             Apply
         </button>
     </form>
 <?php endif; ?>
+
         </div>
     </div>
     <?php endforeach; ?>
@@ -305,11 +330,11 @@ window.onclick = function(event) {
       <!-- Job Overview (2 columns) -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
         <p><strong>Office:</strong> <span id="modalOffice"></span></p>
-        <p><strong>Department:</strong> <span id="modalDepartment"></span></p>
-        <p><strong>Employment Type:</strong> <span id="modalType"></span></p>
-        <p><strong>Monthly Salary:</strong> <span id="modalSalary" class="font-semibold text-clsuGreen"></span></p>
-        <p>📅 <strong>Posted:</strong> <span id="modalPosted"></span></p>
-        <p class="text-red-600 font-semibold">⏳ <strong>Deadline:</strong> <span id="modalDeadline"></span></p>
+        <p><strong>Salary Grade:</strong> <span id="modalSalaryGrade"></span></p>
+        <p><strong>Item No.:</strong> <span id="modalItemNo"></span></p>
+        <p><strong>Monthly Salary:</strong> <span id="modalSalary"></span></p>
+        <p><strong>Posted:</strong> <span id="modalPosted"></span></p>
+        <p class="text-red-600 font-semibold"><strong>Deadline:</strong> <span id="modalDeadline"></span></p>
       </div>
 
       <hr class="my-3">
@@ -369,7 +394,7 @@ const jobs = <?= json_encode($vacancies) ?>;
 const jobCards = Array.from(document.querySelectorAll('.job-card'));
 let perPage = 5, currentPage = 1, filteredType = 'all';
 function renderJobs() {
-    let filteredJobs = jobCards.filter(card => filteredType === 'all' || card.dataset.type === filteredType);
+    let filteredJobs = jobCards; // no filter, show all jobs
 
     const searchValue = document.querySelector('input[placeholder="Search jobs..."]').value.toLowerCase();
     filteredJobs = filteredJobs.filter(card => card.dataset.title.includes(searchValue));
@@ -413,16 +438,6 @@ function renderJobs() {
     pagination.appendChild(nextBtn);
 }
 
-document.querySelectorAll('.filter-btn').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-        filteredType = btn.dataset.type;
-        currentPage=1;
-
-        document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('bg-clsuGreen','text-white'));
-        btn.classList.add('bg-clsuGreen','text-white');
-        renderJobs();
-    });
-});
 
 document.querySelector('input[placeholder="Search jobs..."]').addEventListener('keyup',()=>renderJobs());
 function openModal(id){
@@ -433,8 +448,8 @@ function openModal(id){
     document.getElementById('modalTitle').textContent = job.position_title;
     document.getElementById('modalOfficeText').textContent = job.office;
     document.getElementById('modalOffice').textContent = job.office;
-    document.getElementById('modalDepartment').textContent = job.department;
-    document.getElementById('modalType').textContent = job.employment_type;
+    document.getElementById('modalSalaryGrade').textContent = job.salary_grade;
+    document.getElementById('modalItemNo').textContent = job.plantilla_item_no;
     document.getElementById('modalSalary').textContent = job.monthly_salary;
    document.getElementById('modalPosted').textContent =
     new Date(job.created_at).toLocaleDateString('en-US', { 
@@ -685,7 +700,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
-    const filterButtons = document.querySelectorAll('.filter-btn');
 
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {

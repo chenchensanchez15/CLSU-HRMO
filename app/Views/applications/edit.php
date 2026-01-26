@@ -66,7 +66,6 @@ window.onclick = function(event) {
             <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold">CLSU Online Job Application</span>
-                <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>
             </div>
         </div>
         <div class="flex items-center gap-12">
@@ -75,8 +74,7 @@ window.onclick = function(event) {
    class="text-clsuGold font-semibold border-b-2 border-clsuGold pb-0.5">
    Home
 </a>
-            <a href="<?= site_url('account/personal') ?>" class="hover:underline">Personal</a>
-                <a href="#" class="hover:underline">Trainings</a>
+            <a href="<?= site_url('account/personal') ?>" class="hover:underline">Profile</a>
             </nav>
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
@@ -187,6 +185,28 @@ window.onclick = function(event) {
                         </table>
                     </div>
 
+                    <!-- Contact & Citizenship Table -->
+                    <div class="overflow-x-auto mb-4">
+                        <table class="table-auto w-full text-left border-collapse text-xs">
+                            <thead>
+                                <tr class="bg-gray-100">
+                                    <th class="px-2 py-1 border">Email</th>
+                                    <th class="px-2 py-1 border">Phone Number</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="px-2 py-1 border">
+                                        <input type="email" name="email" value="<?= esc($app['email'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                                    </td>
+                                    <td class="px-2 py-1 border">
+                                        <input type="text" name="phone" value="<?= esc($app['phone'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
                     <!-- Birth & Sex Table -->
                     <div class="overflow-x-auto mb-4">
                         <table class="table-auto w-full text-left border-collapse text-xs">
@@ -194,8 +214,8 @@ window.onclick = function(event) {
                                 <tr class="bg-gray-100">
                                     <th class="px-2 py-1 border">Sex *</th>
                                     <th class="px-2 py-1 border">Date of Birth *</th>
-                                    <th class="px-2 py-1 border">Place of Birth</th>
                                     <th class="px-2 py-1 border">Civil Status</th>
+                                    <th class="px-2 py-1 border">Citizenship</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -211,9 +231,6 @@ window.onclick = function(event) {
                                         <input type="date" name="birth_date" value="<?= esc($profile['date_of_birth'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
                                     </td>
                                     <td class="px-2 py-1 border">
-                                        <input type="text" name="place_of_birth" value="<?= esc($profile['place_of_birth'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
                                         <select name="civil_status" class="px-2 py-1 w-full text-xs">
                                             <option value="">Select Civil Status</option>
                                             <option value="Single" <?= ($profile['civil_status'] ?? '') === 'Single' ? 'selected' : '' ?>>Single</option>
@@ -223,72 +240,44 @@ window.onclick = function(event) {
                                             <option value="Divorced" <?= ($profile['civil_status'] ?? '') === 'Divorced' ? 'selected' : '' ?>>Divorced</option>
                                         </select>
                                     </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Contact & Citizenship Table -->
-                    <div class="overflow-x-auto mb-4">
-                        <table class="table-auto w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">Email</th>
-                                    <th class="px-2 py-1 border">Phone Number</th>
-                                    <th class="px-2 py-1 border">Citizenship</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-2 py-1 border">
-                                        <input type="email" name="email" value="<?= esc($app['email'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="phone" value="<?= esc($app['phone'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
+                                      <td class="px-2 py-1 border">
                               <input type="text" name="citizenship" value="<?= esc($profile['citizenship'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <!-- Physical Info Table -->
-                    <div class="overflow-x-auto mb-4">
-                        <table class="table-auto w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">Height (cm)</th>
-                                    <th class="px-2 py-1 border">Weight (kg)</th>
-                                    <th class="px-2 py-1 border">Blood Type</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-2 py-1 border">
-                                        <input type="number" step="0.01" name="height" value="<?= esc($profile['height'] ?? '') ?>" class=" px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="number" step="0.1" name="weight" value="<?= esc($profile['weight'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <select name="blood_type" class="px-2 py-1 w-full text-xs">
-                                            <option value="" disabled <?= empty($profile['blood_type']) ? 'selected' : '' ?>>Select Blood Type</option>
-                                            <option value="A+" <?= ($profile['blood_type'] ?? '') === 'A+' ? 'selected' : '' ?>>A+</option>
-                                            <option value="A-" <?= ($profile['blood_type'] ?? '') === 'A-' ? 'selected' : '' ?>>A-</option>
-                                            <option value="B+" <?= ($profile['blood_type'] ?? '') === 'B+' ? 'selected' : '' ?>>B+</option>
-                                            <option value="B-" <?= ($profile['blood_type'] ?? '') === 'B-' ? 'selected' : '' ?>>B-</option>
-                                            <option value="AB+" <?= ($profile['blood_type'] ?? '') === 'AB+' ? 'selected' : '' ?>>AB+</option>
-                                            <option value="AB-" <?= ($profile['blood_type'] ?? '') === 'AB-' ? 'selected' : '' ?>>AB-</option>
-                                            <option value="O+" <?= ($profile['blood_type'] ?? '') === 'O+' ? 'selected' : '' ?>>O+</option>
-                                            <option value="O-" <?= ($profile['blood_type'] ?? '') === 'O-' ? 'selected' : '' ?>>O-</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+<!-- Address Table -->
+<div class="overflow-x-auto mb-4">
+    <table class="table-auto w-full border-collapse text-xs mb-4">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="px-2 py-1 border">Residential Address</th>
+                <th class="px-2 py-1 border">Permanent Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="px-2 py-1 border">
+                    <input type="text" 
+                           name="residential_address" 
+                           value="<?= esc($profile['residential_address'] ?? '') ?>" 
+                           placeholder="Enter Residential Address" 
+                           required 
+                           class="px-2 py-1 w-full text-xs">
+                </td>
+                <td class="px-2 py-1 border">
+                    <input type="text" 
+                           name="permanent_address" 
+                           value="<?= esc($profile['permanent_address'] ?? '') ?>" 
+                           placeholder="Enter Permanent Address" 
+                           required 
+                           class="px-2 py-1 w-full text-xs">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
 
                     <!-- Next Button -->
                     <div class="text-right mt-3">

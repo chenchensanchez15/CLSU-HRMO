@@ -1,3 +1,13 @@
+<?php
+// Connect to database
+$db = \Config\Database::connect();
+
+// Fetch only posted jobs
+$builder = $db->table('job_vacancies');
+$builder->where('is_posted', 1);
+$jobs = $builder->get()->getResultArray();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,18 +32,12 @@
 
 <body class="flex flex-col min-h-screen bg-gray-100 text-gray-800">
 
-  <header class="bg-clsuGreen text-white py-4 px-4">
+<header class="bg-clsuGreen text-white py-4 px-4">
     <div class="max-w-5xl mx-auto flex items-center justify-center">
         <div class="flex items-center gap-3 text-center md:text-left">
-            <img
-                src="/HRMO/public/assets/images/clsu-logo2.png"
-                alt="CLSU Logo"
-                class="w-16 h-auto"
-            />
+            <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-16 h-auto"/>
             <div>
-                <h1 class="text-3xl font-bold mb-1">
-                    CLSU Online Job Application
-                </h1>
+                <h1 class="text-3xl font-bold mb-1">CLSU Online Job Application</h1>
                 <p class="text-base max-w-2xl">
                     Explore career opportunities and apply online with ease and security.
                 </p>
@@ -41,63 +45,63 @@
         </div>
     </div>
 </header>
-
-
-<main class="flex-1 max-w-7xl mx-auto py-10 px-6">
-    <h2 class="text-2xl md:text-3xl font-bold text-center mb-6">
-        Available Job Vacancies
-    </h2>
+<main class="flex-1 w-full px-6 py-10">
+    <h2 class="text-2xl md:text-3xl font-bold text-center mb-6">Available Job Vacancies</h2>
 
     <?php if (!empty($jobs)): ?>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <?php foreach ($jobs as $job): ?>
-        <div class="bg-white border border-gray-200 rounded-xl p-5 flex flex-col h-full shadow-sm hover:shadow-lg transition duration-200">
-            
-            <!-- Job Title -->
-            <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-2 hover:text-clsuGreen transition">
-                <?= esc($job['position_title']) ?>
-            </h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            <?php foreach ($jobs as $job): ?>
+                <div class="bg-white border border-gray-200 rounded-xl p-5 flex flex-col shadow-sm hover:shadow-lg transition duration-200 w-full">
 
-            <!-- Job Description -->
-            <p class="text-xs text-gray-700 mb-3 leading-relaxed line-clamp-3">
-                <?= esc($job['description']) ?>
-            </p>
+                    <!-- Job Title -->
+                    <h3 class="text-base md:text-lg font-semibold text-gray-900 mb-2 hover:text-clsuGreen transition">
+                        <?= esc($job['position_title']) ?>
+                    </h3>
 
-        <div class="text-xs text-gray-600 mb-5 space-y-1">
-            <div class="flex gap-2">
-                <span class="font-medium text-gray-800">Department:</span>
-                <span class="text-gray-700"><?= esc($job['department']) ?></span>
-            </div>
-            <div class="flex gap-2">
-                <span class="font-medium text-gray-800">Employment Type:</span>
-                <span class="text-gray-700"><?= esc($job['employment_type']) ?></span>
-            </div>
-            <div class="flex gap-2">
-                <span class="font-medium text-gray-800">Monthly Salary:</span>
-                <span class="text-gray-700"><?= esc($job['monthly_salary']) ?></span>
-            </div>
-            <div class="flex gap-2">
-                <span class="font-medium text-gray-800">Deadline:</span>
-                <span class="text-red-600 font-semibold"><?= date('F j, Y', strtotime($job['application_deadline'])) ?></span>
-            </div>
+                    <!-- Job Description -->
+                    <p class="text-xs text-gray-700 mb-3 leading-relaxed">
+                        <?= esc($job['description']) ?>
+                    </p>
+
+                    <!-- Job Info -->
+                    <div class="text-xs text-gray-600 mb-5 space-y-1">
+                        <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Office:</span>
+                            <span class="text-gray-700"><?= esc($job['office']) ?></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Item No:</span>
+                            <span class="text-gray-700"><?= esc($job['plantilla_item_no']) ?></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Salary Grade:</span>
+                            <span class="text-gray-700"><?= esc($job['salary_grade']) ?></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Monthly Salary:</span>
+                            <span class="text-gray-700">₱<?= number_format($job['monthly_salary'], 2) ?></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Deadline:</span>
+                            <span class="text-red-600 font-semibold"><?= date('F j, Y', strtotime($job['application_deadline'])) ?></span>
+                        </div>
+                    </div>
+
+                    <!-- View Details Button -->
+                    <div class="mt-auto flex justify-end">
+                        <a href="<?= base_url('jobs/view/' . $job['id']) ?>"
+                           class="inline-block bg-clsuGreen text-white px-3 py-1.5 rounded text-xs hover:bg-green-800 transition">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            <?php endforeach; ?>
         </div>
-
-            <!-- View Details Button -->
-            <div class="mt-auto flex justify-end">
-                <a href="<?= base_url('jobs/view/' . $job['id']) ?>"
-                class="inline-block bg-clsuGreen text-white font-semibold rounded-lg px-3 py-1.5 hover:bg-green-800 transition text-xs">
-                    View Details
-                </a>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
     <?php else: ?>
         <p class="text-center text-gray-500 text-sm mt-10">
             No job vacancies available at the moment.
         </p>
     <?php endif; ?>
-
 </main>
 
 
@@ -109,7 +113,6 @@
         </div>
     </div>
 </footer>
-
 
 </body>
 </html>
