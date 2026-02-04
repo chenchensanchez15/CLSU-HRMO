@@ -116,12 +116,15 @@ window.onclick = function(event) {
             </svg>
         <?php endif; ?>
     </div>
-    <h3 class="text-clsuGreen font-bold mb-1">
-        <?= esc($user['first_name'] ?? '') ?>
-        <?= !empty($user['middle_name'] ?? $profile['middle_name'] ?? '') ? esc(substr($user['middle_name'] ?? $profile['middle_name'],0,1)).'. ' : '' ?>
-        <?= esc($user['last_name'] ?? $profile['last_name'] ?? '') ?>
-        <?= esc($user['extension'] ?? $profile['suffix'] ?? '') ?>
-    </h3>
+<h3 class="text-clsuGreen font-bold mb-1">
+    <?= esc($user['first_name'] ?? $profile['first_name'] ?? '') ?>
+    <?= !empty($user['middle_name'] ?? $profile['middle_name'] ?? '')
+        ? esc(substr($user['middle_name'] ?? $profile['middle_name'], 0, 1)) . '. '
+        : '' ?>
+    <?= esc($user['last_name'] ?? $profile['last_name'] ?? '') ?>
+    <?= esc($user['extension'] ?? $profile['suffix'] ?? '') ?>
+</h3>
+
     <p class="text-gray-700 mb-1"><?= esc($user['email'] ?? $profile['email'] ?? 'noemail@example.com') ?></p>
 </div>
 
@@ -213,7 +216,6 @@ window.onclick = function(event) {
     </tbody>
   </table>
 </div>
-
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
     <thead class="bg-gray-100">
@@ -226,7 +228,7 @@ window.onclick = function(event) {
     <tbody>
       <tr>
         <td class="px-2 py-1 border"><?= esc($app['personal']['sex'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['date_of_birth'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($app['personal']['civil_status'] ?? '-') ?></td>
       </tr>
     </tbody>
@@ -268,7 +270,6 @@ window.onclick = function(event) {
     </tbody>
   </table>
 </div>
-
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
@@ -282,55 +283,63 @@ window.onclick = function(event) {
     </thead>
     <tbody>
       <?php
-      $relations = ['Spouse', 'Father', 'Mother'];
-      $family_by_relation = [];
-      if (!empty($app['family'])) {
-          foreach ($app['family'] as $fam) {
-              $family_by_relation[$fam['relationship']] = $fam;
-          }
-      }
+$relations = ['Spouse', 'Father', 'Mother'];
+$family_by_relation = [];
+if (!empty($app['family'])) {
+    foreach ($app['family'] as $fam) {
+        $family_by_relation[$fam['relationship']] = $fam;
+    }
+}
 
-      foreach ($relations as $relation):
-          $fam = $family_by_relation[$relation] ?? [];
+foreach ($relations as $relation):
+    $fam = $family_by_relation[$relation] ?? [];
 
-          $first = $fam['first_name'] ?? '';
-          $middle = $fam['middle_name'] ?? '';
-          $last = $fam['last_name'] ?? '';
-          $suffix = $fam['extension'] ?? '';
+    $first = $fam['first_name'] ?? '';
+    $middle = $fam['middle_name'] ?? '';
+    $last = $fam['last_name'] ?? '';
+    $suffix = $fam['extension'] ?? '';
 
-          // If middle name and suffix are empty or N/A, show only first + last
-          if (empty($middle) || strtoupper($middle) === 'N/A') {
-              $middle = '';
-          }
-          if (empty($suffix) || strtoupper($suffix) === 'N/A') {
-              $suffix = '';
-          }
+    // Convert middle name to initial if not empty or N/A
+    if (!empty($middle) && strtoupper($middle) !== 'N/A') {
+        $middle = strtoupper(substr($middle, 0, 1)) . '.';
+    } else {
+        $middle = '';
+    }
 
-          $nameParts = array_filter([$first, $middle, $last, $suffix]);
-          $fullName = $nameParts ? implode(' ', $nameParts) : '-';
+    // Ignore suffix if empty or N/A
+    if (empty($suffix) || strtoupper($suffix) === 'N/A') {
+        $suffix = '';
+    }
 
-          $occupation = !empty($fam['occupation']) && strtoupper($fam['occupation']) !== 'N/A' ? $fam['occupation'] : '-';
-          $contact    = !empty($fam['contact_no']) && strtoupper($fam['contact_no']) !== 'N/A' ? $fam['contact_no'] : '-';
-      ?>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($relation) ?></td>
-        <td class="px-2 py-1 border"><?= esc($fullName) ?></td>
-        <td class="px-2 py-1 border"><?= esc($occupation) ?></td>
-        <td class="px-2 py-1 border"><?= esc($contact) ?></td>
-      </tr>
-      <?php endforeach; ?>
+    // Capitalize first letters of first, middle, last
+    $first = ucfirst(strtolower($first));
+    $last  = ucfirst(strtolower($last));
+    // Middle is already capitalized as initial (G.)
+    // Suffix: keep as is (Jr., III)
+    
+    $nameParts = array_filter([$first, $middle, $last, $suffix]);
+    $fullName = $nameParts ? implode(' ', $nameParts) : '-';
+
+    $occupation = !empty($fam['occupation']) && strtoupper($fam['occupation']) !== 'N/A' ? ucfirst(strtolower($fam['occupation'])) : '-';
+    $contact    = !empty($fam['contact_no']) && strtoupper($fam['contact_no']) !== 'N/A' ? $fam['contact_no'] : '-';
+?>
+<tr>
+    <td class="px-2 py-1 border"><?= esc($relation) ?></td>
+    <td class="px-2 py-1 border"><?= esc($fullName) ?></td>
+    <td class="px-2 py-1 border"><?= esc($occupation) ?></td>
+    <td class="px-2 py-1 border"><?= esc($contact) ?></td>
+</tr>
+<?php endforeach; ?>
     </tbody>
   </table>
 </div>
-
-<!-- EDUCATION -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Educational Background</h2>
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
     <thead class="bg-gray-100">
       <tr>
         <th class="px-2 py-1 border">Level</th>
-        <th class="px-2 py-1 border">School Name / Degree / Course</th>
+        <th class="px-2 py-1 border">School Name</th>
         <th class="px-2 py-1 border">Period of Attendance</th>
         <th class="px-2 py-1 border">Highest Level / Units Earned</th>
         <th class="px-2 py-1 border">Year Graduated</th>
@@ -342,13 +351,8 @@ window.onclick = function(event) {
           <?php foreach ($app['education'] as $edu): ?>
       <tr>
         <td class="px-2 py-1 border"><?= esc($edu['level'] ?? '-') ?></td>
-        <td class="px-2 py-1 border">
-            <?= esc($edu['school_name'] ?? '-') ?>
-            <?= !empty($edu['degree_course']) ? ' / ' . esc($edu['degree_course']) : '' ?>
-        </td>
-        <td class="px-2 py-1 border">
-            <?= esc($edu['period_from'] ?? '-') ?> - <?= esc($edu['period_to'] ?? '-') ?>
-        </td>
+        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['period'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($edu['highest_level_units'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($edu['awards'] ?? '-') ?></td>
@@ -377,26 +381,119 @@ window.onclick = function(event) {
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($app['work'])): ?>
-        <?php foreach ($app['work'] as $work): ?>
+  <?php if (!empty($app['work'])): ?>
+    <?php foreach ($app['work'] as $work): ?>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($work['position_title'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($work['office'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></td>
+        <td class="px-2 py-1 border"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></td>
         <td class="px-2 py-1 border">
-            <?= esc($work['date_from'] ?? '-') ?> - <?= esc($work['date_to'] ?? '-') ?>
+            <?php 
+              $from = !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-';
+              $to   = !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-';
+              echo $from . ' - ' . $to;
+            ?>
         </td>
-        <td class="px-2 py-1 border"><?= esc($work['status_of_appointment'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= !empty($work['govt_service']) ? 'Yes' : 'No' ?></td>
+        <td class="px-2 py-1 border"><?= !empty($work['status_of_appointment']) ? esc($work['status_of_appointment']) : '-' ?></td>
+        <td class="px-2 py-1 border">
+            <?= (isset($work['govt_service']) && strtoupper($work['govt_service']) === 'YES') ? 'Yes' : 'No' ?>
+        </td>
+      </tr>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <tr>
+      <td class="px-2 py-1 border text-center" colspan="5">No work experience records found.</td>
+    </tr>
+  <?php endif; ?>
+</tbody>
+  </table>
+</div>
+<!-- CIVIL SERVICE -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Civil Service Eligibility</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Eligibility</th>
+        <th class="px-2 py-1 border">Rating / Exam</th>
+        <th class="px-2 py-1 border">Date of Examination</th>
+        <th class="px-2 py-1 border">Place of Examination</th>
+        <th class="px-2 py-1 border">License / PRC No.</th>
+        <th class="px-2 py-1 border">Valid Until</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (!empty($app['civil'])): ?>
+        <?php foreach ($app['civil'] as $cs): ?>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($cs['eligibility'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($cs['rating'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+          <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
+        </td>
+        <td class="px-2 py-1 border"><?= esc($cs['place_of_exam'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($cs['license_no'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+          <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
+        </td>
       </tr>
         <?php endforeach; ?>
       <?php else: ?>
       <tr>
-        <td class="px-2 py-1 border text-center" colspan="5">No work experience records found.</td>
+        <td class="px-2 py-1 border text-center" colspan="6">No civil service records found.</td>
       </tr>
       <?php endif; ?>
     </tbody>
   </table>
 </div>
+
+<!-- TRAININGS -->
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Trainings / Seminars / Workshops</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Training Name</th>
+        <th class="px-2 py-1 border">Category</th>
+        <th class="px-2 py-1 border">Inclusive Dates</th>
+        <th class="px-2 py-1 border">Facilitator</th>
+        <th class="px-2 py-1 border">Hours</th>
+        <th class="px-2 py-1 border">Sponsor</th>
+        <th class="px-2 py-1 border">Remarks</th>
+        <th class="px-2 py-1 border">Certificate</th>
+      </tr>
+    </thead>
+    <tbody>
+      <?php if (!empty($trainings)): ?>
+        <?php foreach ($trainings as $tr): ?>
+      <tr>
+        <td class="px-2 py-1 border"><?= esc($tr['training_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($tr['training_category_name'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= $tr['date_from'] ?> - <?= $tr['date_to'] ?></td>
+        <td class="px-2 py-1 border"><?= esc($tr['training_facilitator'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($tr['training_hours'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($tr['training_sponsor'] ?? '-') ?></td>
+        <td class="px-2 py-1 border"><?= esc($tr['training_remarks'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+          <?php if (!empty($tr['certificate_file'])): ?>
+       <a href="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>" target="_blank" class="text-blue-600 hover:underline">
+    <?= esc($tr['certificate_file']) ?>
+</a>
+
+          <?php else: ?>
+            -
+          <?php endif; ?>
+        </td>
+      </tr>
+        <?php endforeach; ?>
+      <?php else: ?>
+      <tr>
+        <td class="px-2 py-1 border text-center" colspan="8">No trainings/seminars records found.</td>
+      </tr>
+      <?php endif; ?>
+    </tbody>
+  </table>
+</div>
+
 <!-- DOCUMENTS -->
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Uploaded Documents</h2>
 <div class="overflow-x-auto mb-6">
@@ -420,9 +517,10 @@ window.onclick = function(event) {
         <td class="px-2 py-1 border font-semibold"><?= ucfirst($doc) ?></td>
         <td class="px-2 py-1 border">
           <?php if (!empty($file)): ?>
-            <a href="<?= site_url('applications/viewDocument/'.$app['id'].'/'.$doc) ?>" 
-               target="_blank" 
-               class="text-blue-600 hover:underline">
+         <a href="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$doc) ?>"
+   target="_blank"
+   class="text-blue-600 hover:underline">
+
               <?= esc($file) ?>
             </a>
           <?php else: ?>

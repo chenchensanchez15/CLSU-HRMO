@@ -145,244 +145,208 @@ window.onclick = function(event) {
         <hr class="my-4">
 
         <!-- Application Form -->
-        <form id="applicationForm" method="POST" action="<?= base_url('applications/update/' . ($app['id'] ?? '')) ?>" enctype="multipart/form-data">
+<form action="<?= site_url('applications/update/' . $app['id_job_application']) ?>" method="POST" enctype="multipart/form-data">
+
             <input type="hidden" name="job_position_id" value="<?= esc($job['id'] ?? '') ?>">
 
             <!-- Steps Container -->
             <div class="space-y-6">
+        <!-- Instruction Note -->
+        <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
+            *Do not leave blank entries. Put N/A for not applicable.
+        </div>
+             <!-- Step 1: Personal Information -->
+<div class="step" id="step-1">
+    <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Personal Information</div>
 
-                <!-- Step 1: Personal Information -->
-                <div class="step" id="step-1">
-                    <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Personal Information</div>
+    <!-- Name Table -->
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-2 py-1 border">First Name *</th>
+                    <th class="px-2 py-1 border">Middle Name</th>
+                    <th class="px-2 py-1 border">Last Name *</th>
+                    <th class="px-2 py-1 border">Suffix</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="first_name" value="<?= esc($personal['first_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="middle_name" value="<?= esc($personal['middle_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="last_name" value="<?= esc($personal['last_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="name_extension" value="<?= esc($personal['extension'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                    <!-- Name Table -->
-                    <div class="overflow-x-auto mb-4">
-                        <table class="table-auto w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">First Name *</th>
-                                    <th class="px-2 py-1 border">Middle Name</th>
-                                    <th class="px-2 py-1 border">Last Name *</th>
-                                    <th class="px-2 py-1 border">Suffix</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="first_name" value="<?= esc($profile['first_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="middle_name" value="<?= esc($profile['middle_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="last_name" value="<?= esc($profile['last_name'] ?? '') ?>" class=" px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="name_extension" value="<?= esc($profile['suffix'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- Birth & Sex Table -->
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-2 py-1 border">Sex *</th>
+                    <th class="px-2 py-1 border">Date of Birth *</th>
+                    <th class="px-2 py-1 border">Civil Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="px-2 py-1 border">
+                        <select name="sex" class="px-2 py-1 w-full text-xs">
+                            <option value="">Select Sex</option>
+                            <option value="Male" <?= ($personal['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
+                            <option value="Female" <?= ($personal['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
+                        </select>
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="date" name="birth_date" value="<?= esc($personal['date_of_birth'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <select name="civil_status" class="px-2 py-1 w-full text-xs">
+                            <option value="">Select Civil Status</option>
+                            <option value="Single" <?= ($personal['civil_status'] ?? '') === 'Single' ? 'selected' : '' ?>>Single</option>
+                            <option value="Married" <?= ($personal['civil_status'] ?? '') === 'Married' ? 'selected' : '' ?>>Married</option>
+                            <option value="Widowed" <?= ($personal['civil_status'] ?? '') === 'Widowed' ? 'selected' : '' ?>>Widowed</option>
+                            <option value="Separated" <?= ($personal['civil_status'] ?? '') === 'Separated' ? 'selected' : '' ?>>Separated</option>
+                            <option value="Divorced" <?= ($personal['civil_status'] ?? '') === 'Divorced' ? 'selected' : '' ?>>Divorced</option>
+                        </select>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                    <!-- Contact & Citizenship Table -->
-                    <div class="overflow-x-auto mb-4">
-                        <table class="table-auto w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">Email</th>
-                                    <th class="px-2 py-1 border">Phone Number</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-2 py-1 border">
-                                        <input type="email" name="email" value="<?= esc($app['email'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="text" name="phone" value="<?= esc($app['phone'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
+    <!-- Contact & Citizenship Table -->
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full text-left border-collapse text-xs">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="px-2 py-1 border">Email</th>
+                    <th class="px-2 py-1 border">Phone Number</th>
+                    <th class="px-2 py-1 border">Citizenship</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="px-2 py-1 border">
+                        <input type="email" name="email" value="<?= esc($personal['email'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="phone" value="<?= esc($personal['phone'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="citizenship" value="<?= esc($personal['citizenship'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
-                    <!-- Birth & Sex Table -->
-                    <div class="overflow-x-auto mb-4">
-                        <table class="table-auto w-full text-left border-collapse text-xs">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-2 py-1 border">Sex *</th>
-                                    <th class="px-2 py-1 border">Date of Birth *</th>
-                                    <th class="px-2 py-1 border">Civil Status</th>
-                                    <th class="px-2 py-1 border">Citizenship</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="px-2 py-1 border">
-                                        <select name="sex" class="px-2 py-1 w-full text-xs">
-                                            <option value="">Select Sex</option>
-                                            <option value="Male" <?= ($profile['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
-                                            <option value="Female" <?= ($profile['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
-                                        </select>
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <input type="date" name="birth_date" value="<?= esc($profile['date_of_birth'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                    <td class="px-2 py-1 border">
-                                        <select name="civil_status" class="px-2 py-1 w-full text-xs">
-                                            <option value="">Select Civil Status</option>
-                                            <option value="Single" <?= ($profile['civil_status'] ?? '') === 'Single' ? 'selected' : '' ?>>Single</option>
-                                            <option value="Married" <?= ($profile['civil_status'] ?? '') === 'Married' ? 'selected' : '' ?>>Married</option>
-                                            <option value="Widowed" <?= ($profile['civil_status'] ?? '') === 'Widowed' ? 'selected' : '' ?>>Widowed</option>
-                                            <option value="Separated" <?= ($profile['civil_status'] ?? '') === 'Separated' ? 'selected' : '' ?>>Separated</option>
-                                            <option value="Divorced" <?= ($profile['civil_status'] ?? '') === 'Divorced' ? 'selected' : '' ?>>Divorced</option>
-                                        </select>
-                                    </td>
-                                      <td class="px-2 py-1 border">
-                              <input type="text" name="citizenship" value="<?= esc($profile['citizenship'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-<!-- Address Table -->
-<div class="overflow-x-auto mb-4">
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-2 py-1 border">Residential Address</th>
-                <th class="px-2 py-1 border">Permanent Address</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-2 py-1 border">
-                    <input type="text" 
-                           name="residential_address" 
-                           value="<?= esc($profile['residential_address'] ?? '') ?>" 
-                           placeholder="Enter Residential Address" 
-                           required 
-                           class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text" 
-                           name="permanent_address" 
-                           value="<?= esc($profile['permanent_address'] ?? '') ?>" 
-                           placeholder="Enter Permanent Address" 
-                           required 
-                           class="px-2 py-1 w-full text-xs">
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <!-- Address Table -->
+    <div class="overflow-x-auto mb-4">
+        <table class="table-auto w-full border-collapse text-xs mb-4">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1 border">Residential Address</th>
+                    <th class="px-2 py-1 border">Permanent Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="residential_address" value="<?= esc($personal['residential_address'] ?? '') ?>" placeholder="Enter Residential Address" required class="px-2 py-1 w-full text-xs">
+                    </td>
+                    <td class="px-2 py-1 border">
+                        <input type="text" name="permanent_address" value="<?= esc($personal['permanent_address'] ?? '') ?>" placeholder="Enter Permanent Address" required class="px-2 py-1 w-full text-xs">
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Next Button -->
+    <div class="text-right mt-3">
+        <button type="button" onclick="nextStep(1)" class="bg-clsuGreen text-white px-5 py-2 rounded text-sm font-semibold hover:bg-green-800">
+            Next
+        </button>
+    </div>
 </div>
-
-                    <!-- Next Button -->
-                    <div class="text-right mt-3">
-                        <button type="button" onclick="nextStep(1)" class="bg-clsuGreen text-white px-5 py-2 rounded text-sm font-semibold hover:bg-green-800">
-                            Next
-                        </button>
-                    </div>
-                </div>
-
 <!-- Step 2: Family Background -->
 <div class="step hidden" id="step-2">
     <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Family Background</div>
 
-    <!-- Family Tables -->
     <div class="space-y-4">
+        <?php foreach ($family as $fam): ?>
+            <div>
+                <p class="font-semibold text-xs mb-1 text-text-black">
+                    <?= esc($fam['relationship']) ?><?= $fam['relationship'] === 'Mother' ? ' (Maiden Name)' : '' ?>
+                </p>
 
-        <!-- Spouse Table -->
-        <div class="overflow-x-auto">
-        
-        <p class="font-semibold text-sm mb-1">Spouse Information</p>
-            <table class="table-auto w-full text-left border-collapse text-xs">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">Surname</th>
-                        <th class="px-2 py-1 border">First Name</th>
-                        <th class="px-2 py-1 border">Middle Name</th>
-                        <th class="px-2 py-1 border">Extension</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="spouse_surname" value="<?= esc($spouse['last_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="spouse_first_name" value="<?= esc($spouse['first_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="spouse_middle_name" value="<?= esc($spouse['middle_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="spouse_ext_name" value="<?= esc($spouse['extension'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <div class="overflow-x-auto mb-2">
+                    <table class="table-auto w-full border-collapse text-xs">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-1 py-1 border">Surname</th>
+                                <th class="px-1 py-1 border">First Name</th>
+                                <th class="px-1 py-1 border">Middle Name</th>
+                                <?php if ($fam['relationship'] !== 'Mother'): ?>
+                                <th class="px-1 py-1 border">Extension</th>
+                                <?php endif; ?>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_last_name[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['last_name']) ?>" placeholder="Enter Surname" class="px-1 py-1 w-full text-xs" required>
+                                </td>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_first_name[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['first_name']) ?>" placeholder="Enter First Name" class="px-1 py-1 w-full text-xs" required>
+                                </td>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_middle_name[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['middle_name']) ?>" placeholder="Enter Middle Name" class="px-1 py-1 w-full text-xs">
+                                </td>
+                                <?php if ($fam['relationship'] !== 'Mother'): ?>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_extension[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['extension']) ?>" placeholder="Enter Extension" class="px-1 py-1 w-full text-xs">
+                                </td>
+                                <?php endif; ?>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-        <!-- Father Table -->
-        <div class="overflow-x-auto">
-        <p class="font-semibold text-sm mb-1">Father's Information</p>
-            <table class="table-auto w-full text-left border-collapse text-xs">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">Surname</th>
-                        <th class="px-2 py-1 border">First Name</th>
-                        <th class="px-2 py-1 border">Middle Name</th>
-                        <th class="px-2 py-1 border">Extension</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="father_surname" value="<?= esc($father['last_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="father_first_name" value="<?= esc($father['first_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="father_middle_name" value="<?= esc($father['middle_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="father_ext_name" value="<?= esc($father['extension'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Mother Table -->
-        <div class="overflow-x-auto">
-        <p class="font-semibold text-sm mb-1">Mother's Information</p>
-            <table class="table-auto w-full text-left border-collapse text-xs">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">Surname (Maiden)</th>
-                        <th class="px-2 py-1 border">First Name</th>
-                        <th class="px-2 py-1 border">Middle Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="mother_maiden_surname" value="<?= esc($mother['last_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="mother_first_name" value="<?= esc($mother['first_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="mother_middle_name" value="<?= esc($mother['middle_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                <div class="overflow-x-auto mb-2">
+                    <table class="table-auto w-full border-collapse text-xs">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-1 py-1 border">Occupation</th>
+                                <th class="px-1 py-1 border">Contact Number</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_occupation[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['occupation']) ?>" placeholder="Enter Occupation" class="px-1 py-1 w-full text-xs" required>
+                                </td>
+                                <td class="px-1 py-1 border">
+                                    <input type="text" name="fam_contact_no[<?= $fam['id_application_fam'] ?>]" value="<?= esc($fam['contact_no']) ?>" placeholder="Enter Contact Number" class="px-1 py-1 w-full text-xs" maxlength="11" pattern="\d{0,11}" oninput="this.value = this.value.replace(/[^0-9]/g,'');" required>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endforeach; ?>
     </div>
 
     <!-- Previous / Next Buttons -->
@@ -391,19 +355,57 @@ window.onclick = function(event) {
         <button type="button" onclick="nextStep(2)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold">Next</button>
     </div>
 </div>
+
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
     <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Educational Background</div>
 
     <div class="space-y-4">
-        <!-- Elementary Table -->
-        <div class="overflow-x-auto">
-        <p class="font-semibold text-sm mb-1">Elementary</p>
-            <table class="table-auto w-full text-left border-collapse text-xs mb-3">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">School</th>
-                        <th class="px-2 py-1 border">Location</th>
+
+        <?php 
+        $levels = [
+            'elementary' => ['label' => 'Elementary', 'data' => $elementary ?? []],
+            'secondary' => ['label' => 'Secondary', 'data' => $highschool ?? []],
+            'vocational' => ['label' => 'Vocational / Trade', 'data' => $vocational ?? []],
+            'college' => ['label' => 'College', 'data' => $college ?? []],
+            'graduate' => ['label' => 'Graduate Studies', 'data' => $graduate ?? []],
+        ];
+        foreach($levels as $key => $level):
+            $data = $level['data'];
+        ?>
+        <div class="overflow-x-auto mb-2">
+            <p class="font-semibold text-sm mb-1"><?= $level['label'] ?></p>
+
+            <!-- Row 1: School, Degree, Units -->
+            <table class="table-auto w-full border-collapse text-xs mb-1">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-2 py-1 border">School Name</th>
+                        <th class="px-2 py-1 border">Degree / Course</th>
+                        <th class="px-2 py-1 border">Highest Level / Units</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="px-2 py-1 border">
+                            <input type="text" name="<?= $key ?>_school" value="<?= esc($data['school_name'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs">
+                        </td>
+                        <td class="px-2 py-1 border">
+                            <input type="text" name="<?= $key ?>_degree" value="<?= esc($data['degree_course'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs">
+                        </td>
+                        <td class="px-2 py-1 border">
+                            <input type="text" name="<?= $key ?>_units" value="<?= esc($data['highest_level_units'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs">
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Row 2: Period From, Period To, Year, Awards -->
+            <table class="table-auto w-full border-collapse text-xs">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="px-2 py-1 border">Period From</th>
+                        <th class="px-2 py-1 border">Period To</th>
                         <th class="px-2 py-1 border">Year Graduated</th>
                         <th class="px-2 py-1 border">Awards / Honors</th>
                     </tr>
@@ -411,135 +413,22 @@ window.onclick = function(event) {
                 <tbody>
                     <tr>
                         <td class="px-2 py-1 border">
-                            <input type="text" name="elementary_school" value="<?= esc($elementary['school_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                            <input type="text" name="<?= $key ?>_period_from" value="<?= esc($data['period_from'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);">
                         </td>
                         <td class="px-2 py-1 border">
-                            <input type="text" name="elementary_location" value="<?= esc($elementary['location'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                            <input type="text" name="<?= $key ?>_period_to" value="<?= esc($data['period_to'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);">
                         </td>
                         <td class="px-2 py-1 border">
-                            <input type="text" name="elementary_year" value="<?= esc($elementary['year_graduated'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                            <input type="text" name="<?= $key ?>_year" value="<?= esc($data['year_graduated'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs" maxlength="4" oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);">
                         </td>
                         <td class="px-2 py-1 border">
-                            <input type="text" name="elementary_awards" value="<?= esc($elementary['awards'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
+                            <input type="text" name="<?= $key ?>_awards" value="<?= esc($data['awards'] ?? 'N/A') ?>" class="px-2 py-1 w-full text-xs">
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- High School Table -->
-        <div class="overflow-x-auto">
-        <p class="font-semibold text-sm mb-1">High School</p>
-            <table class="table-auto w-full text-left border-collapse text-xs mb-3">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">School</th>
-                        <th class="px-2 py-1 border">Location</th>
-                        <th class="px-2 py-1 border">Year Graduated</th>
-                        <th class="px-2 py-1 border">Awards / Honors</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="highschool_school" value="<?= esc($highschool['school_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="highschool_location" value="<?= esc($highschool['location'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="highschool_year" value="<?= esc($highschool['year_graduated'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="highschool_awards" value="<?= esc($highschool['awards'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- College Table -->
-        <div class="overflow-x-auto">
-        <p class="font-semibold text-sm mb-1">College</p>
-            <table class="table-auto w-full text-left border-collapse text-xs mb-3">
-                <thead>
-                    <tr class="bg-gray-100">
-                        <th class="px-2 py-1 border">School</th>
-                        <th class="px-2 py-1 border">Location</th>
-                        <th class="px-2 py-1 border">Year Graduated</th>
-                        <th class="px-2 py-1 border">Awards / Honors</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="college_school" value="<?= esc($college['school_name'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="college_location" value="<?= esc($college['location'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="college_year" value="<?= esc($college['year_graduated'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <input type="text" name="college_awards" value="<?= esc($college['awards'] ?? '') ?>" class="px-2 py-1 w-full text-xs">
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-<!-- Highest Degree Table -->
-<div class="overflow-x-auto">
-    <p class="font-semibold text-sm mb-1">Highest Degree</p>
-    <table class="table-auto w-full text-left border-collapse text-xs mb-3">
-        <thead>
-            <tr class="bg-gray-100">
-                <th class="px-2 py-1 border">Level</th>
-                <th class="px-2 py-1 border">School</th>
-                <th class="px-2 py-1 border">Location</th>
-                <th class="px-2 py-1 border">Year Graduated</th>
-                <th class="px-2 py-1 border">Awards / Honors</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <!-- Pass the database row ID for update -->
-                <input type="hidden" name="highest_id" value="<?= esc($highest['id'] ?? '') ?>">
-                <td class="px-2 py-1 border">
-                    <input type="text"
-                        name="highest_degree"
-                        value="<?= esc($highest['level'] ?? '') ?>"
-                        class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text"
-                        name="highest_school"
-                        value="<?= esc($highest['school_name'] ?? '') ?>"
-                        class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text"
-                        name="highest_location"
-                        value="<?= esc($highest['location'] ?? '') ?>"
-                        class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text"
-                        name="highest_year"
-                        value="<?= esc($highest['year_graduated'] ?? '') ?>"
-                        class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text"
-                        name="highest_awards"
-                        value="<?= esc($highest['awards'] ?? '') ?>"
-                        class="px-2 py-1 w-full text-xs">
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+        <?php endforeach; ?>
 
     </div>
 
@@ -553,109 +442,427 @@ window.onclick = function(event) {
 <div class="step hidden" id="step-4">
     <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Work Experience</div>
 
-    <div class="overflow-x-auto">
-        <table class="table-auto w-full text-left border-collapse text-xs">
+    <div class="overflow-x-auto relative mb-2">
+        <!-- Add Work Experience Button -->
+        <button type="button" id="add-work-btn"
+            class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0">
+            Add Work Exp
+        </button>
+
+        <table id="work-table" class="table-auto w-full border-collapse text-xs mt-10">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1 border">Position Title</th>
+                    <th class="px-2 py-1 border">Office / Company</th>
+                    <th class="px-2 py-1 border">Inclusive Dates</th>
+                    <th class="px-2 py-1 border">Status of Appointment</th>
+                    <th class="px-2 py-1 border">Government Service</th>
+                    <th class="px-2 py-1 border">Actions</th>
+                </tr>
+            </thead>
             <tbody>
-                <!-- Row 1: Current Work -->
-                <tr>
-                    <td class="px-2 py-1 border font-semibold w-1/4">Current Work / Position / Agency</td>
-                    <td class="px-2 py-1 border w-3/4">
-                        <input type="text" name="current_work" value="<?= esc($applicant_work['current_work'] ?? '') ?>" class="px-2 py-1 w-full text-xs ">
-                    </td>
-                </tr>
-
-                <!-- Row 2: Previous Work -->
-                <tr>
-                    <td class="px-2 py-1 border font-semibold w-1/4">Previous Work / Position / Agency</td>
-                    <td class="px-2 py-1 border w-3/4">
-                        <input type="text" name="previous_work" value="<?= esc($applicant_work['previous_work'] ?? '') ?>" class="px-2 py-1 w-full text-xs ">
-                    </td>
-                </tr>
-
-                <!-- Row 3: Duration -->
-                <tr>
-                    <td class="px-2 py-1 border font-semibold w-1/4">Duration (From – To)</td>
-                    <td class="px-2 py-1 border w-3/4">
-                        <input type="text" name="work_duration" value="<?= esc($applicant_work['duration'] ?? '') ?>" class="px-2 py-1 w-full text-xs ">
-                    </td>
-                </tr>
-
-                <!-- Row 4: Awards / Achievements -->
-                <tr>
-                    <td class="px-2 py-1 border font-semibold w-1/4">Awards / Achievements</td>
-                    <td class="px-2 py-1 border w-3/4">
-                        <input type="text" name="work_awards" value="<?= esc($applicant_work['awards'] ?? '') ?>" class="px-2 py-1 w-full text-xs ">
-                    </td>
-                </tr>
+                <?php if (!empty($applicant_work)): ?>
+                    <?php foreach ($applicant_work as $work): ?>
+                        <tr>
+                            <td class="px-2 py-1 border">
+                                <input type="text" name="position_title[]" value="<?= esc($work['position_title']) ?>" class="px-2 py-1 w-full text-xs">
+                            </td>
+                            <td class="px-2 py-1 border">
+                                <input type="text" name="office[]" value="<?= esc($work['office']) ?>" class="px-2 py-1 w-full text-xs">
+                            </td>
+                            <td class="px-2 py-1 border flex space-x-1">
+                                <input type="date" name="date_from[]" value="<?= esc($work['date_from']) ?>" class="px-2 py-1 w-1/2 text-xs">
+                                <input type="date" name="date_to[]" value="<?= esc($work['date_to']) ?>" class="px-2 py-1 w-1/2 text-xs">
+                            </td>
+                            <td class="px-2 py-1 border">
+                                <input type="text" name="status_of_appointment[]" value="<?= esc($work['status_of_appointment']) ?>" class="px-2 py-1 w-full text-xs">
+                            </td>
+                            <td class="px-2 py-1 border">
+                                <select name="govt_service[]" class="px-2 py-1 w-full text-xs">
+                                    <option value="Yes" <?= $work['govt_service'] === 'Yes' ? 'selected' : '' ?>>Yes</option>
+                                    <option value="No" <?= $work['govt_service'] === 'No' ? 'selected' : '' ?>>No</option>
+                                </select>
+                            </td>
+                            <td class="px-2 py-1 border text-center">
+                                <button type="button" class="text-red-500 hover:underline remove-row">Delete</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr>
+                        <td class="px-2 py-1 border text-center" colspan="6">No work experience added.</td>
+                    </tr>
+                <?php endif; ?>
             </tbody>
         </table>
     </div>
 
-    <div class="text-right mt-4">
-        <button type="button" onclick="prevStep(4)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold">Previous</button>
-        <button type="button" onclick="nextStep(4)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold">Next</button>
+    <div class="text-right mt-3">
+        <button type="button" onclick="prevStep(4)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">Previous</button>
+        <button type="button" onclick="nextStep(4)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Next</button>
     </div>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const workTable = document.getElementById('work-table').getElementsByTagName('tbody')[0];
+    const addBtn = document.getElementById('add-work-btn');
 
-<!-- Step 5: File Attachments & Submit -->
+    function checkEmptyMessage() {
+        if (workTable.rows.length === 0) {
+            const emptyRow = document.createElement('tr');
+            emptyRow.innerHTML = `<td colspan="6" class="px-2 py-1 border text-center">No work experience added.</td>`;
+            workTable.appendChild(emptyRow);
+        }
+    }
+
+    // Add new row
+    addBtn.addEventListener('click', function() {
+        // Remove "No work experience" row if exists
+        if (workTable.rows.length === 1 && workTable.rows[0].cells[0].colSpan === 6) {
+            workTable.innerHTML = '';
+        }
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-2 py-1 border"><input type="text" name="position_title[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="office[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border flex space-x-1">
+                <input type="date" name="date_from[]" class="px-2 py-1 w-1/2 text-xs">
+                <input type="date" name="date_to[]" class="px-2 py-1 w-1/2 text-xs">
+            </td>
+            <td class="px-2 py-1 border"><input type="text" name="status_of_appointment[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border">
+                <select name="govt_service[]" class="px-2 py-1 w-full text-xs">
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </td>
+            <td class="px-2 py-1 border text-center"><button type="button" class="text-red-500 hover:underline remove-row">Delete</button></td>
+        `;
+        workTable.appendChild(row);
+    });
+
+    // Delete row
+    workTable.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-row')) {
+            const row = e.target.closest('tr');
+            row.remove();
+            checkEmptyMessage();
+        }
+    });
+});
+</script>
+<?php
+$user_id = session()->get('user_id');
+$db = \Config\Database::connect();
+?>
+
+<!-- ===============================
+     STEP 5: CIVIL SERVICE ELIGIBILITY
+================================ -->
 <div class="step hidden" id="step-5">
+    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
+        Civil Service Eligibility
+    </div>
+
+    <div class="overflow-x-auto mb-2 relative">
+        <button
+            type="button"
+            id="add-cs-btn"
+            class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0"
+        >
+            Add Civil Service
+        </button>
+
+        <input type="hidden" name="deleted_cs_ids" id="deleted_cs_ids" value="">
+
+        <table id="cs-table" class="table-auto w-full border-collapse text-xs mt-10">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1 border">Eligibility</th>
+                    <th class="px-2 py-1 border">Rating / Exam</th>
+                    <th class="px-2 py-1 border">Date of Examination</th>
+                    <th class="px-2 py-1 border">Place of Examination</th>
+                    <th class="px-2 py-1 border">License / PRC No.</th>
+                    <th class="px-2 py-1 border">Valid Until</th>
+                    <th class="px-2 py-1 border">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (!empty($civil_services)): ?>
+                    <?php foreach ($civil_services as $cs): ?>
+                        <tr data-id="<?= esc($cs['id_cs'] ?? '') ?>">
+                            <td class="px-2 py-1 border"><input type="text" name="eligibility[]" value="<?= esc($cs['eligibility'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="rating[]" value="<?= esc($cs['rating'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="date" name="date_of_exam[]" value="<?= esc($cs['date_of_exam'] != '0000-00-00' ? $cs['date_of_exam'] : '') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="license_no[]" value="<?= esc($cs['license_no'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" value="<?= esc($cs['license_valid_until'] != '0000-00-00' ? $cs['license_valid_until'] : '') ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border text-center">
+                                <button type="button" class="remove-cs-row text-red-600 hover:text-red-800 font-semibold">Delete</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="7" class="px-2 py-1 border text-center">No civil service record added.</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-right mt-3">
+        <button type="button" onclick="prevStep(5)" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">Previous</button>
+        <button type="button" onclick="nextStep(5)" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Next</button>
+    </div>
+</div>
+
+<!-- ===============================
+     STEP 6: TRAININGS
+================================ -->
+<div class="step hidden" id="step-6">
+    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">Trainings</div>
+
+    <div class="overflow-x-auto mb-2 relative">
+        <button type="button" id="add-training-btn" class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0">
+            Add Training
+        </button>
+
+        <input type="hidden" name="deleted_training_ids" id="deleted_training_ids" value="">
+
+        <table id="training-table" class="table-auto w-full border-collapse text-xs mt-6">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1 border">Category</th>
+                    <th class="px-2 py-1 border">Training Name</th>
+                    <th class="px-2 py-1 border">Date From</th>
+                    <th class="px-2 py-1 border">Date To</th>
+                    <th class="px-2 py-1 border">Facilitator</th>
+                    <th class="px-2 py-1 border">Hours</th>
+                    <th class="px-2 py-1 border">Sponsor</th>
+                    <th class="px-2 py-1 border">Remarks</th>
+                    <th class="px-2 py-1 border">Certificate</th>
+                    <th class="px-2 py-1 border">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($trainings)): ?>
+                    <?php foreach($trainings as $i => $tr): ?>
+                        <tr data-id="<?= esc($tr['id_application_trainings'] ?? '') ?>">
+                            <td class="px-2 py-1 border">
+                                <input type="hidden" name="training_id[]" value="<?= esc($tr['id_application_trainings']) ?>">
+                                <select name="training_category_id[]" class="px-2 py-1 w-full text-xs">
+                                    <option value="">Select Category</option>
+                                    <?php foreach($categories as $cat): ?>
+                                        <option value="<?= esc($cat['id_training_category']) ?>" <?= $cat['id_training_category'] == $tr['training_category_id'] ? 'selected' : '' ?>>
+                                            <?= esc($cat['training_category_name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </td>
+                            <td class="px-2 py-1 border"><input type="text" name="training_name[]" value="<?= esc($tr['training_name']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="date" name="training_date_from[]" value="<?= esc($tr['date_from']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="date" name="training_date_to[]" value="<?= esc($tr['date_to']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="training_facilitator[]" value="<?= esc($tr['training_facilitator']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="number" name="training_hours[]" value="<?= esc($tr['training_hours']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="training_sponsor[]" value="<?= esc($tr['training_sponsor']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border"><input type="text" name="training_remarks[]" value="<?= esc($tr['training_remarks']) ?>" class="px-2 py-1 w-full text-xs"></td>
+                            <td class="px-2 py-1 border">
+                                <?php if(!empty($tr['certificate_file'])): ?>
+                                    <p class="text-xs text-green-700 mb-1">Uploaded: <a href="<?= base_url('files/training/' . $tr['certificate_file']) ?>" target="_blank" class="underline text-blue-600 text-xs">View</a></p>
+                                    <input type="hidden" name="existing_certificate_file[]" value="<?= esc($tr['certificate_file']) ?>">
+                                <?php else: ?>
+                                    <input type="hidden" name="existing_certificate_file[]" value="">
+                                <?php endif; ?>
+                                <input type="file" name="training_certificate[<?= $i ?>]" class="text-xs mt-1">
+                            </td>
+                            <td class="px-2 py-1 border text-center">
+                                <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">Delete</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <tr><td colspan="10" class="px-2 py-1 border text-center">No training record added.</td></tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="text-right mt-3">
+        <button type="button" onclick="prevStep(6)" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">Previous</button>
+        <button type="button" onclick="nextStep(6)" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Next</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const table = document.getElementById('training-table').getElementsByTagName('tbody')[0];
+    const addBtn = document.getElementById('add-training-btn');
+    const deletedIds = document.getElementById('deleted_training_ids');
+
+    // Add new row
+    addBtn.addEventListener('click', function () {
+        const rowCount = table.rows.length;
+        const newIndex = rowCount;
+        const newRow = table.insertRow();
+
+        newRow.innerHTML = `
+            <td class="px-2 py-1 border">
+                <input type="hidden" name="training_id[]" value="">
+                <select name="training_category_id[]" class="px-2 py-1 w-full text-xs">
+                    <option value="">Select Category</option>
+                    <?php foreach($categories as $cat): ?>
+                        <option value="<?= esc($cat['id_training_category']) ?>"><?= esc($cat['training_category_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </td>
+            <td class="px-2 py-1 border"><input type="text" name="training_name[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="training_date_from[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="training_date_to[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="training_facilitator[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="number" name="training_hours[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="training_sponsor[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="training_remarks[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border">
+                <input type="hidden" name="existing_certificate_file[]" value="">
+                <input type="file" name="training_certificate[${newIndex}]" class="text-xs mt-1">
+            </td>
+            <td class="px-2 py-1 border text-center">
+                <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">Delete</button>
+            </td>
+        `;
+    });
+
+    // Remove row
+    table.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-training-btn')) {
+            const row = e.target.closest('tr');
+            const idInput = row.querySelector('input[name="training_id[]"]');
+            if (idInput && idInput.value) {
+                // Append deleted id
+                deletedIds.value += idInput.value + ',';
+            }
+            row.remove();
+        }
+    });
+
+});
+</script>
+
+
+<!-- ===============================
+     STEP 7: FILE ATTACHMENTS & SUBMIT
+================================ -->
+<div class="step hidden" id="step-7">
     <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">File Attachments</div>
 
     <div class="overflow-x-auto">
         <table class="table-auto w-full text-left border-collapse text-xs">
             <tbody>
-                <!-- Row 1: Resume -->
+                <!-- Resume -->
                 <tr>
                     <td class="px-2 py-1 border font-semibold w-1/4">Resume (PDF)</td>
                     <td class="px-2 py-1 border w-3/4">
                         <?php if (!empty($documents['resume'])): ?>
-                            <p class="text-xs text-green-700 mb-1">Uploaded: <?= esc($documents['resume']) ?></p>
+                            <p class="text-xs text-green-700 mb-1">Uploaded: <a href="<?= base_url('files/document/' . $documents['resume']) ?>" target="_blank" class="underline text-blue-600 text-xs">View</a></p>
+                            <input type="hidden" name="existing_resume" value="<?= esc($documents['resume']) ?>">
                         <?php endif; ?>
-                        <input type="file" name="resume" accept=".pdf" class="px-2 py-1 w-full text-xs ">
+                        <input type="file" name="resume" accept=".pdf" class="px-2 py-1 w-full text-xs">
                     </td>
                 </tr>
 
-                <!-- Row 2: Transcript of Records -->
+                <!-- TOR -->
                 <tr>
                     <td class="px-2 py-1 border font-semibold w-1/4">Transcript of Records (TOR)</td>
                     <td class="px-2 py-1 border w-3/4">
                         <?php if (!empty($documents['tor'])): ?>
-                            <p class="text-xs text-green-700 mb-1">Uploaded: <?= esc($documents['tor']) ?></p>
+                            <p class="text-xs text-green-700 mb-1">Uploaded: <a href="<?= base_url('files/document/' . $documents['tor']) ?>" target="_blank" class="underline text-blue-600 text-xs">View</a></p>
+                            <input type="hidden" name="existing_tor" value="<?= esc($documents['tor']) ?>">
                         <?php endif; ?>
-                        <input type="file" name="tor" accept=".pdf" class="px-2 py-1 w-full text-xs ">
+                        <input type="file" name="tor" accept=".pdf" class="px-2 py-1 w-full text-xs">
                     </td>
                 </tr>
 
-                <!-- Row 3: Diploma -->
+                <!-- Diploma -->
                 <tr>
                     <td class="px-2 py-1 border font-semibold w-1/4">Diploma</td>
                     <td class="px-2 py-1 border w-3/4">
                         <?php if (!empty($documents['diploma'])): ?>
-                            <p class="text-xs text-green-700 mb-1">Uploaded: <?= esc($documents['diploma']) ?></p>
+                            <p class="text-xs text-green-700 mb-1">Uploaded: <a href="<?= base_url('files/document/' . $documents['diploma']) ?>" target="_blank" class="underline text-blue-600 text-xs">View</a></p>
+                            <input type="hidden" name="existing_diploma" value="<?= esc($documents['diploma']) ?>">
                         <?php endif; ?>
-                        <input type="file" name="diploma" accept=".pdf" class="px-2 py-1 w-full text-xs ">
+                        <input type="file" name="diploma" accept=".pdf" class="px-2 py-1 w-full text-xs">
                     </td>
-                </tr><!-- Row 4: Other Certificates -->
-<tr>
-    <td class="px-2 py-1 border font-semibold w-1/4">Other Certificates (Optional)</td>
-    <td class="px-2 py-1 border w-3/4">
-        <?php if (!empty($documents['certificate'])): ?>
-            <p class="text-xs text-green-700 mb-1">
-                Uploaded: <?= esc($documents['certificate']) ?>
-            </p>
-        <?php endif; ?>
-        <input type="file" name="certificate" accept=".pdf,.jpg,.png" class="px-2 py-1 w-full text-xs ">
-    </td>
-</tr>
+                </tr>
 
+                <!-- Other Certificates -->
+                <tr>
+                    <td class="px-2 py-1 border font-semibold w-1/4">Other Certificates (Optional)</td>
+                    <td class="px-2 py-1 border w-3/4">
+                        <?php if (!empty($documents['certificate'])): ?>
+                            <p class="text-xs text-green-700 mb-1">Uploaded: <a href="<?= base_url('files/document/' . $documents['certificate']) ?>" target="_blank" class="underline text-blue-600 text-xs">View</a></p>
+                            <input type="hidden" name="existing_certificate" value="<?= esc($documents['certificate']) ?>">
+                        <?php endif; ?>
+                        <input type="file" name="certificate" accept=".pdf,.jpg,.png" class="px-2 py-1 w-full text-xs">
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 
     <div class="text-right mt-4">
-        <button type="button" onclick="prevStep(5)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold">Previous</button>
-        <button type="submit" id="submitBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold">Submit Application</button>
+        <button type="button" onclick="prevStep(7)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">Previous</button>
+        <button type="submit" id="submitBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Update Application</button>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ===== CIVIL SERVICE =====
+    const csTbody = document.querySelector('#cs-table tbody');
+    const addCsBtn = document.getElementById('add-cs-btn');
+    const deletedCsInput = document.getElementById('deleted_cs_ids');
+
+    addCsBtn.addEventListener('click', function () {
+        const emptyRow = csTbody.querySelector('td[colspan="7"]');
+        if (emptyRow) emptyRow.closest('tr').remove();
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-2 py-1 border"><input type="text" name="eligibility[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="rating[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="date_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="license_no[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border text-center"><button type="button" class="remove-cs-row text-red-600 hover:text-red-800 font-semibold">Delete</button></td>
+        `;
+        csTbody.appendChild(tr);
+    });
+
+    csTbody.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-cs-row')) {
+            const tr = e.target.closest('tr');
+            const id = tr.dataset.id;
+            if(id) {
+                const ids = deletedCsInput.value ? deletedCsInput.value.split(',') : [];
+                ids.push(id);
+                deletedCsInput.value = ids.join(',');
+            }
+            tr.remove();
+            if(!csTbody.querySelector('tr')) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" class="px-2 py-1 border text-center">No civil service record added.</td>`;
+                csTbody.appendChild(tr);
+            }
+        }
+    });
+});
+</script>
+
+</form>
     </div>
 </div>
    </div> <!-- End Steps Container -->
@@ -665,6 +872,33 @@ window.onclick = function(event) {
     </div> <!-- End Main Form Container -->
 </div>
 
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action*="applications/update/"]');
+    const submitBtn = document.getElementById('submitBtn');
+
+    submitBtn.addEventListener('click', function(e) {
+        e.preventDefault(); // stop default submission
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to update this application?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#0B6B3A',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, update it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit(); // submit the form only if user confirms
+            }
+        });
+    });
+});
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
