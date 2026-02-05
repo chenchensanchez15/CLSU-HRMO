@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>Applicant Dashboard | CLSU HRMO</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <script>
 tailwind.config = {
     theme: {
@@ -140,8 +142,6 @@ window.onclick = function(event) {
         </div>
     </div>
 </div>
-
-
         <hr class="my-4">
 
         <!-- Application Form -->
@@ -281,6 +281,7 @@ window.onclick = function(event) {
         </button>
     </div>
 </div>
+
 <!-- Step 2: Family Background -->
 <div class="step hidden" id="step-2">
     <div class="bg-gray-100 px-3 py-2 rounded font-semibold text-sm mb-4">Family Background</div>
@@ -483,9 +484,12 @@ window.onclick = function(event) {
                                     <option value="No" <?= $work['govt_service'] === 'No' ? 'selected' : '' ?>>No</option>
                                 </select>
                             </td>
-                            <td class="px-2 py-1 border text-center">
-                                <button type="button" class="text-red-500 hover:underline remove-row">Delete</button>
-                            </td>
+                        <td class="px-2 py-1 border text-center">
+    <button type="button" class="remove-row text-red-500 px-1">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+</td>
+
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -502,7 +506,6 @@ window.onclick = function(event) {
         <button type="button" onclick="nextStep(4)" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Next</button>
     </div>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const workTable = document.getElementById('work-table').getElementsByTagName('tbody')[0];
@@ -538,21 +541,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     <option value="No">No</option>
                 </select>
             </td>
-            <td class="px-2 py-1 border text-center"><button type="button" class="text-red-500 hover:underline remove-row">Delete</button></td>
+            <td class="px-2 py-1 border text-center">
+                <button type="button" class="remove-row text-red-500 px-1">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
         `;
         workTable.appendChild(row);
     });
 
-    // Delete row
+    // Delete row (works even if icon <i> is clicked)
     workTable.addEventListener('click', function(e) {
-        if (e.target.classList.contains('remove-row')) {
-            const row = e.target.closest('tr');
+        const btn = e.target.closest('.remove-row');
+        if (btn) {
+            const row = btn.closest('tr');
             row.remove();
             checkEmptyMessage();
         }
     });
 });
 </script>
+
+
 <?php
 $user_id = session()->get('user_id');
 $db = \Config\Database::connect();
@@ -599,9 +609,12 @@ $db = \Config\Database::connect();
                             <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
                             <td class="px-2 py-1 border"><input type="text" name="license_no[]" value="<?= esc($cs['license_no'] ?: '-') ?>" class="px-2 py-1 w-full text-xs"></td>
                             <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" value="<?= esc($cs['license_valid_until'] != '0000-00-00' ? $cs['license_valid_until'] : '') ?>" class="px-2 py-1 w-full text-xs"></td>
-                            <td class="px-2 py-1 border text-center">
-                                <button type="button" class="remove-cs-row text-red-600 hover:text-red-800 font-semibold">Delete</button>
-                            </td>
+                          <td class="px-2 py-1 border text-center">
+    <button type="button" class="remove-cs-row text-red-600 px-1 font-semibold">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+</td>
+
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -616,6 +629,56 @@ $db = \Config\Database::connect();
         <button type="button" onclick="nextStep(5)" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Next</button>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    // ===== CIVIL SERVICE =====
+    const csTbody = document.querySelector('#cs-table tbody');
+    const addCsBtn = document.getElementById('add-cs-btn');
+    const deletedCsInput = document.getElementById('deleted_cs_ids');
+
+    addCsBtn.addEventListener('click', function () {
+        const emptyRow = csTbody.querySelector('td[colspan="7"]');
+        if (emptyRow) emptyRow.closest('tr').remove();
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="px-2 py-1 border"><input type="text" name="eligibility[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="rating[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="date_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="text" name="license_no[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" class="px-2 py-1 w-full text-xs"></td>
+            <td class="px-2 py-1 border text-center">
+                <button type="button" class="remove-cs-row text-red-600 hover:text-red-800 font-semibold">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        `;
+        csTbody.appendChild(tr);
+    });
+
+    csTbody.addEventListener('click', function(e) {
+        const btn = e.target.closest('.remove-cs-row');
+        if (btn) {
+            const tr = btn.closest('tr');
+            const id = tr.dataset.id;
+            if(id) {
+                const ids = deletedCsInput.value ? deletedCsInput.value.split(',') : [];
+                ids.push(id);
+                deletedCsInput.value = ids.join(',');
+            }
+            tr.remove();
+            if(!csTbody.querySelector('tr')) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" class="px-2 py-1 border text-center">No civil service record added.</td>`;
+                csTbody.appendChild(tr);
+            }
+        }
+    });
+});
+</script>
 
 <!-- ===============================
      STEP 6: TRAININGS
@@ -676,9 +739,12 @@ $db = \Config\Database::connect();
                                 <?php endif; ?>
                                 <input type="file" name="training_certificate[<?= $i ?>]" class="text-xs mt-1">
                             </td>
-                            <td class="px-2 py-1 border text-center">
-                                <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">Delete</button>
-                            </td>
+                           <td class="px-2 py-1 border text-center">
+    <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">
+        <i class="fa-solid fa-trash"></i>
+    </button>
+</td>
+
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
@@ -729,15 +795,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 <input type="file" name="training_certificate[${newIndex}]" class="text-xs mt-1">
             </td>
             <td class="px-2 py-1 border text-center">
-                <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">Delete</button>
+                <button type="button" class="remove-training-btn text-red-600 px-1 font-semibold">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
             </td>
         `;
     });
 
     // Remove row
     table.addEventListener('click', function (e) {
-        if (e.target && e.target.classList.contains('remove-training-btn')) {
-            const row = e.target.closest('tr');
+        const btn = e.target.closest('.remove-training-btn'); // ensures icon click works
+        if (btn) {
+            const row = btn.closest('tr');
             const idInput = row.querySelector('input[name="training_id[]"]');
             if (idInput && idInput.value) {
                 // Append deleted id
@@ -749,6 +818,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+
 
 
 <!-- ===============================
@@ -816,52 +886,6 @@ document.addEventListener('DOMContentLoaded', function () {
         <button type="submit" id="submitBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-sm font-semibold hover:bg-green-800">Update Application</button>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    // ===== CIVIL SERVICE =====
-    const csTbody = document.querySelector('#cs-table tbody');
-    const addCsBtn = document.getElementById('add-cs-btn');
-    const deletedCsInput = document.getElementById('deleted_cs_ids');
-
-    addCsBtn.addEventListener('click', function () {
-        const emptyRow = csTbody.querySelector('td[colspan="7"]');
-        if (emptyRow) emptyRow.closest('tr').remove();
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="px-2 py-1 border"><input type="text" name="eligibility[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="rating[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="date" name="date_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="license_no[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border text-center"><button type="button" class="remove-cs-row text-red-600 hover:text-red-800 font-semibold">Delete</button></td>
-        `;
-        csTbody.appendChild(tr);
-    });
-
-    csTbody.addEventListener('click', function(e) {
-        if (e.target.closest('.remove-cs-row')) {
-            const tr = e.target.closest('tr');
-            const id = tr.dataset.id;
-            if(id) {
-                const ids = deletedCsInput.value ? deletedCsInput.value.split(',') : [];
-                ids.push(id);
-                deletedCsInput.value = ids.join(',');
-            }
-            tr.remove();
-            if(!csTbody.querySelector('tr')) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td colspan="7" class="px-2 py-1 border text-center">No civil service record added.</td>`;
-                csTbody.appendChild(tr);
-            }
-        }
-    });
-});
-</script>
-
 </form>
     </div>
 </div>

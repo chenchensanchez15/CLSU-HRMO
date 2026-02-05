@@ -847,7 +847,7 @@ $categories = $db->table('lib_training_category')->get()->getResultArray();
     </div>
 
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        Trainings / Seminars / Workshops
+        Trainings
     </div>
 
     <div class="overflow-x-auto mb-2 relative">
@@ -1035,6 +1035,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tbody = document.querySelector('#training-table tbody');
+
+    // Delete any training row
+    tbody.addEventListener('click', function(e) {
+        if (e.target.closest('.deleteTrainingBtn')) {
+            e.target.closest('tr').remove();
+
+            // Show "No training record added" if table is empty
+            if (tbody.querySelectorAll('tr').length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="10" class="px-2 py-1 border text-center">
+                        No training record added.
+                    </td>
+                `;
+                tbody.appendChild(emptyRow);
+            }
+        }
+    });
+});
+</script>
+
 <?php
 $user_id = session()->get('user_id');
 
