@@ -7,7 +7,7 @@ use App\Controllers\BaseController;
 use App\Models\JobApplicationModel;
 use App\Models\JobPositionModel;
 use App\Models\ApplicantModel;
-use App\Models\ApplicantFamModel;
+
 use App\Models\ApplicantEducationModel;
 use App\Models\ApplicantWorkExperienceModel;
 use App\Models\ApplicantDocumentsModel; 
@@ -19,7 +19,6 @@ class Applications extends BaseController
     protected $jobPositions;
     protected $jobApplications;
     protected $applicantPersonal;
-    protected $familyModel;
     protected $educationModel;
     protected $workModel;
     protected $documentModel; 
@@ -30,7 +29,7 @@ class Applications extends BaseController
         $this->jobPositions = new JobPositionModel();          
         $this->jobApplications = new JobApplicationModel();   
         $this->applicantPersonal = new ApplicantModel();      
-        $this->familyModel = new ApplicantFamModel();         
+        // Family background functionality removed
         $this->educationModel = new ApplicantEducationModel();
         $this->workModel = new ApplicantWorkExperienceModel();
         $this->documentModel = new ApplicantDocumentsModel(); 
@@ -71,27 +70,9 @@ class Applications extends BaseController
 
     $profile = $this->applicantPersonal->where('user_id', $user_id)->first();
 
-    // Fetch family info
-    $family = $db->table('applicant_fam')
-                 ->where('user_id', $user_id)
-                 ->get()
-                 ->getResultArray();
-
-    $spouse = $father = $mother = [];
-    foreach ($family as $fam) {
-        switch ($fam['relationship']) {
-            case 'Spouse': $spouse = $fam; break;
-            case 'Father': $father = $fam; break;
-            case 'Mother': $mother = $fam; break;
-        }
-    }
-
     return view('apply', [
         'job'     => $job,
-        'profile' => $profile,
-        'spouse'  => $spouse,
-        'father'  => $father,
-        'mother'  => $mother
+        'profile' => $profile
     ]);
 }
 
@@ -123,22 +104,44 @@ public function submit($id = null)
     $application_id = $this->jobApplications->getInsertID();
 
     // =========================
-    // INSERT INTO application_personal
+    // INSERT INTO application_personal - DIRECT DATABASE COPY
     // =========================
+    
+    // ALWAYS fetch fresh data from applicant_personal table
+    $applicantPersonal = $this->applicantPersonal->where('user_id', $user_id)->first();
+    
+    if (!$applicantPersonal || empty($applicantPersonal['first_name'])) {
+        return $this->response->setStatusCode(400)->setBody('Personal information not found in your profile. Please complete your profile in the Personal Information section first.');
+    }
+    
+    // Use database values directly - ignore any potentially problematic POST data
+    $firstName = $applicantPersonal['first_name'];
+    $middleName = $applicantPersonal['middle_name'] ?? '';
+    $lastName = $applicantPersonal['last_name'] ?? '';
+    $extension = $applicantPersonal['suffix'] ?? '';
+    $sex = $applicantPersonal['sex'] ?? '';
+    $dateOfBirth = $applicantPersonal['date_of_birth'] ?? '';
+    $civilStatus = $applicantPersonal['civil_status'] ?? '';
+    $email = $applicantPersonal['email'] ?? '';
+    $phone = $applicantPersonal['phone'] ?? '';
+    $citizenship = $applicantPersonal['citizenship'] ?? '';
+    $residentialAddress = $applicantPersonal['residential_address'] ?? '';
+    $permanentAddress = $applicantPersonal['permanent_address'] ?? '';
+    
     $db->table('application_personal')->insert([
         'job_application_id' => $application_id,
-        'first_name' => $this->request->getPost('first_name'),
-        'middle_name' => $this->request->getPost('middle_name'),
-        'last_name' => $this->request->getPost('last_name'),
-        'extension' => $this->request->getPost('extension'),
-        'sex' => $this->request->getPost('sex'),
-        'date_of_birth' => $this->request->getPost('date_of_birth'),
-        'civil_status' => $this->request->getPost('civil_status'),
-        'email' => $this->request->getPost('email'),
-        'phone' => $this->request->getPost('phone'),
-        'citizenship' => $this->request->getPost('citizenship'),
-        'residential_address' => $this->request->getPost('residential_address') ?? '-',
-        'permanent_address' => $this->request->getPost('permanent_address') ?? '-',
+        'first_name' => $firstName,
+        'middle_name' => $middleName,
+        'last_name' => $lastName,
+        'extension' => $extension,
+        'sex' => $sex,
+        'date_of_birth' => $dateOfBirth,
+        'civil_status' => $civilStatus,
+        'email' => $email,
+        'phone' => $phone,
+        'citizenship' => $citizenship,
+        'residential_address' => $residentialAddress ?: '-',
+        'permanent_address' => $permanentAddress ?: '-',
         'is_clsu_employee' => $this->request->getPost('is_clsu_employee') ?? 'No',
         'clsu_employee_specify' => $this->request->getPost('clsu_employee_specify') ?? null,
         'religion' => $this->request->getPost('religion') ?? null,
@@ -150,44 +153,6 @@ public function submit($id = null)
         'created_at' => date('Y-m-d H:i:s'),
         'updated_at' => date('Y-m-d H:i:s')
     ]);
-
-    // =========================
-    // INSERT INTO application_fam
-    // =========================
-    $familyMembers = [
-        'Spouse' => [
-            'first_name' => $this->request->getPost('spouse_first_name'),
-            'middle_name' => $this->request->getPost('spouse_middle_name'),
-            'last_name' => $this->request->getPost('spouse_surname'),
-            'extension' => $this->request->getPost('spouse_ext_name'),
-            'occupation' => $this->request->getPost('spouse_occupation'),
-            'contact_no' => $this->request->getPost('spouse_contact')
-        ],
-        'Father' => [
-            'first_name' => $this->request->getPost('father_first_name'),
-            'middle_name' => $this->request->getPost('father_middle_name'),
-            'last_name' => $this->request->getPost('father_surname'),
-            'extension' => $this->request->getPost('father_ext_name'),
-            'occupation' => $this->request->getPost('father_occupation') ?? '-',
-            'contact_no' => $this->request->getPost('father_contact') ?? '-'
-        ],
-        'Mother' => [
-            'first_name' => $this->request->getPost('mother_first_name'),
-            'middle_name' => $this->request->getPost('mother_middle_name'),
-            'last_name' => $this->request->getPost('mother_maiden_surname'),
-            'extension' => null,
-            'occupation' => $this->request->getPost('mother_occupation') ?? '-',
-            'contact_no' => $this->request->getPost('mother_contact') ?? '-'
-        ]
-    ];
-
-    foreach ($familyMembers as $relationship => $member) {
-        $member['job_application_id'] = $application_id;
-        $member['relationship'] = $relationship;
-        $member['created_at'] = date('Y-m-d H:i:s');
-        $member['updated_at'] = date('Y-m-d H:i:s');
-        $db->table('application_fam')->insert($member);
-    }
 
     // =========================
     // INSERT INTO application_education
@@ -207,6 +172,7 @@ public function submit($id = null)
             'level' => '', // Will be populated from lib_degree_level
             'school_name' => $edu['school_name'] ?? 'N/A',
             'degree_course' => $edu['degree_course'] ?? 'N/A',
+            'course' => $edu['course'] ?? 'N/A',
             'period_from' => $edu['period_from'] ?? 'N/A',
             'period_to' => $edu['period_to'] ?? 'N/A',
             'highest_level_units' => $edu['highest_level_units'] ?? 'N/A',
@@ -491,29 +457,7 @@ public function view($application_id = null)
         ? date('F d, Y', strtotime($app['personal']['date_of_birth']))
         : '-';
 
-    // -------------------------
-    // Fetch family background
-    // -------------------------
-    $app['family'] = $db->table('application_fam')
-                        ->where('job_application_id', $application_id)
-                        ->get()
-                        ->getResultArray() ?? [];
-
-    foreach ($app['family'] as &$fam) {
-        $middle = (!empty($fam['middle_name']) && strtoupper($fam['middle_name']) !== 'N/A') 
-                    ? strtoupper(substr($fam['middle_name'], 0, 1)) . '.' 
-                    : '';
-        $suffix = (!empty($fam['extension']) && strtoupper($fam['extension']) !== 'N/A') 
-                    ? $fam['extension'] 
-                    : '';
-        $first = !empty($fam['first_name']) ? ucfirst(strtolower($fam['first_name'])) : '';
-        $last  = !empty($fam['last_name']) ? ucfirst(strtolower($fam['last_name'])) : '';
-        $fam['full_name_formatted'] = implode(' ', array_filter([$first, $middle, $last, $suffix])) ?: '-';
-        $fam['occupation_formatted'] = (!empty($fam['occupation']) && strtoupper($fam['occupation']) !== 'N/A') 
-                                        ? ucwords(strtolower($fam['occupation'])) : '-';
-        $fam['contact_formatted'] = (!empty($fam['contact_no']) && strtoupper($fam['contact_no']) !== 'N/A') 
-                                        ? $fam['contact_no'] : '-';
-    }
+    // Family background functionality removed
 
     // -------------------------
     // Fetch education with joins
@@ -733,15 +677,7 @@ public function edit($application_id = null)
         ->get()
         ->getRowArray() ?? [];
 
-// =========================
-// Family Background (all rows from application_fam)
-// =========================
-$family = $db->table('application_fam')
-    ->where('job_application_id', $application_id)
-    ->orderBy('id_application_fam', 'ASC')
-    ->get()
-    ->getResultArray();
-
+// Family background functionality removed
 
     // =========================
     // Educational Background
@@ -848,7 +784,7 @@ $family = $db->table('application_fam')
         'job'             => $job,
         'profile'         => $profile,
         'personal'        => $personal,
-        'family'          => $family,   // <-- pass all family rows
+        // Family background functionality removed
         'elementary'      => $elementary,
         'highschool'      => $highschool,
         'vocational'      => $vocational,
@@ -908,42 +844,7 @@ $db->table('application_personal')
    ->where('job_application_id', $job_application_id)
    ->update($personalData);
 
-   // -------------------
-    // Update Family Background
-    // -------------------
-   $famTable = $db->table('application_fam');
-$famIds = $this->request->getPost('fam_last_name') ?? [];
-
-foreach ($famIds as $id => $lastName) {
-    // Skip empty rows
-    if (empty(trim($lastName))) continue;
-
-    $data = [
-        'first_name'  => $this->request->getPost('fam_first_name')[$id] ?? '-',
-        'middle_name' => $this->request->getPost('fam_middle_name')[$id] ?? '-',
-        'last_name'   => $lastName ?: '-',
-        'extension'   => $this->request->getPost('fam_extension')[$id] ?? '-',
-        'occupation'  => $this->request->getPost('fam_occupation')[$id] ?? '-',
-        'contact_no'  => $this->request->getPost('fam_contact_no')[$id] ?? null,
-        'updated_at'  => date('Y-m-d H:i:s')
-    ];
-
-    // Clean phone numbers
-    if (!empty($data['contact_no'])) {
-        $data['contact_no'] = preg_replace('/\D/', '', $data['contact_no']);
-        $data['contact_no'] = substr($data['contact_no'], 0, 11);
-    }
-
-    // Update or insert
-    if (!empty($id)) {
-        $famTable->where('id_application_fam', $id)->update($data);
-    } else {
-        $data['job_application_id'] = $job_application_id;
-        $data['relationship'] = $this->request->getPost('fam_relationship')[$id] ?? 'Unknown';
-        $data['created_at'] = date('Y-m-d H:i:s');
-        $famTable->insert($data);
-    }
-}
+   // Family background functionality removed
 
     // -------------------
     // Update Educational Background

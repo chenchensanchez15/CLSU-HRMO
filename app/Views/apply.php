@@ -78,7 +78,7 @@
       enctype="multipart/form-data"
       action="<?= base_url('applications/submit/' . $job['id']) ?>">
     <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
-    
+
 <!-- Step 1: Personal Information -->
 <div class="step" id="step-1">
     <!-- Additional Personal Details -->
@@ -235,19 +235,6 @@
         </div>
     </div>
 
-    <!-- Hidden inputs to store data in DB -->
-    <input type="hidden" name="first_name" value="<?= esc($profile['first_name'] ?? '') ?>">
-    <input type="hidden" name="middle_name" value="<?= esc($profile['middle_name'] ?? '') ?>">
-    <input type="hidden" name="last_name" value="<?= esc($profile['last_name'] ?? '') ?>">
-    <input type="hidden" name="extension" value="<?= esc($profile['suffix'] ?? '') ?>">
-    <input type="hidden" name="sex" value="<?= esc($profile['sex'] ?? '') ?>">
-    <input type="hidden" name="date_of_birth" value="<?= esc($profile['date_of_birth'] ?? '') ?>">
-    <input type="hidden" name="civil_status" value="<?= esc($profile['civil_status'] ?? '') ?>">
-    <input type="hidden" name="email" value="<?= esc($profile['email'] ?? '') ?>">
-    <input type="hidden" name="phone" value="<?= esc($profile['phone'] ?? '') ?>">
-    <input type="hidden" name="citizenship" value="<?= esc($profile['citizenship'] ?? '') ?>">
-    <input type="hidden" name="residential_address" value="<?= esc($profile['residential_address'] ?? '') ?>">
-    <input type="hidden" name="permanent_address" value="<?= esc($profile['permanent_address'] ?? '') ?>">
 
     <!-- Personal Information Details (Compact Format) -->
     <div class="space-y-3 text-xs">
@@ -377,6 +364,7 @@ foreach($libDegreeLevels as $levelObj){
             'level_name' => $levelName,
             'school_name' => '-',
             'degree_course' => '-',
+            'course' => '-',
             'period_from' => '-',
             'period_to' => '-',
             'highest_level_units' => '-',
@@ -391,6 +379,7 @@ foreach($libDegreeLevels as $levelObj){
                 'level_name' => $firstRow ? $levelName : '', // only show level on first row
                 'school_name' => $edu['school_name'] ?? '-',
                 'degree_course' => $edu['degree_course'] ?? '-',
+                'course' => $edu['course'] ?? '-',
                 'period_from' => $edu['period_from'] ?? '-',
                 'period_to' => $edu['period_to'] ?? '-',
                 'highest_level_units' => $edu['highest_level_units'] ?? '-',
@@ -432,7 +421,8 @@ foreach($libDegreeLevels as $levelObj){
                 <tr>
                     <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Level</th>
                     <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Name of School</th>
-                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Degree / Course</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Degree</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Course</th>
                     <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">From</th>
                     <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">To</th>
                     <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Highest Level / Units Earned</th>
@@ -446,6 +436,7 @@ foreach($libDegreeLevels as $levelObj){
                     <td class="px-3 py-2 border-b border-gray-200 font-semibold text-gray-800"><?= esc($edu['level_name']) ?></td>
                     <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($edu['school_name']) ?></td>
                     <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($edu['degree_course']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($edu['course'] ?? '-') ?></td>
                     <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['period_from']) ?></td>
                     <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['period_to']) ?></td>
                     <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['highest_level_units']) ?></td>
@@ -489,18 +480,6 @@ foreach($libDegreeLevels as $levelObj){
         <h3 class="text-clsuGreen font-semibold text-sm">Work Experience</h3>
     </div>
     
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
-        </div>
-    </div>
 
     <?php
     $user_id = session()->get('user_id');
@@ -605,19 +584,6 @@ $civil_services = $db->table('applicant_civil_service')
         <h3 class="text-clsuGreen font-semibold text-sm">Civil Service Eligibility</h3>
     </div>
     
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
-        </div>
-    </div>
-
     <div class="overflow-x-auto mb-5 relative">
         <table id="cs-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
@@ -787,19 +753,7 @@ $trainings = $db->table('applicant_trainings at')
         </svg>
         <h3 class="text-clsuGreen font-semibold text-sm">Trainings</h3>
     </div>
-    
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
-        </div>
-    </div>
+
 
     <div class="overflow-x-auto mb-5 relative">
         <table id="training-table" class="table-auto w-full border-collapse text-xs">
@@ -1007,19 +961,6 @@ $documents = $documents ?? [
         <h3 class="text-clsuGreen font-semibold text-sm">File Attachments</h3>
     </div>
     
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
-        </div>
-    </div>
-
     <?php
     $docLabels = [
         'pds'               => '1. Fully accomplished Personal Data Sheet (PDS)',
@@ -1058,6 +999,38 @@ $documents = $documents ?? [
             <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Data Privacy Section -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"></path>
+            </svg>
+            <div class="flex-1">
+                <h4 class="text-sm font-semibold text-blue-800 mb-2">Data Privacy Notice</h4>
+                <p class="text-xs text-blue-700 mb-3">
+                    We collect and process your personal information in accordance with the Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing Rules and Regulations. Your personal data will be used solely for employment purposes, recruitment processes, and human resource management. We ensure the confidentiality, integrity, and availability of your personal information through appropriate organizational, physical, and technical security measures.
+                </p>
+                <div class="flex items-start mt-3">
+                    <input type="checkbox" 
+                           id="privacy_consent" 
+                           name="privacy_consent" 
+                           required 
+                           class="mt-1 mr-2 h-4 w-4 text-clsuGreen border-gray-300 rounded focus:ring-clsuGreen">
+                    <label for="privacy_consent" class="text-xs text-gray-700">
+                        I have read and understood the Data Privacy Notice. I consent to the collection, use, and processing of my personal information for employment and recruitment purposes in accordance with applicable data privacy laws.
+                        <span class="text-red-500">*</span>
+                    </label>
+                </div>
+                <div id="privacy-error" class="hidden mt-2 text-red-600 text-xs flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    Please read and accept the Data Privacy Notice by checking the consent checkbox before submitting your application.
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Navigation Buttons -->
@@ -1202,7 +1175,22 @@ document.addEventListener('DOMContentLoaded', function () {
     submitBtn.addEventListener('click', function(e){
         e.preventDefault();
 
-        // Confirm submission
+        // First validate privacy consent
+        const privacyCheckbox = document.getElementById('privacy_consent');
+        const privacyError = document.getElementById('privacy-error');
+        
+        if (!privacyCheckbox.checked) {
+            // Show inline error message
+            privacyError.classList.remove('hidden');
+            privacyCheckbox.focus();
+            privacyCheckbox.scrollIntoView({behavior: 'smooth', block: 'center'});
+            return;
+        } else {
+            // Hide error if previously shown
+            privacyError.classList.add('hidden');
+        }
+
+        // If privacy consent is given, show confirmation dialog
         Swal.fire({
             title: 'Are you sure?',
             text: 'Please confirm that all your data are correct.',

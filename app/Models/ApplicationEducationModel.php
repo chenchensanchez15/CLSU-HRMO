@@ -14,6 +14,7 @@ class ApplicationEducationModel extends Model
         'level',
         'school_name',
         'degree_course',
+        'course',
         'period_from',
         'period_to',
         'highest_level_units',

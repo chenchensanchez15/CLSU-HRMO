@@ -67,7 +67,7 @@ $routes->get('trainings/certificate/(:any)', 'Account::viewTrainingCertificate/$
 $routes->get('files/training/(:any)', 'Files::training/$1');
 $routes->get('files/document/(:any)', 'Files::document/$1');
 $routes->delete('account/deleteEducation/(:num)', 'Account::deleteEducation/$1');
-$routes->post('account/updateFamily', 'Account::updateFamily');
+// Family background functionality removed
 $routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1');
 $routes->get('account/viewTrainingCertificate/(:any)', 'Account::viewTrainingCertificate/$1');
 $routes->post('account/updateFile', 'Account::updateFile');

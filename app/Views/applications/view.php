@@ -194,410 +194,391 @@ window.onclick = function(event) {
     </tbody>
   </table>
 </div>
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Personal Information</h2>
-
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">First Name</th>
-        <th class="px-2 py-1 border">Middle Name</th>
-        <th class="px-2 py-1 border">Last Name</th>
-        <th class="px-2 py-1 border">Suffix</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['first_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['middle_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['last_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['extension'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Sex</th>
-        <th class="px-2 py-1 border">Date of Birth</th>
-        <th class="px-2 py-1 border">Civil Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['sex'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['civil_status'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Email</th>
-        <th class="px-2 py-1 border">Phone Number</th>
-        <th class="px-2 py-1 border">Citizenship</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['email'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['phone'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['citizenship'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Residential Address</th>
-        <th class="px-2 py-1 border">Permanent Address</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['residential_address'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['permanent_address'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Additional Personal Details</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Are you CLSU Permanent Employee?</th>
-        <th class="px-2 py-1 border">Religion</th>
-        <th class="px-2 py-1 border">Indigenous Person</th>
-        <th class="px-2 py-1 border">Person with Disability</th>
-        <th class="px-2 py-1 border">Solo Parent</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border">
-          <?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?>
-          <?php if (!empty($app['personal']['clsu_employee_specify']) && $app['personal']['is_clsu_employee'] === 'Yes'): ?>
-            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></span>
-          <?php endif; ?>
-        </td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['religion'] ?? '-') ?></td>
-        <td class="px-2 py-1 border">
-          <?= esc($app['personal']['is_indigenous'] ?? 'No') ?>
-          <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
-            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></span>
-          <?php endif; ?>
-        </td>
-        <td class="px-2 py-1 border">
-          <?= esc($app['personal']['is_pwd'] ?? 'No') ?>
-          <?php if (!empty($app['personal']['pwd_specify']) && $app['personal']['is_pwd'] === 'Yes'): ?>
-            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></span>
-          <?php endif; ?>
-        </td>
-        <td class="px-2 py-1 border"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Relationship</th>
-        <th class="px-2 py-1 border">Full Name</th>
-        <th class="px-2 py-1 border">Occupation</th>
-        <th class="px-2 py-1 border">Contact Number</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php
-$relations = ['Spouse', 'Father', 'Mother'];
-$family_by_relation = [];
-if (!empty($app['family'])) {
-    foreach ($app['family'] as $fam) {
-        $family_by_relation[$fam['relationship']] = $fam;
-    }
-}
-
-foreach ($relations as $relation):
-    $fam = $family_by_relation[$relation] ?? [];
-
-    $first = $fam['first_name'] ?? '';
-    $middle = $fam['middle_name'] ?? '';
-    $last = $fam['last_name'] ?? '';
-    $suffix = $fam['extension'] ?? '';
-
-    // Convert middle name to initial if not empty or N/A
-    if (!empty($middle) && strtoupper($middle) !== 'N/A') {
-        $middle = strtoupper(substr($middle, 0, 1)) . '.';
-    } else {
-        $middle = '';
-    }
-
-    // Ignore suffix if empty or N/A
-    if (empty($suffix) || strtoupper($suffix) === 'N/A') {
-        $suffix = '';
-    }
-
-    // Capitalize first letters of first, middle, last
-    $first = ucfirst(strtolower($first));
-    $last  = ucfirst(strtolower($last));
-    // Middle is already capitalized as initial (G.)
-    // Suffix: keep as is (Jr., III)
+<div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+        </svg>
+        <h2 class="text-xl font-bold text-clsuGreen">Personal Information</h2>
+    </div>
     
-    $nameParts = array_filter([$first, $middle, $last, $suffix]);
-    $fullName = $nameParts ? implode(' ', $nameParts) : '-';
-
-    $occupation = !empty($fam['occupation']) && strtoupper($fam['occupation']) !== 'N/A' ? ucfirst(strtolower($fam['occupation'])) : '-';
-    $contact    = !empty($fam['contact_no']) && strtoupper($fam['contact_no']) !== 'N/A' ? $fam['contact_no'] : '-';
-?>
-<tr>
-    <td class="px-2 py-1 border"><?= esc($relation) ?></td>
-    <td class="px-2 py-1 border"><?= esc($fullName) ?></td>
-    <td class="px-2 py-1 border"><?= esc($occupation) ?></td>
-    <td class="px-2 py-1 border"><?= esc($contact) ?></td>
-</tr>
-<?php endforeach; ?>
-    </tbody>
-  </table>
+    <!-- Name Information -->
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Name Information</h3>
+    <div class="overflow-x-auto mb-6">
+        <table class="table-auto w-full border-collapse text-sm">
+            <tbody>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700 w-1/4">First Name</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['first_name'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Middle Name</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['middle_name'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Last Name</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['last_name'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Suffix</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['extension'] ?? '-') ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Personal Details -->
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Personal Details</h3>
+    <div class="overflow-x-auto mb-6">
+        <table class="table-auto w-full border-collapse text-sm">
+            <tbody>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700 w-1/4">Sex</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['sex'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Date of Birth</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Civil Status</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['civil_status'] ?? '-') ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Contact Information -->
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h3>
+    <div class="overflow-x-auto mb-6">
+        <table class="table-auto w-full border-collapse text-sm">
+            <tbody>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700 w-1/4">Email</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['email'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Phone Number</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['phone'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Citizenship</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['citizenship'] ?? '-') ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Address Information -->
+    <h3 class="text-lg font-semibold text-gray-800 mb-3">Address Information</h3>
+    <div class="overflow-x-auto">
+        <table class="table-auto w-full border-collapse text-sm">
+            <tbody>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700 w-1/4">Residential Address</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['residential_address'] ?? '-') ?></td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                    <td class="py-2 font-medium text-gray-700">Permanent Address</td>
+                    <td class="py-2 text-gray-800"><?= esc($app['personal']['permanent_address'] ?? '-') ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Educational Background</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Level</th>
-        <th class="px-2 py-1 border">Name of School</th>
-        <th class="px-2 py-1 border">Degree / Course</th>
-        <th class="px-2 py-1 border">From</th>
-        <th class="px-2 py-1 border">To</th>
-        <th class="px-2 py-1 border">Highest Level / Units Earned</th>
-        <th class="px-2 py-1 border">Year Graduated</th>
-        <th class="px-2 py-1 border">Scholarship / Academic Honors</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($app['education_display'])): ?>
-          <?php foreach ($app['education_display'] as $edu): ?>
-      <tr>
-        <td class="px-2 py-1 border font-semibold"><?= esc($edu['level']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['school_name']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['degree_course']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['period_from']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['period_to']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['highest_level_units']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['year_graduated']) ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['awards']) ?></td>
-      </tr>
-          <?php endforeach; ?>
-      <?php else: ?>
-      <tr>
-        <td class="px-2 py-1 border text-center" colspan="8">No education records found.</td>
-      </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
+
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Additional Personal Details</h2>
+    
+    <div class="space-y-2">
+        <div>
+            <p class="font-medium text-gray-700">Are you CLSU Employee?</p>
+            <p class="ml-4"><?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?></p>
+            <?php if (!empty($app['personal']['clsu_employee_specify']) && $app['personal']['is_clsu_employee'] === 'Yes'): ?>
+                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></p>
+            <?php endif; ?>
+        </div>
+        <div>
+            <p class="font-medium text-gray-700">Religion</p>
+            <p class="ml-4"><?= esc($app['personal']['religion'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="font-medium text-gray-700">Indigenous Person</p>
+            <p class="ml-4"><?= esc($app['personal']['is_indigenous'] ?? 'No') ?></p>
+            <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
+                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></p>
+            <?php endif; ?>
+        </div>
+        <div>
+            <p class="font-medium text-gray-700">Person with Disability</p>
+            <p class="ml-4"><?= esc($app['personal']['is_pwd'] ?? 'No') ?></p>
+            <?php if (!empty($app['personal']['pwd_specify']) && $app['personal']['is_pwd'] === 'Yes'): ?>
+                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></p>
+            <?php endif; ?>
+        </div>
+        <div>
+            <p class="font-medium text-gray-700">Solo Parent</p>
+            <p class="ml-4"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></p>
+        </div>
+    </div>
+</div>
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Educational Background</h2>
+    
+    <?php if (!empty($app['education_display'])): ?>
+        <?php 
+        $currentLevel = '';
+        foreach ($app['education_display'] as $edu): 
+            if (!empty($edu['level']) && $edu['level'] !== $currentLevel):
+                $currentLevel = $edu['level'];
+                if ($currentLevel !== '-'): ?>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3 mt-6"><?= esc($currentLevel) ?></h3>
+                <?php endif;
+            endif;
+            if ($edu['school_name'] !== '-' || $edu['degree_course'] !== '-'): ?>
+                <div class="space-y-2 mb-4 ml-4">
+                    <div>
+                        <p class="font-medium text-gray-700">School Name</p>
+                        <p class="ml-4"><?= esc($edu['school_name']) ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700">Degree / Course</p>
+                        <p class="ml-4"><?= esc($edu['degree_course']) ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700">Period</p>
+                        <p class="ml-4"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700">Year Graduated</p>
+                        <p class="ml-4"><?= esc($edu['year_graduated']) ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700">Highest Level / Units Earned</p>
+                        <p class="ml-4"><?= esc($edu['highest_level_units']) ?></p>
+                    </div>
+                    <div>
+                        <p class="font-medium text-gray-700">Scholarship / Academic Honors</p>
+                        <p class="ml-4"><?= esc($edu['awards']) ?></p>
+                    </div>
+                </div>
+            <?php endif;
+        endforeach; ?>
+    <?php else: ?>
+        <div class="text-center py-4">
+            <p class="text-gray-500">No education records found.</p>
+        </div>
+    <?php endif; ?>
 </div>
 
-<!-- WORK EXPERIENCE -->
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Work Experience</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Position / Title</th>
-        <th class="px-2 py-1 border">Office</th>
-        <th class="px-2 py-1 border">Inclusive Dates</th>
-        <th class="px-2 py-1 border">Status of Appointment</th>
-        <th class="px-2 py-1 border">Government Service</th>
-      </tr>
-    </thead>
-    <tbody>
-  <?php if (!empty($app['work'])): ?>
-    <?php foreach ($app['work'] as $work): ?>
-      <tr>
-        <td class="px-2 py-1 border"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></td>
-        <td class="px-2 py-1 border"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></td>
-        <td class="px-2 py-1 border">
-            <?php 
-              $from = !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-';
-              $to   = !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-';
-              echo $from . ' - ' . $to;
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Work Experience</h2>
+    
+    <?php if (!empty($app['work'])): ?>
+        <?php foreach ($app['work'] as $work): ?>
+            <div class="space-y-2 mb-6 ml-4">
+                <div>
+                    <p class="font-medium text-gray-700">Position / Title</p>
+                    <p class="ml-4"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></p>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700">Office</p>
+                    <p class="ml-4"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></p>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700">Inclusive Dates</p>
+                    <?php 
+                      $from = !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-';
+                      $to   = !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-';
+                    ?>
+                    <p class="ml-4"><?= $from ?> - <?= $to ?></p>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700">Status of Appointment</p>
+                    <p class="ml-4"><?= !empty($work['status_of_appointment']) ? esc($work['status_of_appointment']) : '-' ?></p>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-700">Government Service</p>
+                    <p class="ml-4"><?= (isset($work['govt_service']) && strtoupper($work['govt_service']) === 'YES') ? 'Yes' : 'No' ?></p>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <div class="text-center py-4">
+            <p class="text-gray-500">No work experience records found.</p>
+        </div>
+    <?php endif; ?>
+</div>
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Civil Service Eligibility</h2>
+    
+    <?php if (!empty($app['civil'])): ?>
+        <div class="space-y-4">
+            <?php foreach ($app['civil'] as $cs): ?>
+                <div class="bg-white rounded-lg border border-gray-200 p-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Eligibility</p>
+                            <p class="text-base font-medium text-gray-800"><?= esc($cs['eligibility'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Rating / Exam</p>
+                            <p class="text-base text-gray-800"><?= esc($cs['rating'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Date of Examination</p>
+                            <p class="text-base text-gray-800">
+                                <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Place of Examination</p>
+                            <p class="text-base text-gray-800"><?= esc($cs['place_of_exam'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">License / PRC No.</p>
+                            <p class="text-base text-gray-800"><?= esc($cs['license_no'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Valid Until</p>
+                            <p class="text-base text-gray-800">
+                                <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
+                            </p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-sm font-medium text-gray-600 mb-1">Certificate</p>
+                            <?php if (!empty($cs['certificate'])): ?>
+                                <button type="button" 
+                                        class="view-certificate-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline">
+                                    View Certificate
+                                </button>
+                            <?php else: ?>
+                                <span class="text-gray-500">No certificate available</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="text-center py-8">
+            <p class="text-gray-500 text-lg">No civil service records found.</p>
+        </div>
+    <?php endif; ?>
+</div>
+
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Trainings</h2>
+    
+    <?php if (!empty($trainings)): ?>
+        <div class="space-y-4">
+            <?php foreach ($trainings as $tr): ?>
+                <div class="bg-white rounded-lg border border-gray-200 p-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Training Name</p>
+                            <p class="text-base font-medium text-gray-800"><?= esc($tr['training_name'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Category</p>
+                            <p class="text-base text-gray-800"><?= esc($tr['training_category_name'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Inclusive Dates</p>
+                            <p class="text-base text-gray-800"><?= $tr['date_from'] ?> - <?= $tr['date_to'] ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Facilitator</p>
+                            <p class="text-base text-gray-800"><?= esc($tr['training_facilitator'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Hours</p>
+                            <p class="text-base text-gray-800"><?= esc($tr['training_hours'] ?? '-') ?></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 mb-1">Sponsor</p>
+                            <p class="text-base text-gray-800"><?= esc($tr['training_sponsor'] ?? '-') ?></p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-sm font-medium text-gray-600 mb-1">Remarks</p>
+                            <p class="text-base text-gray-800"><?= esc($tr['training_remarks'] ?? '-') ?></p>
+                        </div>
+                        <div class="md:col-span-2">
+                            <p class="text-sm font-medium text-gray-600 mb-1">Certificate</p>
+                            <?php if (!empty($tr['certificate_file'])): ?>
+                                <button type="button" 
+                                        class="view-training-certificate-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline"
+                                        data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
+                                    View Certificate
+                                </button>
+                            <?php else: ?>
+                                <span class="text-gray-500">No certificate available</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="text-center py-8">
+            <p class="text-gray-500 text-lg">No trainings records found.</p>
+        </div>
+    <?php endif; ?>
+</div>
+
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Uploaded Documents</h2>
+    
+    <?php
+    // List of document fields in the database
+    $docs = [
+        'pds' => 'Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
+        'performance_rating' => 'Performance Rating in the present position for the last rating period',
+        'resume' => 'Resume',
+        'tor' => 'Transcript of Records (TOR)',
+        'diploma' => 'Diploma'
+    ];
+
+    $hasDocuments = false;
+    foreach ($docs as $key => $label) {
+        if (!empty($app['documents'][$key])) {
+            $hasDocuments = true;
+            break;
+        }
+    }
+    ?>
+    
+    <?php if ($hasDocuments): ?>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <?php foreach ($docs as $key => $label): 
+                $file = $app['documents'][$key] ?? null;
             ?>
-        </td>
-        <td class="px-2 py-1 border"><?= !empty($work['status_of_appointment']) ? esc($work['status_of_appointment']) : '-' ?></td>
-        <td class="px-2 py-1 border">
-            <?= (isset($work['govt_service']) && strtoupper($work['govt_service']) === 'YES') ? 'Yes' : 'No' ?>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <tr>
-      <td class="px-2 py-1 border text-center" colspan="5">No work experience records found.</td>
-    </tr>
-  <?php endif; ?>
-</tbody>
-  </table>
-</div>
-<!-- CIVIL SERVICE -->
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Civil Service Eligibility</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Eligibility</th>
-        <th class="px-2 py-1 border">Rating / Exam</th>
-        <th class="px-2 py-1 border">Date of Examination</th>
-        <th class="px-2 py-1 border">Place of Examination</th>
-        <th class="px-2 py-1 border">License / PRC No.</th>
-        <th class="px-2 py-1 border">Valid Until</th>
-        <th class="px-2 py-1 border">Certificate</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($app['civil'])): ?>
-        <?php foreach ($app['civil'] as $cs): ?>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($cs['eligibility'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($cs['rating'] ?? '-') ?></td>
-        <td class="px-2 py-1 border">
-          <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
-        </td>
-        <td class="px-2 py-1 border"><?= esc($cs['place_of_exam'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($cs['license_no'] ?? '-') ?></td>
-        <td class="px-2 py-1 border">
-          <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
-        </td>
-        <td class="px-2 py-1 border text-center">
-          <?php if (!empty($cs['certificate'])): ?>
-            <button type="button" 
-                    class="view-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
-                    data-file="<?= site_url('applications/viewCivilCertificate/' . urlencode($cs['certificate'])) ?>">
-              View Certificate
-            </button>
-          <?php else: ?>
-            -
-          <?php endif; ?>
-        </td>
-      </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-      <tr>
-        <td class="px-2 py-1 border text-center" colspan="7">No civil service records found.</td>
-      </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
-
-<!-- TRAININGS -->
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Trainings</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Training Name</th>
-        <th class="px-2 py-1 border">Category</th>
-        <th class="px-2 py-1 border">Inclusive Dates</th>
-        <th class="px-2 py-1 border">Facilitator</th>
-        <th class="px-2 py-1 border">Hours</th>
-        <th class="px-2 py-1 border">Sponsor</th>
-        <th class="px-2 py-1 border">Remarks</th>
-        <th class="px-2 py-1 border">Certificate</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php if (!empty($trainings)): ?>
-        <?php foreach ($trainings as $tr): ?>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($tr['training_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($tr['training_category_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= $tr['date_from'] ?> - <?= $tr['date_to'] ?></td>
-        <td class="px-2 py-1 border"><?= esc($tr['training_facilitator'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($tr['training_hours'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($tr['training_sponsor'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($tr['training_remarks'] ?? '-') ?></td>
-        <td class="px-2 py-1 border text-center">
-          <?php if (!empty($tr['certificate_file'])): ?>
-            <button type="button" 
-                    class="view-training-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
-                    data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
-              View Certificate
-            </button>
-          <?php else: ?>
-            -
-          <?php endif; ?>
-        </td>
-      </tr>
-        <?php endforeach; ?>
-      <?php else: ?>
-      <tr>
-        <td class="px-2 py-1 border text-center" colspan="8">No trainings records found.</td>
-      </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
-</div>
-
-<!-- DOCUMENTS -->
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Uploaded Documents</h2>
-<div class="overflow-x-auto mb-6">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Document</th>
-        <th class="px-2 py-1 border">File</th>
-      </tr>
-    </thead>
-    <tbody>
-      <?php
-      // List of document fields in the database (5 documents)
-      $docs = [
-          'pds' => 'Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
-          'performance_rating' => 'Performance Rating n the present position for the last rating period',
-          'resume' => 'Resume',
-          'tor' => 'Transcript of Records (TOR)',
-          'diploma' => 'Diploma'
-      ];
-
-      // Loop through each document type
-      foreach ($docs as $key => $label):
-          $file = $app['documents'][$key] ?? null;
-      ?>
-      <tr>
-        <td class="px-2 py-1 border font-semibold"><?= esc($label) ?></td>
-        <td class="px-2 py-1 border text-center">
-          <?php if (!empty($file)): ?>
-            <button type="button" 
-                    class="view-document-btn text-blue-600 text-xs font-medium hover:text-blue-800"
-                    data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
-              View Document
-            </button>
-          <?php else: ?>
-            <span class="text-gray-500 text-xs italic">No file available</span>
-          <?php endif; ?>
-        </td>
-      </tr>
-      <?php endforeach; ?>
-
-      <?php if (empty(array_filter($app['documents'] ?? []))): ?>
-      <tr>
-        <td class="px-2 py-1 border text-center font-semibold" colspan="2">No documents uploaded.</td>
-      </tr>
-      <?php endif; ?>
-    </tbody>
-  </table>
+                <div class="bg-white rounded-lg border border-gray-200 p-4">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-600 mb-1">Document</p>
+                            <p class="text-base font-medium text-gray-800 mb-2"><?= esc($label) ?></p>
+                        </div>
+                        <div>
+                            <?php if (!empty($file)): ?>
+                                <button type="button" 
+                                        class="view-document-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline"
+                                        data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
+                                    View Document
+                                </button>
+                            <?php else: ?>
+                                <span class="text-gray-400 text-sm">No file uploaded</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php else: ?>
+        <div class="text-center py-8">
+            <p class="text-gray-500 text-lg">No documents uploaded.</p>
+        </div>
+    <?php endif; ?>
 </div>
 </div>
 </div>

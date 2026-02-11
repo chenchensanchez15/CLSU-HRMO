@@ -8,7 +8,6 @@ use App\Models\JobApplicationModel;
 use App\Models\ApplicantDocumentsModel;
 use App\Models\ApplicantCivilServiceModel;
 use App\Models\ApplicantTrainingModel;
-use App\Models\ApplicantFamModel;
 
 class Account extends BaseController
 {
@@ -27,7 +26,7 @@ public function personal()
     $trainingModel         = new \App\Models\ApplicantTrainingModel();
     $trainingCategoryModel = new \App\Models\TrainingCategoryModel();
     $fileModel             = new \App\Models\ApplicantDocumentsModel();
-    $familyModel           = new \App\Models\ApplicantFamModel();
+    // Family background functionality removed
 
     // Load degree tables
     $degreeModel       = new \App\Models\DegreeModel();
@@ -56,25 +55,7 @@ public function personal()
         ];
     }
 
-    // ----------------- FAMILY -----------------
-    $familyRecords = $familyModel->where('user_id', $userId)->findAll();
-    $familyProfile = [
-        'spouse' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
-        'father' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
-        'mother' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'occupation'=>'', 'contact_no'=>''],
-    ];
-    foreach ($familyRecords as $member) {
-        $relationship = strtolower($member['relationship']);
-        if (!isset($familyProfile[$relationship])) continue;
-        $familyProfile[$relationship] = [
-            'first_name'  => $member['first_name'] ?? '',
-            'middle_name' => $member['middle_name'] ?? '',
-            'last_name'   => $member['last_name'] ?? '',
-            'extension'   => $member['extension'] ?? '',
-            'occupation'  => $member['occupation'] ?? '',
-            'contact_no'  => $member['contact_no'] ?? '',
-        ];
-    }
+    // Family background functionality removed
 
     // ----------------- EDUCATION -----------------
     $educationRecords = $educationModel->where('user_id', $userId)->findAll();
@@ -221,7 +202,6 @@ $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
     return view('account/personal', [
         'user'               => $user,
         'profile'            => $profile,
-        'familyProfile'      => $familyProfile,
         'educationRecords'   => $finalEducation,
         'workRecords'        => $workRecords,
         'civilRecords'       => $civilRecords,
@@ -282,65 +262,7 @@ public function update()
     ]);
 }
 
-public function updateFamily()
-{
-    $session = session();
-    $userId = $session->get('user_id');
-
-    $applicantFamModel = new ApplicantFamModel();
-    $familyMembers = ['Spouse', 'Father', 'Mother'];
-
-    try {
-        foreach ($familyMembers as $relation) {
-            $key = strtolower($relation);
-
-            // --- Gather data from POST, default to blank ---
-            $data = [
-                'user_id'     => $userId,
-                'relationship'=> $relation,
-                'first_name'  => $this->request->getPost($key.'_first_name') ?? '',
-                'middle_name' => $this->request->getPost($key.'_middle_name') ?? '',
-                'last_name'   => $this->request->getPost($key.'_last_name') ?? '',
-                'extension'   => $this->request->getPost($key.'_extension') ?? '',
-                'occupation'  => $this->request->getPost($key.'_occupation') ?? '',
-                'contact_no'  => $this->request->getPost($key.'_contact_no') ?? '',
-            ];
-
-            // --- Validation for contact number ---
-            if (!empty($data['contact_no']) && !preg_match('/^\d{11}$/', $data['contact_no'])) {
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => "$relation Contact No. must be exactly 11 digits."
-                ]);
-            }
-
-            // --- Check if record exists ---
-            $existing = $applicantFamModel
-                ->where('user_id', $userId)
-                ->where('relationship', $relation)
-                ->first();
-
-            if ($existing) {
-                // --- Update existing record ---
-                $applicantFamModel->update($existing['id'], $data);
-            } else {
-                // --- Insert new record ---
-                $applicantFamModel->insert($data);
-            }
-        }
-
-        return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Family background updated successfully.'
-        ]);
-
-    } catch (\Exception $e) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Error: ' . $e->getMessage()
-        ]);
-    }
-}
+// Family background functionality removed
 public function updatePhoto()
 {
     $session = session();
