@@ -28,14 +28,15 @@ $builder = $db->table('job_applications');
 $builder->select('
     job_applications.id_job_application,
     job_applications.job_vacancy_id,
+    job_applications.applied_at,
+    job_applications.application_status,
     job_vacancies.position_title,
     job_vacancies.office AS department,
     job_vacancies.plantilla_item_no,
     job_vacancies.salary_grade,
     job_vacancies.monthly_salary,
-    job_vacancies.posted_at AS posting_date,
-    job_vacancies.application_deadline AS closing_date,
-    job_applications.application_status
+    job_vacancies.posted_at,
+    job_vacancies.application_deadline
 ');
 $builder->join('job_vacancies', 'job_vacancies.id = job_applications.job_vacancy_id', 'left');
 $builder->where('job_applications.user_id', $userId);

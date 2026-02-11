@@ -81,136 +81,159 @@
     
 <!-- Step 1: Personal Information -->
 <div class="step" id="step-1">
-
-
-
     <!-- Additional Personal Details -->
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        Additional Personal Details
+    <div class="mb-4">
+        <h3 class="text-clsuGreen font-bold text-sm mb-3">Additional Personal Details</h3>
+        
+        <!-- Row 1: CLSU Employee, Person with Disability, Indigenous Person -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+            <!-- CLSU Employee -->
+            <div class="relative">
+                <label class="block text-xs font-medium text-clsuGreen mb-1">Are you CLSU Employee?</label>
+                <div class="flex gap-1">
+                    <select name="is_clsu_employee"
+                            id="clsu_employee_select"
+                            required
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
+                            onchange="handleClsuMainSelection(this)">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <select name="is_clsu_employee_detail"
+                            id="clsu_employee_detail"
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
+                            onchange="handleClsuDetailSelection(this)">
+                        <option value="">Select Type</option>
+                        <option value="Permanent">Permanent</option>
+                        <option value="Temporary">Temporary</option>
+                        <option value="COS/JO">COS/JO</option>
+                    </select>
+                </div>
+                <input type="text"
+                       id="clsu_specify"
+                       name="clsu_employee_specify"
+                       placeholder="Specify"
+                       class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
+                <input type="hidden" name="clsu_employee_value" id="clsu_employee_hidden">
+            </div>
+            
+            <!-- Person with Disability -->
+            <div class="relative">
+                <label class="block text-xs font-medium text-clsuGreen mb-1">Person with Disability</label>
+                <div class="flex gap-1">
+                    <select name="is_pwd"
+                            id="pwd_select"
+                            required
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
+                            onchange="handlePwdMainSelection(this)">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <select name="is_pwd_detail"
+                            id="pwd_detail"
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
+                            onchange="handlePwdDetailSelection(this)">
+                        <option value="">Select Type</option>
+                        <option value="Visual Impairment">Visual Impairment</option>
+                        <option value="Hearing Impairment">Hearing Impairment</option>
+                        <option value="Mobility Impairment">Mobility Impairment</option>
+                        <option value="Cognitive Disability">Cognitive Disability</option>
+                        <option value="Mental Health Condition">Mental Health Condition</option>
+                    </select>
+                </div>
+                <input type="text"
+                       id="pwd_specify"
+                       name="pwd_specify"
+                       placeholder="Specify"
+                       class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
+                <input type="hidden" name="pwd_value" id="pwd_hidden">
+            </div>
+            
+            <!-- Indigenous Person -->
+            <div class="relative">
+                <label class="block text-xs font-medium text-clsuGreen mb-1">Indigenous Person</label>
+                <div class="flex gap-1">
+                    <select name="is_indigenous"
+                            id="indigenous_select"
+                            required
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
+                            onchange="handleIndigenousMainSelection(this)">
+                        <option value="">Select</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                    <select name="is_indigenous_detail"
+                            id="indigenous_detail"
+                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
+                            onchange="handleIndigenousDetailSelection(this)">
+                        <option value="">Select Type</option>
+                        <option value="Lumad">Lumad</option>
+                        <option value="Indigenous Cultural Community">Indigenous Cultural Community</option>
+                        <option value="Ethnic Minority">Ethnic Minority</option>
+                    </select>
+                </div>
+                <input type="text"
+                       id="indigenous_specify"
+                       name="indigenous_specify"
+                       placeholder="Specify"
+                       class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
+                <input type="hidden" name="indigenous_value" id="indigenous_hidden">
+            </div>
+        </div>
+        
+        <!-- Row 2: Religion and Solo Parent -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <!-- Religion -->
+            <div>
+                <label class="block text-xs font-medium text-clsuGreen mb-1">Religion</label>
+                <input type="text"
+                       name="religion"
+                       placeholder="Enter Religion"
+                       required
+                       class="w-full text-xs px-2 py-1 border border-clsuGreen rounded">
+            </div>
+            
+            <!-- Solo Parent -->
+            <div>
+                <label class="block text-xs font-medium text-clsuGreen mb-1">Solo Parent</label>
+                <select name="is_solo_parent"
+                        required
+                        class="w-full text-xs px-2 py-1 border border-clsuGreen rounded">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+            </div>
+        </div>
     </div>
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <tbody>
+    <div class="text-right mt-2">
+        <button type="button" id="step1Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+            Next
+        </button>
+    </div>
 
-            <!-- ROW 1 -->
-            <tr>
-                <td class="border p-0" colspan="3">
-                    <table class="w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-2 py-1 border w-1/2">Are you CLSU Permanent Employee?</th>
-                                <th class="px-2 py-1 border w-1/2">Religion</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-2 py-1 border">
-                                    <select name="is_clsu_employee"
-                                            required
-                                            class="w-full text-xs px-2 py-1"
-                                            onchange="toggleSpecify(this, 'clsu_specify')">
-                                        <option value="">Select</option>
-                                        <option value="Yes">Yes</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                    <input type="text"
-                                           id="clsu_specify"
-                                           name="clsu_employee_specify"
-                                           placeholder="Specify"
-                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
-                                </td>
-                                <td class="px-2 py-1 border">
-                                    <input type="text"
-                                           name="religion"
-                                           placeholder="Enter Religion"
-                                           required
-                                           class="w-full text-xs px-2 py-1">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
+    <!-- Script for two-dropdown cascading -->
+ 
 
-            <!-- ROW 2 -->
-            <tr>
-                <td class="border p-0" colspan="3">
-                    <table class="w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-2 py-1 border w-1/3">Indigenous Person</th>
-                                <th class="px-2 py-1 border w-1/3">Person with Disability</th>
-                                <th class="px-2 py-1 border w-1/3">Solo Parent</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-2 py-1 border">
-                                    <select name="is_indigenous"
-                                            required
-                                            class="w-full text-xs px-2 py-1"
-                                            onchange="toggleSpecify(this, 'indigenous_specify')">
-                                        <option value="">Select</option>
-                                        <option value="Yes">Yes</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                    <input type="text"
-                                           id="indigenous_specify"
-                                           name="indigenous_specify"
-                                           placeholder="Specify"
-                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
-                                </td>
+</div>
 
-                                <td class="px-2 py-1 border">
-                                    <select name="is_pwd"
-                                            required
-                                            class="w-full text-xs px-2 py-1"
-                                            onchange="toggleSpecify(this, 'pwd_specify')">
-                                        <option value="">Select</option>
-                                        <option value="Yes">Yes</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                    <input type="text"
-                                           id="pwd_specify"
-                                           name="pwd_specify"
-                                           placeholder="Specify"
-                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
-                                </td>
-
-                                <td class="px-2 py-1 border">
-                                    <select name="is_solo_parent"
-                                            required
-                                            class="w-full text-xs px-2 py-1">
-                                        <option value="">Select</option>
-                                        <option value="Yes">Yes</option>
-                                        <option value="No">No</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-
-        </tbody>
-    </table>
-
-    <!-- Script for toggling specify input -->
-    <script>
-    function toggleSpecify(select, inputId) {
-        const input = document.getElementById(inputId);
-        if (select.value === 'Yes') {
-            input.classList.remove('hidden');
-            input.setAttribute('required', 'required');
-        } else {
-            input.classList.add('hidden');
-            input.value = '';
-            input.removeAttribute('required');
-        }
-    }
-    </script>
-
-    <!-- Personal Information -->
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">Personal Information</div>
+<!-- Step 2: Family Background -->
+<div class="step hidden" id="step-2">
+ 
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Hidden inputs to store data in DB -->
     <input type="hidden" name="first_name" value="<?= esc($profile['first_name'] ?? '') ?>">
@@ -226,247 +249,91 @@
     <input type="hidden" name="residential_address" value="<?= esc($profile['residential_address'] ?? '') ?>">
     <input type="hidden" name="permanent_address" value="<?= esc($profile['permanent_address'] ?? '') ?>">
 
-    <!-- Visible UI table -->
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-2 py-1 border">First Name</th>
-                <th class="px-2 py-1 border">Middle Name</th>
-                <th class="px-2 py-1 border">Last Name</th>
-                <th class="px-2 py-1 border">Suffix</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-2 py-1 border"><?= esc($profile['first_name'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['middle_name'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['last_name'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['suffix'] ?? '-') ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-2 py-1 border">Sex</th>
-                <th class="px-2 py-1 border">Date of Birth</th>
-                <th class="px-2 py-1 border">Civil Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-2 py-1 border"><?= esc($profile['sex'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= !empty($profile['date_of_birth']) ? date('F j, Y', strtotime($profile['date_of_birth'])) : '-' ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['civil_status'] ?? '-') ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-2 py-1 border">Email</th>
-                <th class="px-2 py-1 border">Phone</th>
-                <th class="px-2 py-1 border">Citizenship</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-2 py-1 border"><?= esc($profile['email'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['phone'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['citizenship'] ?? '-') ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <table class="table-auto w-full border-collapse text-xs mb-4">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-2 py-1 border">Residential Address</th>
-                <th class="px-2 py-1 border">Permanent Address</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-2 py-1 border"><?= esc($profile['residential_address'] ?? '-') ?></td>
-                <td class="px-2 py-1 border"><?= esc($profile['permanent_address'] ?? '-') ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="text-right mt-2">
-        <button type="button" id="step1Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
-            Next
-        </button>
-    </div>
-
-</div>
-
-<!-- Step 2: Family Background -->
-<div class="step hidden" id="step-2">
-    <div>
-        <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-            Family Background
+    <!-- Personal Information Details (Compact Format) -->
+    <div class="space-y-3 text-xs">
+        <!-- Name Information -->
+        <div class="pb-2 border-b border-gray-200">
+            <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+                <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                Personal Information
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">First Name</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['first_name'] ?? '-') ?></p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Middle Name</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['middle_name'] ?? '-') ?></p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Last Name</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['last_name'] ?? '-') ?></p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Suffix</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['suffix'] ?? '-') ?></p>
+                </div>
+            </div>
         </div>
 
-        <div class="space-y-4">
-
-            <!-- Spouse -->
-            <div>
-                <p class="font-semibold text-xs mb-1 text-text-black">Spouse</p>
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Surname</th>
-                                <th class="px-1 py-1 border">First Name</th>
-                                <th class="px-1 py-1 border">Middle Name</th>
-                                <th class="px-1 py-1 border">Extension</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($spouse['last_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($spouse['first_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($spouse['middle_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($spouse['extension'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="spouse_surname" value="<?= esc($spouse['last_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="spouse_first_name" value="<?= esc($spouse['first_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="spouse_middle_name" value="<?= esc($spouse['middle_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="spouse_ext_name" value="<?= esc($spouse['extension'] ?? 'N/A') ?>">
+        <!-- Personal Details -->
+        <div class="pb-2 border-b border-gray-200">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Sex</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['sex'] ?? '-') ?></p>
                 </div>
-            
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Contact Number</th>
-                                <th class="px-1 py-1 border">Occupation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($spouse['contact_no'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($spouse['occupation'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="spouse_contact" value="<?= esc($spouse['contact_no'] ?? 'N/A') ?>">
-                    <input type="hidden" name="spouse_occupation" value="<?= esc($spouse['occupation'] ?? 'N/A') ?>">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Date of Birth</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5">
+                        <?= !empty($profile['date_of_birth']) ? date('F j, Y', strtotime($profile['date_of_birth'])) : '-' ?>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Civil Status</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['civil_status'] ?? '-') ?></p>
                 </div>
             </div>
+        </div>
 
-            <!-- Father -->
-            <div>
-                <p class="font-semibold text-xs mb-1 text-text-black">Father</p>
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Surname</th>
-                                <th class="px-1 py-1 border">First Name</th>
-                                <th class="px-1 py-1 border">Middle Name</th>
-                                <th class="px-1 py-1 border">Extension</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($father['last_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($father['first_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($father['middle_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($father['extension'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="father_surname" value="<?= esc($father['last_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="father_first_name" value="<?= esc($father['first_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="father_middle_name" value="<?= esc($father['middle_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="father_ext_name" value="<?= esc($father['extension'] ?? 'N/A') ?>">
+        <!-- Contact Information -->
+        <div class="pb-2 border-b border-gray-200">
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Email</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5 break-words"><?= esc($profile['email'] ?? '-') ?></p>
                 </div>
-            
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Contact Number</th>
-                                <th class="px-1 py-1 border">Occupation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($father['contact_no'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($father['occupation'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="father_contact" value="<?= esc($father['contact_no'] ?? 'N/A') ?>">
-                    <input type="hidden" name="father_occupation" value="<?= esc($father['occupation'] ?? 'N/A') ?>">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Phone</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['phone'] ?? '-') ?></p>
+                </div>
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Citizenship</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['citizenship'] ?? '-') ?></p>
                 </div>
             </div>
+        </div>
 
-            <!-- Mother -->
-            <div>
-                <p class="font-semibold text-xs mb-1 text-text-black">Mother (Maiden Name)</p>
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Surname</th>
-                                <th class="px-1 py-1 border">First Name</th>
-                                <th class="px-1 py-1 border">Middle Name</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($mother['last_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($mother['first_name'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($mother['middle_name'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="mother_maiden_surname" value="<?= esc($mother['last_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="mother_first_name" value="<?= esc($mother['first_name'] ?? 'N/A') ?>">
-                    <input type="hidden" name="mother_middle_name" value="<?= esc($mother['middle_name'] ?? 'N/A') ?>">
+        <!-- Address Information -->
+        <div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Residential Address</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['residential_address'] ?? '-') ?></p>
                 </div>
-            
-                <div class="overflow-x-auto mb-2">
-                    <table class="table-auto w-full border-collapse text-xs">
-                        <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-1 py-1 border">Contact Number</th>
-                                <th class="px-1 py-1 border">Occupation</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="px-1 py-1 border"><?= esc($mother['contact_no'] ?? 'N/A') ?></td>
-                                <td class="px-1 py-1 border"><?= esc($mother['occupation'] ?? 'N/A') ?></td>
-                            </tr>
-                        </tbody>
-                    </table>
-            
-                    <!-- Hidden Inputs -->
-                    <input type="hidden" name="mother_contact" value="<?= esc($mother['contact_no'] ?? 'N/A') ?>">
-                    <input type="hidden" name="mother_occupation" value="<?= esc($mother['occupation'] ?? 'N/A') ?>">
+                <div>
+                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Permanent Address</p>
+                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['permanent_address'] ?? '-') ?></p>
                 </div>
             </div>
-
         </div>
     </div>
+
 
     <!-- Navigation Buttons -->
     <div class="text-right mt-4">
@@ -538,33 +405,52 @@ foreach($libDegreeLevels as $levelObj){
 
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">Educational Background</div>
-
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section Header with Icon -->
+    <div class="px-3 py-2 mb-4 flex items-center">
+        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+        <h3 class="text-clsuGreen font-semibold text-sm">Educational Background</h3>
+    </div>
+    
     <div class="overflow-x-auto mb-5">
         <table class="table-auto w-full text-left border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-2 py-1 border">Level</th>
-                    <th class="px-2 py-1 border">Name of School</th>
-                    <th class="px-2 py-1 border">Degree / Course</th>
-                    <th class="px-2 py-1 border">From</th>
-                    <th class="px-2 py-1 border">To</th>
-                    <th class="px-2 py-1 border">Highest Level / Units Earned</th>
-                    <th class="px-2 py-1 border">Year Graduated</th>
-                    <th class="px-2 py-1 border">Scholarship / Academic Honors</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Level</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Name of School</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Degree / Course</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">From</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">To</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Highest Level / Units Earned</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Year Graduated</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Scholarship / Academic Honors</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach($finalEducation as $edu): ?>
-                <tr class="hover:bg-gray-50">
-                    <td class="px-2 py-1 border font-semibold"><?= esc($edu['level_name']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['school_name']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['degree_course']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['period_from']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['period_to']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['highest_level_units']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['year_graduated']) ?></td>
-                    <td class="px-2 py-1 border"><?= esc($edu['awards']) ?></td>
+            <tbody class="bg-white">
+                <?php foreach($finalEducation as $index => $edu): ?>
+                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                    <td class="px-3 py-2 border-b border-gray-200 font-semibold text-gray-800"><?= esc($edu['level_name']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($edu['school_name']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($edu['degree_course']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['period_from']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['period_to']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['highest_level_units']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['year_graduated']) ?></td>
+                    <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($edu['awards']) ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -582,9 +468,38 @@ foreach($libDegreeLevels as $levelObj){
 </div>
 <!-- Step 4: Work Experience (Read-Only) -->
 <div class="step hidden" id="step-4">
-
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        Work Experience
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section Header with Icon -->
+    <div class="px-3 py-2 mb-4 flex items-center">
+        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+        </svg>
+        <h3 class="text-clsuGreen font-semibold text-sm">Work Experience</h3>
+    </div>
+    
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
     </div>
 
     <?php
@@ -596,58 +511,44 @@ foreach($libDegreeLevels as $levelObj){
         ->getResultArray();
     ?>
 
-    <div class="overflow-x-auto mb-2">
-        <table id="work-table" class="table-auto w-full border-collapse text-xs mt-2">
+    <div class="overflow-x-auto mb-5">
+        <table id="work-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-2 py-1 border">Position Title</th>
-                    <th class="px-2 py-1 border">Office / Company</th>
-                    <th class="px-2 py-1 border">Inclusive Dates</th>
-                    <th class="px-2 py-1 border">Status of Appointment</th>
-                    <th class="px-2 py-1 border">Government Service</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Position Title</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Office / Company</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Inclusive Dates</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Status of Appointment</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Government Service</th>
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody class="bg-white">
                 <?php if (!empty($work_experiences)): ?>
                     <?php foreach ($work_experiences as $work): ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <?= esc($work['position_title'] ?? '-') ?>
-                                <input type="hidden" name="position_title[]" value="<?= esc($work['position_title'] ?? 'N/A') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($work['office'] ?? '-') ?>
-                                <input type="hidden" name="office[]" value="<?= esc($work['office'] ?? 'N/A') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-800 font-medium"><?= esc($work['position_title'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($work['office'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600">
                                 <?= !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-' ?> 
                                 - 
                                 <?= !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-' ?>
                                 <input type="hidden" name="date_from[]" value="<?= !empty($work['date_from']) ? date('Y-m-d', strtotime($work['date_from'])) : '' ?>">
                                 <input type="hidden" name="date_to[]" value="<?= !empty($work['date_to']) ? date('Y-m-d', strtotime($work['date_to'])) : '' ?>">
                             </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($work['status_of_appointment'] ?? '-') ?>
-                                <input type="hidden" name="status_of_appointment[]" value="<?= esc($work['status_of_appointment'] ?? 'N/A') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($work['govt_service'] ?? '-') ?>
-                                <input type="hidden" name="govt_service[]" value="<?= esc($work['govt_service'] ?? 'No') ?>">
-                            </td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($work['status_of_appointment'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($work['govt_service'] ?? '-') ?></td>
+                            <!-- Hidden inputs for form submission -->
+                            <input type="hidden" name="position_title[]" value="<?= esc($work['position_title'] ?? 'N/A') ?>">
+                            <input type="hidden" name="office[]" value="<?= esc($work['office'] ?? 'N/A') ?>">
+                            <input type="hidden" name="status_of_appointment[]" value="<?= esc($work['status_of_appointment'] ?? 'N/A') ?>">
+                            <input type="hidden" name="govt_service[]" value="<?= esc($work['govt_service'] ?? 'No') ?>">
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td class="px-2 py-1 border text-center" colspan="5">
+                        <td class="px-3 py-2 border-b border-gray-200 text-center text-gray-500" colspan="5">
                             No work experience added.
-                            <!-- Add empty hidden inputs to avoid undefined index errors -->
-                            <input type="hidden" name="position_title[]" value="N/A">
-                            <input type="hidden" name="office[]" value="N/A">
-                            <input type="hidden" name="date_from[]" value="">
-                            <input type="hidden" name="date_to[]" value="">
-                            <input type="hidden" name="status_of_appointment[]" value="N/A">
-                            <input type="hidden" name="govt_service[]" value="No">
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -666,6 +567,7 @@ foreach($libDegreeLevels as $levelObj){
         </button>
     </div>
 </div>
+
 <?php
 $user_id = session()->get('user_id');
 $app = $db->table('job_applications')
@@ -682,72 +584,94 @@ $civil_services = $db->table('applicant_civil_service')
 ?>
 
 <div class="step hidden" id="step-5">
-
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        Civil Service Eligibility
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section Header with Icon -->
+    <div class="px-3 py-2 mb-4 flex items-center">
+        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+        </svg>
+        <h3 class="text-clsuGreen font-semibold text-sm">Civil Service Eligibility</h3>
+    </div>
+    
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
     </div>
 
-    <div class="overflow-x-auto mb-2 relative">
+    <div class="overflow-x-auto mb-5 relative">
         <table id="cs-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-2 py-1 border">Eligibility</th>
-                    <th class="px-2 py-1 border">Rating</th>
-                    <th class="px-2 py-1 border">Date of Exam</th>
-                    <th class="px-2 py-1 border">Place of Exam</th>
-                    <th class="px-2 py-1 border">License No.</th>
-                    <th class="px-2 py-1 border">License Valid Until</th>
-                    <th class="px-2 py-1 border">Certificate</th>
-                    <th class="px-2 py-1 border">Actions</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Eligibility</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Rating</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Date of Exam</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Place of Exam</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">License No.</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">License Valid Until</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Certificate</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white">
                 <?php if (!empty($civil_services)): ?>
                     <?php foreach($civil_services as $cs): ?>
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <?= esc($cs['eligibility'] ?? '-') ?>
-                                <input type="hidden" name="eligibility[]" value="<?= esc($cs['eligibility'] ?? '-') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($cs['rating'] ?? '-') ?>
-                                <input type="hidden" name="rating[]" value="<?= esc($cs['rating'] ?? '-') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
+                        <tr class="hover:bg-gray-50 transition-colors duration-150">
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-800 font-medium"><?= esc($cs['eligibility'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($cs['rating'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600">
                                 <?= !empty($cs['date_of_exam']) ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
                                 <input type="hidden" name="date_of_exam[]" value="<?= !empty($cs['date_of_exam']) ? date('Y-m-d', strtotime($cs['date_of_exam'])) : '' ?>">
                             </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($cs['place_of_exam'] ?? '-') ?>
-                                <input type="hidden" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?? '-') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <?= esc($cs['license_no'] ?? '-') ?>
-                                <input type="hidden" name="license_no[]" value="<?= esc($cs['license_no'] ?? '-') ?>">
-                            </td>
-                            <td class="px-2 py-1 border">
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($cs['place_of_exam'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($cs['license_no'] ?? '-') ?></td>
+                            <td class="px-3 py-2 border-b border-gray-200 text-gray-600">
                                 <?= !empty($cs['license_valid_until']) ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
                                 <input type="hidden" name="license_valid_until[]" value="<?= !empty($cs['license_valid_until']) ? date('Y-m-d', strtotime($cs['license_valid_until'])) : '' ?>">
                             </td>
-                            <td class="px-2 py-1 border text-center">
+                            <td class="px-3 py-2 border-b border-gray-200 text-center">
                                 <?php if (!empty($cs['certificate'])): ?>
                                     <button type="button"
-                                        class="view-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                        class="view-certificate-btn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
                                         data-file="<?= base_url('account/viewCivilCertificate/' . urlencode($cs['certificate'])) ?>">
-                                        View
+                                        <i class="fa-regular fa-eye mr-1"></i> View
                                     </button>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="px-2 py-1 border text-center">
-                                <button type="button" class="text-red-500 hover:underline remove-cs-row">
-                                    <i class="fa-solid fa-trash"></i>
+                            <td class="px-3 py-2 border-b border-gray-200 text-center">
+                                <button type="button" class="inline-flex px-2 py-1 text-xs font-medium rounded text-red-600 hover:bg-red-50 remove-cs-row">
+                                    <i class="fa-solid fa-trash mr-1"></i> Delete
                                 </button>
                             </td>
+                            <!-- Hidden inputs for form submission -->
+                            <input type="hidden" name="eligibility[]" value="<?= esc($cs['eligibility'] ?? '-') ?>">
+                            <input type="hidden" name="rating[]" value="<?= esc($cs['rating'] ?? '-') ?>">
+                            <input type="hidden" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?? '-') ?>">
+                            <input type="hidden" name="license_no[]" value="<?= esc($cs['license_no'] ?? '-') ?>">
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td class="px-2 py-1 border text-center" colspan="8">
+                        <td class="px-3 py-2 border-b border-gray-200 text-center text-gray-500" colspan="8">
                             No civil service record added.
                         </td>
                     </tr>
@@ -830,6 +754,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+
 <?php
 $user_id = session()->get('user_id');
 $trainings = $db->table('applicant_trainings at')
@@ -842,74 +767,82 @@ $trainings = $db->table('applicant_trainings at')
 ?>
 
 <div class="step hidden" id="step-6">
-
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        Trainings
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section Header with Icon -->
+    <div class="px-3 py-2 mb-4 flex items-center">
+        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+        <h3 class="text-clsuGreen font-semibold text-sm">Trainings</h3>
+    </div>
+    
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
     </div>
 
-    <div class="overflow-x-auto mb-2 relative">
+    <div class="overflow-x-auto mb-5 relative">
         <table id="training-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
-                    <th class="px-2 py-1 border">Category</th>
-                    <th class="px-2 py-1 border">Training Name</th>
-                    <th class="px-2 py-1 border">Venue</th>
-                    <th class="px-2 py-1 border">Date From</th>
-                    <th class="px-2 py-1 border">Date To</th>
-                    <th class="px-2 py-1 border">Facilitator</th>
-                    <th class="px-2 py-1 border">Hours</th>
-                    <th class="px-2 py-1 border">Sponsor</th>
-                    <th class="px-2 py-1 border">Remarks</th>
-                    <th class="px-2 py-1 border">Certificate</th>
-                    <th class="px-2 py-1 border text-center">Actions</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Category</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Training Name</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Venue</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Date From</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Date To</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Facilitator</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Hours</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Sponsor</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Remarks</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700">Certificate</th>
+                    <th class="px-3 py-2 border-t border-b border-gray-300 font-medium text-gray-700 text-center">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="bg-white">
             <?php if (!empty($trainings)): ?>
                 <?php foreach ($trainings as $tr): ?>
-                    <tr>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_category_name']) ?>
-                            <input type="hidden" name="training_category_id[]" value="<?= esc($tr['training_category_id']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_name']) ?>
-                            <input type="hidden" name="training_name[]" value="<?= esc($tr['training_name']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_venue']) ?>
-                            <input type="hidden" name="training_venue[]" value="<?= esc($tr['training_venue']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
+                    <tr class="hover:bg-gray-50 transition-colors duration-150">
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-800 font-medium"><?= esc($tr['training_category_name']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-700"><?= esc($tr['training_name']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($tr['training_venue']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600">
                             <?= !empty($tr['date_from']) ? date('F d, Y', strtotime($tr['date_from'])) : '-' ?>
                             <input type="hidden" name="training_date_from[]" value="<?= !empty($tr['date_from']) ? date('Y-m-d', strtotime($tr['date_from'])) : '' ?>">
                         </td>
-                        <td class="px-2 py-1 border">
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600">
                             <?= !empty($tr['date_to']) ? date('F d, Y', strtotime($tr['date_to'])) : '-' ?>
                             <input type="hidden" name="training_date_to[]" value="<?= !empty($tr['date_to']) ? date('Y-m-d', strtotime($tr['date_to'])) : '' ?>">
                         </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_facilitator']) ?>
-                            <input type="hidden" name="training_facilitator[]" value="<?= esc($tr['training_facilitator']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_hours']) ?>
-                            <input type="hidden" name="training_hours[]" value="<?= esc($tr['training_hours']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_sponsor']) ?>
-                            <input type="hidden" name="training_sponsor[]" value="<?= esc($tr['training_sponsor']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border">
-                            <?= esc($tr['training_remarks']) ?>
-                            <input type="hidden" name="training_remarks[]" value="<?= esc($tr['training_remarks']) ?>">
-                        </td>
-                        <td class="px-2 py-1 border text-center">
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($tr['training_facilitator']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($tr['training_hours']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($tr['training_sponsor']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-gray-600"><?= esc($tr['training_remarks']) ?></td>
+                        <td class="px-3 py-2 border-b border-gray-200 text-center">
                             <?php if (!empty($tr['certificate_file'])): ?>
                                 <button type="button"
-                                    class="viewCertificateBtn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                    class="viewCertificateBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
                                     data-file="<?= base_url('file/view-training/' . $tr['id_applicant_training'] . '/' . $tr['certificate_file']) ?>">
-                                    View
+                                    <i class="fa-regular fa-eye mr-1"></i> View
                                 </button>
                                 <input type="hidden" name="existing_certificate_file[]" value="<?= esc($tr['certificate_file']) ?>">
                             <?php else: ?>
@@ -917,16 +850,24 @@ $trainings = $db->table('applicant_trainings at')
                                 <input type="hidden" name="existing_certificate_file[]" value="">
                             <?php endif; ?>
                         </td>
-                        <td class="px-2 py-1 border text-center">
-                            <button type="button" class="deleteTrainingBtn text-red-600 px-1">
-                                <i class="fa-solid fa-trash"></i>
+                        <td class="px-3 py-2 border-b border-gray-200 text-center">
+                            <button type="button" class="deleteTrainingBtn inline-flex px-2 py-1 text-xs font-medium rounded text-red-600 hover:bg-red-50">
+                                <i class="fa-solid fa-trash mr-1"></i> Delete
                             </button>
                         </td>
+                        <!-- Hidden inputs for form submission -->
+                        <input type="hidden" name="training_category_id[]" value="<?= esc($tr['training_category_id']) ?>">
+                        <input type="hidden" name="training_name[]" value="<?= esc($tr['training_name']) ?>">
+                        <input type="hidden" name="training_venue[]" value="<?= esc($tr['training_venue']) ?>">
+                        <input type="hidden" name="training_facilitator[]" value="<?= esc($tr['training_facilitator']) ?>">
+                        <input type="hidden" name="training_hours[]" value="<?= esc($tr['training_hours']) ?>">
+                        <input type="hidden" name="training_sponsor[]" value="<?= esc($tr['training_sponsor']) ?>">
+                        <input type="hidden" name="training_remarks[]" value="<?= esc($tr['training_remarks']) ?>">
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="11" class="px-2 py-1 border text-center">
+                    <td colspan="11" class="px-3 py-2 border-b border-gray-200 text-center text-gray-500">
                         No training record added.
                     </td>
                 </tr>
@@ -1045,35 +986,65 @@ $documents = $documents ?? [
 
 <!-- Step 7: File Attachments (VIEW ONLY) -->
 <div class="step hidden" id="step-7">
-    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
-        File Attachments
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Section Header with Icon -->
+    <div class="px-3 py-2 mb-4 flex items-center">
+        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <h3 class="text-clsuGreen font-semibold text-sm">File Attachments</h3>
+    </div>
+    
+    <!-- Verification Message -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+        <div class="flex items-start">
+            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
+                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+            </div>
+        </div>
     </div>
 
     <?php
     $docLabels = [
-        'pds'         => '1. Fully accomplished Personal Data Sheet (PDS)',
-        'performance' => '2. Performance rating (last rating period)',
-        'resume'      => '3. Resume (PDF)',
-        'tor'         => '4. Transcript of Records (TOR)',
-        'diploma'     => '5. Diploma'
+        'pds'               => '1. Fully accomplished Personal Data Sheet (PDS)',
+        'performance_rating' => '2. Performance rating (last rating period)',
+        'resume'            => '3. Resume (PDF)',
+        'tor'               => '4. Transcript of Records (TOR)',
+        'diploma'           => '5. Diploma'
     ];
     ?>
 
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto mb-5">
         <table class="table-auto w-full border-collapse text-xs">
-            <tbody>
+            <tbody class="bg-white">
             <?php foreach ($docLabels as $key => $label): ?>
-                <tr>
-                    <th class="px-2 py-2 border text-left w-1/3">
+                <tr class="hover:bg-gray-50 transition-colors duration-150">
+                    <th class="px-3 py-2 border-b border-gray-200 text-left font-medium text-gray-700 w-1/3">
                         <?= esc($label) ?>
                     </th>
-                    <td class="px-2 py-2 border">
+                    <td class="px-3 py-2 border-b border-gray-200">
                         <?php if (!empty($documents[$key])): ?>
                             <button 
                                 type="button"
-                                class="viewFileBtn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
                                 data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
-                                View
+                                <i class="fa-regular fa-eye mr-1"></i> View
                             </button>
                             <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key]) ?>">
                         <?php else: ?>
@@ -1258,9 +1229,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     if (data.success) {
                         Swal.fire({
                             icon: 'success',
-                            title: 'Application Submitted!',
-                            text: 'Your application has been successfully saved.',
-                            timer: 2500,
+                            title: 'Application Submitted Successfully!',
+                            html: '<div class="text-left"><p class="mb-2"><strong>Your application has been successfully processed.</strong></p><p class="text-sm text-gray-600">• Personal information saved to database</p><p class="text-sm text-gray-600">• Application details recorded</p><p class="text-sm text-gray-600">• Documents uploaded successfully</p></div>',
+                            timer: 3000,
                             showConfirmButton: false
                         }).then(() => {
                             window.location.href = '<?= base_url("dashboard") ?>';

@@ -13,7 +13,8 @@ class ApplicantEducationModel extends Model
         'degree_level_id',   // <-- added
         'degree_id',         // <-- added
         'school_name',
-        'degree_course', 
+        'degree_course',
+        'course', 
         'period_from',
         'period_to',
         'highest_level_units',

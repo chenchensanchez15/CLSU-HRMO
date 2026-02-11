@@ -33,6 +33,15 @@ public function loginPost()
                 'first_login' => $user['first_login']
             ]);
 
+            // Check if there's a redirect URL stored (for job application)
+            $redirectUrl = $session->get('redirect_after_login');
+            
+            if ($redirectUrl) {
+                // Clear the redirect URL from session
+                $session->remove('redirect_after_login');
+                return redirect()->to($redirectUrl);
+            }
+
             // If first login, redirect to dashboard with flashdata
             if ($user['first_login'] == 1) {
                 return redirect()->to('/dashboard')->with('first_login', true);

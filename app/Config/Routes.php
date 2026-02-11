@@ -22,6 +22,8 @@ $routes->get('/dashboard', 'Dashboard::index');
 // Jobs
 $routes->get('/jobs', 'Jobs::index');
 $routes->get('/jobs/view/(:num)', 'Jobs::view/$1');
+$routes->get('/jobs/getDetails/(:num)', 'Jobs::getDetails/$1');
+$routes->get('/jobs/getAllPosted', 'Jobs::getAllPosted');
 
 // Applications
 $routes->get('applications/apply/(:any)', 'Applications::apply/$1');
@@ -37,6 +39,7 @@ $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
 $routes->get('applications/viewDocument/(:num)/(:segment)', 'Applications::viewDocument/$1/$2');
 $routes->get('applications/viewPhoto/(:num)', 'Applications::viewPhoto/$1');
 $routes->get('applications/viewResume/(:num)', 'Applications::viewResume/$1');
+$routes->get('applications/viewCivilCertificate/(:any)', 'Applications::viewCivilCertificate/$1');
 
 // Account
 $routes->get('account/personal', 'Account::personal');

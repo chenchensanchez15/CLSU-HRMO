@@ -158,97 +158,117 @@ window.onclick = function(event) {
   <!-- TAB CONTENTS -->
   <div class="tab-content" id="tab-personal">
 
-<!-- === Personal Information Tables === -->
-<h2 class="text-xl font-bold text-clsuGreen mb-2">Personal Information</h2>
-
-<!-- Name Table -->
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full text-left border-collapse text-xs" id="table-name">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="px-2 py-1 border">First Name</th>
-        <th class="px-2 py-1 border">Middle Name</th>
-        <th class="px-2 py-1 border">Last Name</th>
-        <th class="px-2 py-1 border">Suffix</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border" data-key="first_name"><?= esc($profile['first_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="middle_name"><?= esc($profile['middle_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="last_name"><?= esc($profile['last_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="suffix"><?= esc($profile['suffix'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
+<!-- === Personal Information Section === -->
+<div class="flex justify-between items-center mb-3">
+    <h2 class="text-lg font-bold text-clsuGreen">Personal Information</h2>
+    <button id="editPersonalInfoBtn" class="bg-clsuGreen text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-800 transition-colors duration-200 flex items-center">
+        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+        </svg>
+        Edit Personal Information
+    </button>
 </div>
 
-<!-- Basic Info Table -->
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full text-left border-collapse text-xs" id="table-basic">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="px-2 py-1 border">Sex</th>
-        <th class="px-2 py-1 border">Date of Birth</th>
-        <th class="px-2 py-1 border">Civil Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border" data-key="sex"><?= esc($profile['sex'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="date_of_birth">
+<!-- Flat Compact Layout -->
+<div class="space-y-3">
+  
+  <!-- Full Name Display -->
+  <div>
+    <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+      <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+      </svg>
+     Personal Details
+    </h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">First Name</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['first_name'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Middle Name</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['middle_name'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Last Name</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['last_name'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Suffix</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['suffix'] ?? 'N/A') ?></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Details -->
+  <div class="pb-2 border-b border-gray-200">
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Sex</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['sex'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Date of Birth</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5">
           <?= isset($profile['date_of_birth']) && $profile['date_of_birth'] != '' 
               ? date('F j, Y', strtotime($profile['date_of_birth'])) 
-              : '-' ?>
-        </td>
-        <td class="px-2 py-1 border" data-key="civil_status"><?= esc($profile['civil_status'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
+              : 'N/A' ?>
+        </p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Civil Status</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['civil_status'] ?? 'N/A') ?></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contact Information -->
+  <div class="pb-2 border-b border-gray-200">
+    <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+      <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+      </svg>
+      Contact Information
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Email</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5 break-words"><?= esc($profile['email'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Phone Number</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['phone'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Citizenship</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['citizenship'] ?? 'N/A') ?></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Addresses -->
+  <div>
+    <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+      <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
+      Addresses
+    </h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Residential Address</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['residential_address'] ?? 'N/A') ?></p>
+      </div>
+      <div>
+        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Permanent Address</p>
+        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['permanent_address'] ?? 'N/A') ?></p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Contact Table -->
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full text-left border-collapse text-xs" id="table-contact">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="px-2 py-1 border">Email</th>
-        <th class="px-2 py-1 border">Phone Number</th>
-        <th class="px-2 py-1 border">Citizenship</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border" data-key="email"><?= esc($profile['email'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="phone"><?= esc($profile['phone'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" data-key="citizenship"><?= esc($profile['citizenship'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Addresses Table -->
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full text-left border-collapse text-xs" id="table-addresses">
-    <thead>
-      <tr class="bg-gray-100">
-        <th class="px-2 py-1 border">Residential Address</th>
-        <th class="px-2 py-1 border" colspan="2">Permanent Address</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border" data-key="residential_address"><?= esc($profile['residential_address'] ?? '-') ?></td>
-        <td class="px-2 py-1 border" colspan="2" data-key="permanent_address"><?= esc($profile['permanent_address'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<!-- Edit Personal Info Button -->
-<div class="flex justify-end mb-6">
-  <button id="editPersonalBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Edit Personal Info</button>
-</div>
 <!-- Edit Personal Info Modal -->
 <div id="personalModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
   <div class="bg-white rounded-lg w-3/4 max-w-2xl p-6 transform scale-95 opacity-0 transition-all duration-300">
@@ -376,7 +396,7 @@ window.onclick = function(event) {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const personalModal = document.getElementById('personalModal');
-    const editBtn = document.getElementById('editPersonalBtn');
+    const editBtn = document.getElementById('editPersonalInfoBtn');
     const cancelBtn = document.getElementById('cancelPersonal');
     const form = document.getElementById('personalForm');
 
@@ -444,352 +464,125 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
-<!-- Family Background -->
-<h2 class="text-xl font-bold text-clsuGreen mb-2 mt-6">Family Background</h2>
 
-<?php $relations = ['Spouse', 'Father', 'Mother']; ?>
-<?php foreach ($relations as $rel): ?>
-  <?php $key = strtolower($rel); ?>
-  <div class="mb-4">
-    <p class="font-semibold text-xs mb-1 text-clsuGreen">
-      <?= $rel ?><?php if($rel==='Mother') echo ' (Maiden Name)'; ?>
-    </p>
 
-    <!-- Name Table -->
-    <div class="overflow-x-auto mb-2">
-      <table class="table-auto w-full text-left border-collapse text-xs family-table" data-relation="<?= $key ?>">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="px-2 py-1 border">First Name</th>
-            <th class="px-2 py-1 border">Middle Name</th>
-            <th class="px-2 py-1 border">Last Name</th>
-            <?php if($rel !== 'Mother'): ?><th class="px-2 py-1 border">Extension</th><?php endif; ?>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-2 py-1 border" data-key="<?= $key ?>_first_name"><?= esc($familyProfile[$key]['first_name']) ?></td>
-            <td class="px-2 py-1 border" data-key="<?= $key ?>_middle_name"><?= esc($familyProfile[$key]['middle_name']) ?></td>
-            <td class="px-2 py-1 border" data-key="<?= $key ?>_last_name"><?= esc($familyProfile[$key]['last_name']) ?></td>
-            <?php if($rel !== 'Mother'): ?>
-              <td class="px-2 py-1 border" data-key="<?= $key ?>_extension"><?= esc($familyProfile[$key]['extension']) ?></td>
-            <?php endif; ?>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-    <!-- Contact Number & Occupation Table -->
-    <div class="overflow-x-auto">
-      <table class="table-auto w-full text-left border-collapse text-xs family-table" data-relation="<?= $key ?>">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="px-2 py-1 border">Contact No.</th>
-            <th class="px-2 py-1 border">Occupation</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="px-2 py-1 border" data-key="<?= $key ?>_contact_no"><?= esc($familyProfile[$key]['contact_no']) ?></td>
-            <td class="px-2 py-1 border" data-key="<?= $key ?>_occupation"><?= esc($familyProfile[$key]['occupation']) ?></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
-  </div>
-<?php endforeach; ?>
 
-<!-- Edit Family Background Button -->
-<div class="flex justify-end mb-4">
-  <button id="editFamilyBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Edit Family Background</button>
-</div>
 
-<!-- Family Modal -->
-<div id="familyModal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 pointer-events-none transition-opacity duration-300 z-50">
-  <div class="bg-white rounded-lg w-3/4 max-w-3xl p-4 transform scale-95 opacity-0 transition-all duration-300">
 
-    <h3 class="text-lg font-bold text-clsuGreen mb-3">Edit Family Background</h3>
 
-    <form id="familyForm" class="grid gap-3">
-      <?php foreach ($relations as $rel): ?>
-        <?php $key = strtolower($rel); ?>
-        <div class="border-b pb-3">
 
-          <!-- Relation Label -->
-          <p class="font-semibold text-xs mb-1 text-clsuGreen">
-            <?= $rel ?><?php if($rel==='Mother') echo ' (Maiden Name)'; ?>
-          </p>
 
-          <!-- Row 1: Names -->
-          <div class="grid gap-3 mb-1" style="grid-template-columns: <?= $rel==='Mother' ? '1fr 1fr 1fr' : 'repeat(4,1fr)' ?>;">
-            <div>
-              <label class="text-xs font-semibold">First Name <?php if($rel !== 'Spouse') echo '<span class="text-red-500">*</span>'; ?></label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded"
-                     placeholder="Enter First Name" maxlength="50"
-                     id="<?= $key ?>_first_name" name="<?= $key ?>_first_name"
-                     value="<?= esc($familyProfile[$key]['first_name'] ?? '') ?>"
-                     <?php if($rel !== 'Spouse') echo 'required'; ?>>
-            </div>
-            <div>
-              <label class="text-xs font-semibold">Middle Name</label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded"
-                     placeholder="Enter Middle Name" maxlength="50"
-                     id="<?= $key ?>_middle_name" name="<?= $key ?>_middle_name"
-                     value="<?= esc($familyProfile[$key]['middle_name'] ?? '') ?>">
-            </div>
-            <div>
-              <label class="text-xs font-semibold">Last Name <?php if($rel !== 'Spouse') echo '<span class="text-red-500">*</span>'; ?></label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded"
-                     placeholder="Enter Last Name" maxlength="50"
-                     id="<?= $key ?>_last_name" name="<?= $key ?>_last_name"
-                     value="<?= esc($familyProfile[$key]['last_name'] ?? '') ?>"
-                     <?php if($rel !== 'Spouse') echo 'required'; ?>>
-            </div>
-            <?php if($rel !== 'Mother'): ?>
-            <div>
-              <label class="text-xs font-semibold">Extension</label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded"
-                     placeholder="Enter Extension" maxlength="10"
-                     id="<?= $key ?>_extension" name="<?= $key ?>_extension"
-                     value="<?= esc($familyProfile[$key]['extension'] ?? '') ?>">
-            </div>
-            <?php endif; ?>
-          </div>
 
-          <!-- Row 2: Contact / Occupation -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="text-xs font-semibold">Contact No. <?php if($rel !== 'Spouse') echo '<span class="text-red-500">*</span>'; ?></label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded contact-number"
-                     placeholder="Enter 11-digit Contact No." maxlength="11"
-                     id="<?= $key ?>_contact_no" name="<?= $key ?>_contact_no"
-                     value="<?= esc($familyProfile[$key]['contact_no'] ?? '') ?>"
-                     <?php if($rel !== 'Spouse') echo 'required'; ?>>
-            </div>
-            <div>
-              <label class="text-xs font-semibold">Occupation <?php if($rel !== 'Spouse') echo '<span class="text-red-500">*</span>'; ?></label>
-              <input type="text" class="w-full text-xs px-2 py-1 border rounded"
-                     placeholder="Enter Occupation" maxlength="50"
-                     id="<?= $key ?>_occupation" name="<?= $key ?>_occupation"
-                     value="<?= esc($familyProfile[$key]['occupation'] ?? '') ?>"
-                     <?php if($rel !== 'Spouse') echo 'required'; ?>>
-            </div>
-          </div>
 
-        </div>
-      <?php endforeach; ?>
 
-      <!-- Buttons -->
-      <div class="flex justify-end gap-2 mt-3">
-        <button type="button" id="cancelFamily" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-xs font-semibold transition-colors">Cancel</button>
-        <button type="submit" id="saveFamily" class="bg-clsuGreen hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors">Save</button>
-      </div>
-    </form>
-
-  </div>
-</div>
-
-<script>
-// Modal open/close
-const familyModal = document.getElementById('familyModal');
-const editFamilyBtn = document.getElementById('editFamilyBtn');
-const cancelFamilyBtn = document.getElementById('cancelFamily');
-const saveFamilyBtn = document.getElementById('saveFamily');
-
-// Store DB values (original values)
-function getFamilyOriginalValues() {
-    const values = {};
-    <?php foreach ($relations as $rel): ?>
-    <?php $key = strtolower($rel); ?>
-    values['<?= $key ?>'] = {
-        first_name: document.querySelector('[data-key="<?= $key ?>_first_name"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_first_name"]').innerText.trim(),
-        middle_name: document.querySelector('[data-key="<?= $key ?>_middle_name"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_middle_name"]').innerText.trim(),
-        last_name: document.querySelector('[data-key="<?= $key ?>_last_name"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_last_name"]').innerText.trim(),
-        extension: document.querySelector('[data-key="<?= $key ?>_extension"]') ? (document.querySelector('[data-key="<?= $key ?>_extension"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_extension"]').innerText.trim()) : '',
-        contact_no: document.querySelector('[data-key="<?= $key ?>_contact_no"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_contact_no"]').innerText.trim(),
-        occupation: document.querySelector('[data-key="<?= $key ?>_occupation"]').innerText.trim() === '-' ? '' : document.querySelector('[data-key="<?= $key ?>_occupation"]').innerText.trim()
-    };
-    <?php endforeach; ?>
-    return values;
-}
-
-let familyOriginalValues = getFamilyOriginalValues();
-let familyTypedValues = null;
-
-function prefillModal(values) {
-    <?php foreach ($relations as $rel): ?>
-    <?php $key = strtolower($rel); ?>
-    ['first_name','middle_name','last_name','extension','contact_no','occupation'].forEach(id => {
-        const el = document.getElementById('<?= $key ?>_' + id);
-        if(el) el.value = values['<?= $key ?>'][id];
-    });
-    <?php endforeach; ?>
-}
-
-// Edit button
-editFamilyBtn.addEventListener('click', () => {
-    prefillModal(familyTypedValues || familyOriginalValues);
-    familyModal.classList.remove('opacity-0','pointer-events-none');
-    familyModal.querySelector('div').classList.remove('scale-95','opacity-0');
-});
-
-// Cancel button
-cancelFamilyBtn.addEventListener('click', () => {
-    prefillModal(familyOriginalValues);
-    familyTypedValues = null;
-    familyModal.classList.add('opacity-0','pointer-events-none');
-    familyModal.querySelector('div').classList.add('scale-95','opacity-0');
-});
-
-// Close modal by clicking overlay
-familyModal.addEventListener('click', e => {
-    if(e.target === familyModal){
-        familyTypedValues = {};
-        <?php foreach ($relations as $rel): ?>
-        <?php $key = strtolower($rel); ?>
-        familyTypedValues['<?= $key ?>'] = {};
-        ['first_name','middle_name','last_name','extension','contact_no','occupation'].forEach(id => {
-            const el = document.getElementById('<?= $key ?>_' + id);
-            familyTypedValues['<?= $key ?>'][id] = el ? el.value : '';
-        });
-        <?php endforeach; ?>
-        familyModal.classList.add('opacity-0','pointer-events-none');
-        familyModal.querySelector('div').classList.add('scale-95','opacity-0');
-    }
-});
-
-// Save family (AJAX) - removed the SweetAlert for required fields
-saveFamilyBtn.addEventListener('click', async () => {
-    const form = document.getElementById('familyForm');
-
-    // Let browser handle required validation, so remove the previous SweetAlert check
-    if(!form.checkValidity()) {
-        form.reportValidity();
-        return;
-    }
-
-    const formData = new FormData(form);
-
-    // Validate contact numbers
-    for(let [key,value] of formData.entries()){
-        if(key.endsWith('contact_no') && value && !/^\d{11}$/.test(value)){
-            Swal.fire({ icon:'warning', title:'Invalid Contact Number', text:'Contact number must be exactly 11 digits.', timer:2500, showConfirmButton:false });
-            return;
-        }
-    }
-
-    try {
-        const res = await fetch('<?= site_url("account/updateFamily") ?>', { method:'POST', body:formData });
-        const data = await res.json();
-        if(data.success){
-            Swal.fire({ icon:'success', title:'Saved!', text:data.message, timer:1500, showConfirmButton:false, willClose:()=>location.reload() });
-        } else {
-            Swal.fire({ icon:'error', title:'Error', text:data.message, timer:2500, showConfirmButton:false });
-        }
-    } catch(err){
-        console.error(err);
-        Swal.fire({ icon:'error', title:'Error', text:'Failed to save family background.', timer:2500, showConfirmButton:false });
-    }
-});
-
-// Contact number formatting
-document.querySelectorAll('.contact-number').forEach(input => {
-  input.addEventListener('input', e => {
-    let value = e.target.value.replace(/\D/g,'');
-    if(value.length>11) value = value.slice(0,11);
-    e.target.value = value;
-  });
-});
 </script>
 </div>
   
 <!-- === EDUCATION TAB === -->
 <div class="tab-content" id="tab-education">
-    <h2 class="text-lg font-bold text-clsuGreen mb-3">Educational Background</h2>
-
-    <div class="overflow-x-auto mb-5">
-        <table class="table-auto w-full text-left border-collapse text-xs" id="table-education">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="px-2 py-2 border w-20">Level</th>
-                    <th class="px-2 py-2 border w-40">Name of School</th>
-                    <th class="px-2 py-2 border w-40">Degree / Course</th>
-                    <th class="px-2 py-2 border w-14">From</th>
-                    <th class="px-2 py-2 border w-14">To</th>
-                    <th class="px-2 py-2 border w-28">Highest Level / Units Earned</th>
-                    <th class="px-2 py-2 border w-20">Year Graduated</th>
-                    <th class="px-2 py-2 border w-36">Scholarship / Academic Honors</th>
-                    <th class="px-2 py-2 border w-36">Actions</th>
-                </tr>
-            </thead>
-<tbody>
-<?php
-$hasAnyEducation = false;
-foreach ($educationRecords ?? [] as $edu) {
-    if (!empty($edu['school_name']) && $edu['school_name'] !== '-') {
-        $hasAnyEducation = true;
-        break;
-    }
-}
-
-if (!$hasAnyEducation): ?>
-    <tr>
-        <td class="px-2 py-2 border text-center italic text-gray-500" colspan="9">
-            No educational background found for this applicant.
-        </td>
-    </tr>
-<?php else: ?>
-    <?php foreach($libDegreeLevels as $levelObj):
-        $levelName = $levelObj['degree_level_name'];
-        $levelRecords = array_filter($educationRecords ?? [], fn($r) => $r['degree_level_id'] == $levelObj['id_degree_level']);
-
-        if (empty($levelRecords)){
-            $levelRecords[] = [
-                'id' => null,
-                'school_name' => '-',
-                'degree_course' => '-',
-                'period_from' => '-',
-                'period_to' => '-',
-                'highest_level_units' => '-',
-                'year_graduated' => '-',
-                'awards' => '-',
-                'degree_id' => null
-            ];
-        }
-
-        $firstRow = true;
-        foreach($levelRecords as $edu): ?>
-            <tr class="hover:bg-gray-50" data-level="<?= esc($levelName) ?>" data-id="<?= esc($edu['id']) ?>">
-                <td class="px-2 py-2 border font-semibold"><?= $firstRow ? esc($levelName) : '' ?></td>
-                <td class="px-2 py-2 border" data-key="school_name"><?= esc($edu['school_name']) ?></td>
-                <td class="px-2 py-2 border" data-key="degree_course" data-degree-id="<?= esc($edu['degree_id']) ?>"><?= esc($edu['degree_course']) ?></td>
-                <td class="px-2 py-2 border" data-key="period_from"><?= esc($edu['period_from']) ?></td>
-                <td class="px-2 py-2 border" data-key="period_to"><?= esc($edu['period_to']) ?></td>
-                <td class="px-2 py-2 border" data-key="highest_level_units"><?= esc($edu['highest_level_units']) ?></td>
-                <td class="px-2 py-2 border" data-key="year_graduated"><?= esc($edu['year_graduated']) ?></td>
-                <td class="px-2 py-2 border" data-key="awards"><?= esc($edu['awards']) ?></td>
-
-                <?php if($edu['id']): ?>
-                   <td class="px-1 py-1 border text-center">
-        <button class="editWorkBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-        <button class="deleteWorkBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
-    </td>
-                <?php else: ?>
-                <td class="px-2 py-2 border text-center text-gray-300">-</td>
-                <?php endif; ?>
-            </tr>
-        <?php $firstRow = false; endforeach; ?>
-    <?php endforeach; ?>
-<?php endif; ?>
-</tbody>
-
-        </table>
+    <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-clsuGreen">Educational Background</h2>
+        <button id="addEducationBtn" class="bg-clsuGreen text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-800 transition-colors duration-200 flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Education
+        </button>
     </div>
 
-    <!-- Bottom Buttons -->
-    <div class="flex justify-end gap-2">
-        <button id="addEducationBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Add Education</button>
+    <!-- Professional Compact Educational Background Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="table-education">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Level</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Name of School</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Degree / Course</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">From</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">To</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Highest Level / Units Earned</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Year Graduated</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Scholarship / Academic Honors</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <?php
+                    $hasAnyEducation = false;
+                    foreach ($educationRecords ?? [] as $edu) {
+                        if (!empty($edu['school_name']) && $edu['school_name'] !== '-') {
+                            $hasAnyEducation = true;
+                            break;
+                        }
+                    }
+
+                    if (!$hasAnyEducation): ?>
+                        <tr>
+                            <td class="px-3 py-4 text-center text-gray-500 italic" colspan="9">
+                                No educational background found for this applicant.
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach($libDegreeLevels as $levelObj):
+                            $levelName = $levelObj['degree_level_name'];
+                            $levelRecords = array_filter($educationRecords ?? [], fn($r) => $r['degree_level_id'] == $levelObj['id_degree_level']);
+
+                            if (empty($levelRecords)){
+                                $levelRecords[] = [
+                                    'id' => null,
+                                    'school_name' => '-',
+                                    'degree_course' => '-',
+                                    'period_from' => '-',
+                                    'period_to' => '-',
+                                    'highest_level_units' => '-',
+                                    'year_graduated' => '-',
+                                    'awards' => '-',
+                                    'degree_id' => null
+                                ];
+                            }
+
+                            $firstRow = true;
+                            foreach($levelRecords as $edu): ?>
+                                <tr class="hover:bg-gray-50 transition-colors" data-level="<?= esc($levelName) ?>" data-id="<?= esc($edu['id']) ?>">
+                                    <td class="px-3 py-2 border-b font-semibold text-gray-800"><?= $firstRow ? esc($levelName) : '' ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700" data-key="school_name"><?= esc($edu['school_name']) ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700" data-key="degree_course" data-degree-id="<?= esc($edu['degree_id']) ?>"><?= esc(($edu['degree_course'] ?? '') . (($edu['course'] ?? '') ? ' - ' . $edu['course'] : '')) ?: '-' ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="period_from"><?= esc($edu['period_from']) ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="period_to"><?= esc($edu['period_to']) ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700" data-key="highest_level_units"><?= esc($edu['highest_level_units']) ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="year_graduated"><?= esc($edu['year_graduated']) ?></td>
+                                    <td class="px-3 py-2 border-b text-gray-700" data-key="awards"><?= esc($edu['awards']) ?></td>
+
+                                    <?php if($edu['id']): ?>
+                                        <td class="px-3 py-2 border-b text-center">
+                                            <div class="flex justify-center gap-1">
+                                                <button class="editWorkBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                    Edit
+                                                </button>
+                                                <button class="deleteWorkBtn inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    <?php else: ?>
+                                        <td class="px-3 py-2 border-b text-center text-gray-400">-</td>
+                                    <?php endif; ?>
+                                </tr>
+                            <?php $firstRow = false; endforeach; ?>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -817,10 +610,16 @@ if (!$hasAnyEducation): ?>
             </div>
 
             <div>
-                <label class="text-xs font-semibold">Degree / Course<span class="text-red-500">*</span></label>
+                <label class="text-xs font-semibold">Degree<span class="text-red-500">*</span></label>
                 <select name="degree_id" class="w-full border px-2 py-1 rounded text-xs" required>
                     <option value="" disabled selected>Select Degree</option>
                 </select>
+            </div>
+
+            <!-- Course Field - Visible for vocational through doctorate -->
+            <div id="courseField" class="hidden">
+                <label class="text-xs font-semibold">Course<span class="text-red-500">*</span></label>
+                <input type="text" name="course_name" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter course name">
             </div>
 
             <div class="flex gap-2">
@@ -834,19 +633,20 @@ if (!$hasAnyEducation): ?>
                 </div>
             </div>
 
+            <!-- Reordered and optional fields -->
             <div>
-                <label class="text-xs font-semibold">Highest Level / Units Earned<span class="text-red-500">*</span></label>
-                <input type="text" name="highest_level_units" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter units or level" required>
+                <label class="text-xs font-semibold">Year Graduated</label>
+                <input type="number" name="year_graduated" class="w-full border px-2 py-1 rounded text-xs" min="1900" max="2100" placeholder="YYYY">
             </div>
 
             <div>
-                <label class="text-xs font-semibold">Year Graduated<span class="text-red-500">*</span></label>
-                <input type="number" name="year_graduated" class="w-full border px-2 py-1 rounded text-xs" min="1900" max="2100" placeholder="YYYY" required>
+                <label class="text-xs font-semibold">Highest Level / Units Earned</label>
+                <input type="text" name="highest_level_units" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter units or level">
             </div>
 
             <div>
-                <label class="text-xs font-semibold">Scholarship / Academic Honors<span class="text-red-500">*</span></label>
-                <input type="text" name="awards" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter awards" required>
+                <label class="text-xs font-semibold">Scholarship / Academic Honors</label>
+                <input type="text" name="awards" class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter awards">
             </div>
 
             <div class="flex justify-end gap-2 mt-3">
@@ -930,6 +730,26 @@ function updateDegreeOptions(levelId, selectedDegreeId = null){
         });
 }
 
+// ===== DYNAMIC COURSE FIELD VISIBILITY =====
+function toggleCourseField(levelId) {
+    const courseField = document.getElementById('courseField');
+    const courseInput = form.course_name;
+    
+    // Levels that should show course field (Vocational/Trade, College, Graduate Studies, Doctorate)
+    const courseLevels = ['3', '4', '5', '6']; // Assuming these are the IDs
+    
+    if (courseLevels.includes(levelId)) {
+        // Show course field
+        courseField.classList.remove('hidden');
+        courseInput.setAttribute('required', 'required');
+    } else {
+        // Hide course field
+        courseField.classList.add('hidden');
+        courseInput.removeAttribute('required');
+        courseInput.value = ''; // Clear course field when switching away
+    }
+}
+
 function openModal(title, data = {}) {
     modalTitle.innerText = title;
     const newEditingRow = data.id ? document.querySelector(`tr[data-id="${data.id}"]`) : null;
@@ -946,6 +766,7 @@ function openModal(title, data = {}) {
         // Edit mode: use tempEditData if exists, otherwise row data
         levelSelect.value = tempEditData.degree_level_id ?? data.degree_level_id ?? '';
         updateDegreeOptions(levelSelect.value, tempEditData.degree_id ?? data.degree_id ?? null);
+        toggleCourseField(levelSelect.value);
 
         form.school_name.value         = tempEditData.school_name ?? data.school_name ?? '';
         form.period_from.value         = tempEditData.period_from ?? data.period_from ?? '';
@@ -953,10 +774,16 @@ function openModal(title, data = {}) {
         form.highest_level_units.value = tempEditData.highest_level_units ?? data.highest_level_units ?? '';
         form.year_graduated.value      = tempEditData.year_graduated ?? data.year_graduated ?? '';
         form.awards.value              = tempEditData.awards ?? data.awards ?? '';
+        
+        // Handle course field for edit mode
+        if (!document.getElementById('courseField').classList.contains('hidden')) {
+            form.course_name.value = tempEditData.course_name ?? data.course_name ?? '';
+        }
     } else {
         // Add mode
         levelSelect.value = tempAddData.degree_level_id ?? '';
         updateDegreeOptions(levelSelect.value, tempAddData.degree_id ?? null);
+        toggleCourseField(levelSelect.value);
 
         form.school_name.value         = tempAddData.school_name ?? '';
         form.period_from.value         = tempAddData.period_from ?? '';
@@ -964,6 +791,11 @@ function openModal(title, data = {}) {
         form.highest_level_units.value = tempAddData.highest_level_units ?? '';
         form.year_graduated.value      = tempAddData.year_graduated ?? '';
         form.awards.value              = tempAddData.awards ?? '';
+        
+        // Handle course field for add mode
+        if (!document.getElementById('courseField').classList.contains('hidden')) {
+            form.course_name.value = tempAddData.course_name ?? '';
+        }
     }
 
     modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -994,6 +826,7 @@ modal.addEventListener('click', e => {
 // ===== DEGREE LEVEL CHANGE =====
 levelSelect.addEventListener('change', e => {
     updateDegreeOptions(e.target.value);
+    toggleCourseField(e.target.value);
     if (isEditing) {
         tempEditData.degree_level_id = e.target.value;
     } else {
@@ -1028,6 +861,8 @@ function attachRowEditButtons(){
                 degree_level_id: libDegreeLevels.find(l => l.degree_level_name === row.dataset.level)?.id_degree_level,
                 degree_id: row.querySelector('[data-key="degree_course"]').dataset.degreeId || null,
                 school_name: row.querySelector('[data-key="school_name"]').innerText,
+                course_name: row.querySelector('[data-key="degree_course"]').innerText.split(' - ')[1] || '',
+                degree_course: row.querySelector('[data-key="degree_course"]').innerText.split(' - ')[0] || '',
                 period_from: row.querySelector('[data-key="period_from"]').innerText,
                 period_to: row.querySelector('[data-key="period_to"]').innerText,
                 highest_level_units: row.querySelector('[data-key="highest_level_units"]').innerText,
@@ -1106,10 +941,7 @@ form.addEventListener('submit', async e => {
         'school_name',
         'degree_id',
         'period_from',
-        'period_to',
-        'highest_level_units',
-        'year_graduated',
-        'awards'
+        'period_to'
     ];
 
     // Check required fields — remove SweetAlert, just focus first empty field
@@ -1195,26 +1027,16 @@ attachRowDeleteButtons();
 
 <!-- === WORK EXPERIENCE TAB === -->
 <div class="tab-content hidden" id="tab-work">
-    <h2 class="text-lg font-bold text-clsuGreen mb-2">Work Experience</h2>
+    <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-clsuGreen">Work Experience</h2>
+        <button id="addWorkBtn" class="bg-clsuGreen text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-800 transition-colors duration-200 flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Work Experience
+        </button>
+    </div>
 
-    <div class="overflow-x-auto mb-4">
-        <table class="table-auto w-full text-left border-collapse text-xs" id="table-work">
-          <thead>
-    <tr class="bg-gray-100">
-        <th rowspan="2" class="px-1 py-1 border w-24">Position Title</th>
-        <th rowspan="2" class="px-1 py-1 border w-28">Office / Company</th>
-        <th colspan="2" class="px-1 py-1 border text-center w-28">Inclusive Dates</th>
-        <th rowspan="2" class="px-1 py-1 border w-28">Status of Appointment</th>
-        <th rowspan="2" class="px-1 py-1 border w-20">Government Service</th>
-        <th rowspan="2" class="px-1 py-1 border w-20">Total Days</th>
-        <th rowspan="2" class="px-1 py-1 border w-20">Actions</th>
-    </tr>
-    <tr class="bg-gray-100">
-        <th class="px-1 py-1 border w-14">From</th>
-        <th class="px-1 py-1 border w-14">To</th>
-    </tr>
-</thead>
-<tbody id="workBody">
     <?php
     // Helper function to calculate formatted duration
     function calculate_duration($from_ts, $to_ts){
@@ -1230,56 +1052,104 @@ attachRowDeleteButtons();
         if($days>0) $text .= ' '.$days.' day'.($days>1?'s':'');
         return trim($text);
     }
-
-    $totalDays = 0;
-    if(!empty($workRecords)):
-        foreach($workRecords as $work):
-            foreach (['position_title','office','status_of_appointment','govt_service'] as $key) {
-                if (empty($work[$key])) $work[$key] = '-';
-            }
-            $work['date_from_ts'] = (!empty($work['date_from']) && $work['date_from'] !== '0000-00-00') ? strtotime($work['date_from']) : null;
-            $work['date_to_ts'] = (!empty($work['date_to']) && $work['date_to'] !== '0000-00-00') ? strtotime($work['date_to']) : null;
-            $daysText = ($work['date_from_ts'] && $work['date_to_ts']) ? calculate_duration($work['date_from_ts'], $work['date_to_ts']) : '-';
-            $totalDays += ($work['date_from_ts'] && $work['date_to_ts']) ? ($work['date_to_ts'] - $work['date_from_ts'])/86400 + 1 : 0;
     ?>
-    <tr data-id="<?= esc($work['id']) ?>">
-        <td class="px-1 py-1 border" data-key="position_title"><?= esc($work['position_title']) ?></td>
-        <td class="px-1 py-1 border" data-key="office"><?= esc($work['office']) ?></td>
-        <td class="px-1 py-1 border" data-key="date_from" data-value="<?= $work['date_from'] ?>"><?= !empty($work['date_from']) ? date('F j, Y', $work['date_from_ts']) : '-' ?></td>
-        <td class="px-1 py-1 border" data-key="date_to" data-value="<?= $work['date_to'] ?>"><?= !empty($work['date_to']) ? date('F j, Y', $work['date_to_ts']) : '-' ?></td>
-        <td class="px-1 py-1 border" data-key="status_of_appointment"><?= esc($work['status_of_appointment']) ?></td>
-        <td class="px-1 py-1 border" data-key="govt_service"><?= esc($work['govt_service']) ?></td>
-        <td class="px-1 py-1 border text-center" data-key="total_days"><?= $daysText ?></td>
-        <td class="px-1 py-1 border text-center">
-            <button class="editWorkBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-            <button class="deleteWorkBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
-        </td>
-    </tr>
-    <?php
-        endforeach;
-    else:
-    ?>
-  <tr>
-     <td class="px-2 py-2 border text-center italic text-gray-500" colspan="9">No work experience found for this applicant.</td>
-    </tr>
-    <?php endif; ?>
-</tbody>
-<!-- TOTAL ROW -->
-<?php if(!empty($workRecords)): ?>
-<tfoot>
-    <tr class="bg-gray-100 font-bold">
-        <td colspan="6" class="px-1 py-1 border text-right">Total Work Duration:</td>
-        <td class="px-1 py-1 border text-center"><?= $totalDays > 0 ? $totalDays : '-' ?></td>
-        <td class="px-1 py-1 border"></td>
-    </tr>
-</tfoot>
-<?php endif; ?>
 
-        </table>
-    </div>
-
-    <div class="flex justify-end gap-2 -mt-1" id="workButtons">
-        <button id="addWorkBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Add Work Experience</button>
+    <!-- Professional Compact Work Experience Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="table-work">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Position Title</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Office / Company</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">From</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">To</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Status</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Govt Service</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Duration</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <?php if(!empty($workRecords)): ?>
+                        <?php 
+                        $totalDays = 0;
+                        foreach($workRecords as $work): 
+                            // Process work data
+                            foreach (['position_title','office','status_of_appointment','govt_service'] as $key) {
+                                if (empty($work[$key])) $work[$key] = '-';
+                            }
+                            $work['date_from_ts'] = (!empty($work['date_from']) && $work['date_from'] !== '0000-00-00') ? strtotime($work['date_from']) : null;
+                            $work['date_to_ts'] = (!empty($work['date_to']) && $work['date_to'] !== '0000-00-00') ? strtotime($work['date_to']) : null;
+                            $daysText = ($work['date_from_ts'] && $work['date_to_ts']) ? calculate_duration($work['date_from_ts'], $work['date_to_ts']) : '-';
+                            
+                            // Calculate total days for summary
+                            $totalDays += ($work['date_from_ts'] && $work['date_to_ts']) ? ($work['date_to_ts'] - $work['date_from_ts'])/86400 + 1 : 0;
+                        ?>
+                        <tr class="hover:bg-gray-50 transition-colors" data-id="<?= esc($work['id']) ?>">
+                            <td class="px-3 py-2 border-b text-gray-800 font-medium" data-key="position_title"><?= esc($work['position_title']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="office"><?= esc($work['office']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_from" data-value="<?= $work['date_from'] ?>">
+                                <?= !empty($work['date_from']) ? date('M j, Y', $work['date_from_ts']) : '-' ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_to" data-value="<?= $work['date_to'] ?>">
+                                <?= !empty($work['date_to']) ? date('M j, Y', $work['date_to_ts']) : '-' ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="status_of_appointment"><?= esc($work['status_of_appointment']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="govt_service"><?= esc($work['govt_service']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center font-medium" data-key="total_days"><?= $daysText ?></td>
+                            <td class="px-3 py-2 border-b text-center">
+                                <div class="flex justify-center gap-1">
+                                    <button class="editWorkBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors" data-id="<?= esc($work['id']) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="deleteWorkBtn inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors" data-id="<?= esc($work['id']) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                        
+                        <!-- Total Summary Row -->
+                        <tr class="bg-gray-50 font-semibold">
+                            <td colspan="6" class="px-3 py-2 border-b text-right text-gray-700">Total Work Duration:</td>
+                            <td class="px-3 py-2 border-b text-center text-clsuGreen" data-key="total_duration">
+                                <?php 
+                                if ($totalDays > 0) {
+                                    // Convert total days to formatted duration
+                                    $totalText = '';
+                                    $years = floor($totalDays / 365);
+                                    $remainingDays = $totalDays % 365;
+                                    $months = floor($remainingDays / 30);
+                                    $days = $remainingDays % 30;
+                                    
+                                    if ($years > 0) $totalText .= $years . ' yr' . ($years > 1 ? 's' : '') . ' ';
+                                    if ($months > 0) $totalText .= $months . ' mo' . ($months > 1 ? 's' : '') . ' ';
+                                    if ($days > 0) $totalText .= $days . ' day' . ($days > 1 ? 's' : '');
+                                    
+                                    echo trim($totalText) ?: '0 days';
+                                } else {
+                                    echo '-';
+                                }
+                                ?>
+                            </td>
+                            <td class="px-3 py-2 border-b"></td>
+                        </tr>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="8" class="px-3 py-4 text-center text-gray-500 italic">No work experience found for this applicant.</td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -1354,6 +1224,10 @@ function openModal(row = null) {
     const isEdit = !!row;
     isAddingNew = !isEdit;
 
+    // Update modal title based on action
+    const modalTitle = document.querySelector('#editWorkModal h3');
+    modalTitle.textContent = isAddingNew ? 'Add Work Experience' : 'Edit Work Experience';
+
     // === CLEAR tempEditData if switching to a different row ===
     if (isEdit) {
         if (currentEditingRow !== row) {
@@ -1382,13 +1256,19 @@ function openModal(row = null) {
         form.status_of_appointment.value = tempEditData.status_of_appointment ?? data.status_of_appointment;
         form.govt_service.value = tempEditData.govt_service ?? (data.govt_service !== '-' ? data.govt_service : '');
     } else {
-        // Add modal
-        form.position_title.value = tempAddData.position_title ?? '';
-        form.office.value = tempAddData.office ?? '';
-        form.date_from.value = tempAddData.date_from ?? '';
-        form.date_to.value = tempAddData.date_to ?? '';
-        form.status_of_appointment.value = tempAddData.status_of_appointment ?? '';
-        form.govt_service.value = tempAddData.govt_service ?? '';
+        // Add modal - restore previously typed data or clear if none
+        if (Object.keys(tempAddData).length > 0) {
+            // Restore previously typed add data
+            form.position_title.value = tempAddData.position_title ?? '';
+            form.office.value = tempAddData.office ?? '';
+            form.date_from.value = tempAddData.date_from ?? '';
+            form.date_to.value = tempAddData.date_to ?? '';
+            form.status_of_appointment.value = tempAddData.status_of_appointment ?? '';
+            form.govt_service.value = tempAddData.govt_service ?? '';
+        } else {
+            // First time opening add modal - clear form
+            form.reset();
+        }
     }
 
     modal.classList.remove('opacity-0','pointer-events-none');
@@ -1403,6 +1283,7 @@ function openModal(row = null) {
         modal.classList.add('opacity-0'); 
         setTimeout(()=> modal.classList.add('pointer-events-none'), 300); 
         if(clearTemp){
+            // Only clear data when Cancel button is clicked
             if(isAddingNew){
                 tempAddData = {}; 
             } else {
@@ -1411,10 +1292,23 @@ function openModal(row = null) {
             form.reset();
             currentEditingRow = null;
         }
+        // Don't clear data on accidental close - preserve typed information
     }
 
+    // Cancel button - explicitly clear data
     cancelBtn.addEventListener('click', ()=> closeModal(true));
-    modal.addEventListener('click', e => { if(e.target===modal) closeModal(false); });
+    
+    // Accidental close (clicking overlay) - preserve data
+    modal.addEventListener('click', e => { 
+        if(e.target===modal) closeModal(false); 
+    });
+    
+    // ESC key - preserve data (accidental close)
+    document.addEventListener('keydown', e => {
+        if(e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
+            closeModal(false);
+        }
+    });
 
     // Track input changes separately for Add and Edit
     form.querySelectorAll('input, select').forEach(el=>{
@@ -1595,107 +1489,122 @@ function openModal(row = null) {
 </script>
 
 <div class="tab-content hidden" id="tab-civil">
-    <h2 class="text-lg font-bold text-clsuGreen mb-2">Civil Service Eligibility</h2>
-
-    <div class="overflow-x-auto mb-4">
-        <table class="table-auto w-full text-left border-collapse text-xs" id="table-civil">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="px-1 py-1 border w-28">Eligibility</th>
-                    <th class="px-1 py-1 border w-20">Rating / Exam</th>
-                    <th class="px-1 py-1 border w-20">Date of Examination</th>
-                    <th class="px-1 py-1 border w-24">Place of Examination</th>
-                    <th class="px-1 py-1 border w-20">License / PRC No.</th>
-                    <th class="px-1 py-1 border w-20">Valid Until</th>
-                    <th class="px-1 py-1 border w-24">Certificate</th>
-                    <th class="px-1 py-1 border w-20">Actions</th>
-                </tr>
-            </thead>
-
-<tbody>
-<?php if (!empty($civilRecords)): ?>
-
-<?php
-// ✅ SORT: newest date_of_exam FIRST
-usort($civilRecords, function ($a, $b) {
-    $dateA = (!empty($a['date_of_exam']) && $a['date_of_exam'] !== '0000-00-00')
-        ? strtotime($a['date_of_exam'])
-        : -INF;
-
-    $dateB = (!empty($b['date_of_exam']) && $b['date_of_exam'] !== '0000-00-00')
-        ? strtotime($b['date_of_exam'])
-        : -INF;
-
-    return $dateB <=> $dateA; // DESC
-});
-?>
-
-<?php foreach ($civilRecords as $civil): ?>
-    <?php
-    // ✅ Safe date formatting
-    $civil['date_of_exam'] =
-        (!empty($civil['date_of_exam']) && $civil['date_of_exam'] !== '0000-00-00' && strtotime($civil['date_of_exam']))
-            ? date('F j, Y', strtotime($civil['date_of_exam']))
-            : 'N/A';
-
-    $civil['license_valid_until'] =
-        (!empty($civil['license_valid_until']) && $civil['license_valid_until'] !== '0000-00-00' && strtotime($civil['license_valid_until']))
-            ? date('F j, Y', strtotime($civil['license_valid_until']))
-            : 'N/A';
-
-    $civil['eligibility']     = !empty($civil['eligibility']) ? $civil['eligibility'] : 'N/A';
-    $civil['rating']          = !empty($civil['rating']) ? $civil['rating'] : 'N/A';
-    $civil['place_of_exam']   = !empty($civil['place_of_exam']) ? $civil['place_of_exam'] : 'N/A';
-    $civil['license_no']      = !empty($civil['license_no']) ? $civil['license_no'] : 'N/A';
-    // ✅ Do not overwrite certificate, keep NULL if none
-    ?>
-
-    <tr data-id="<?= esc($civil['id']) ?>">
-        <td class="px-1 py-1 border" data-key="eligibility"><?= esc($civil['eligibility']) ?></td>
-        <td class="px-1 py-1 border" data-key="rating"><?= esc($civil['rating']) ?></td>
-        <td class="px-1 py-1 border" data-key="date_of_exam"><?= esc($civil['date_of_exam']) ?></td>
-        <td class="px-1 py-1 border" data-key="place_of_exam"><?= esc($civil['place_of_exam']) ?></td>
-        <td class="px-1 py-1 border" data-key="license_no"><?= esc($civil['license_no']) ?></td>
-        <td class="px-1 py-1 border" data-key="license_valid_until"><?= esc($civil['license_valid_until']) ?></td>
-       <td class="px-1 py-1 border text-center" data-key="certificate">
-    <?php if (!empty($civil['certificate'])): ?>
-        <button class="viewCertificateBtn text-blue-600 hover:underline px-1"
-            data-file="<?= esc($civil['certificate']) ?>">
-            View
-        </button>
-    <?php else: ?>
-        N/A
-    <?php endif; ?>
-</td>
-
-        <td class="px-1 py-1 border text-center">
-            <button class="editCivilBtn text-blue-600 px-1">
-                <i class="fa-solid fa-pen-to-square"></i>
-            </button>
-            <button class="deleteCivilBtn text-red-600 px-1">
-                <i class="fa-solid fa-trash"></i>
-            </button>
-        </td>
-    </tr>
-<?php endforeach; ?>
-
-<?php else: ?>
-    <tr id="noCivilRow">
-        <td class="px-2 py-2 border text-center italic text-gray-500" colspan="8">
-            No civil service found for this applicant.
-        </td>
-    </tr>
-<?php endif; ?>
-</tbody>
-
-        </table>
-    </div>
-
-    <div class="flex justify-end gap-2 -mt-1">
-        <button id="addCivilBtn"
-            class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+    <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-clsuGreen">Civil Service Eligibility</h2>
+        <button id="addCivilBtn" class="bg-clsuGreen text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-800 transition-colors duration-200 flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
             Add Civil Service
         </button>
+    </div>
+
+    <!-- Professional Compact Civil Service Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="table-civil">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Eligibility</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Rating</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Exam Date</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Place of Exam</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">License No.</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Valid Until</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Certificate</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <?php if (!empty($civilRecords)): ?>
+                        <?php
+                        // ✅ SORT: newest date_of_exam FIRST
+                        usort($civilRecords, function ($a, $b) {
+                            $dateA = (!empty($a['date_of_exam']) && $a['date_of_exam'] !== '0000-00-00')
+                                ? strtotime($a['date_of_exam'])
+                                : -INF;
+                        
+                            $dateB = (!empty($b['date_of_exam']) && $b['date_of_exam'] !== '0000-00-00')
+                                ? strtotime($b['date_of_exam'])
+                                : -INF;
+                        
+                            return $dateB <=> $dateA; // DESC
+                        });
+                        ?>
+                        
+                        <?php foreach ($civilRecords as $civil): ?>
+                            <?php
+                            // Store raw dates for modal use
+                            $civil['date_of_exam_raw'] = $civil['date_of_exam'];
+                            $civil['license_valid_until_raw'] = $civil['license_valid_until'];
+                            
+                            // ✅ Safe date formatting
+                            $civil['date_of_exam'] =
+                                (!empty($civil['date_of_exam']) && $civil['date_of_exam'] !== '0000-00-00' && strtotime($civil['date_of_exam']))
+                                    ? date('M j, Y', strtotime($civil['date_of_exam']))
+                                    : '-';
+                        
+                            $civil['license_valid_until'] =
+                                (!empty($civil['license_valid_until']) && $civil['license_valid_until'] !== '0000-00-00' && strtotime($civil['license_valid_until']))
+                                    ? date('M j, Y', strtotime($civil['license_valid_until']))
+                                    : '-';
+                        
+                            $civil['eligibility']     = !empty($civil['eligibility']) ? $civil['eligibility'] : '-';
+                            $civil['rating']          = !empty($civil['rating']) ? $civil['rating'] : '-';
+                            $civil['place_of_exam']   = !empty($civil['place_of_exam']) ? $civil['place_of_exam'] : '-';
+                            $civil['license_no']      = !empty($civil['license_no']) ? $civil['license_no'] : '-';
+                            // ✅ Do not overwrite certificate, keep NULL if none
+                            ?>
+                        
+                            <tr class="hover:bg-gray-50 transition-colors" data-id="<?= esc($civil['id']) ?>">
+                                <td class="px-3 py-2 border-b text-gray-800 font-medium" data-key="eligibility"><?= esc($civil['eligibility']) ?></td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="rating"><?= esc($civil['rating']) ?></td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_of_exam" data-value="<?= esc($civil['date_of_exam_raw']) ?>"><?= esc($civil['date_of_exam']) ?></td>
+                                <td class="px-3 py-2 border-b text-gray-700" data-key="place_of_exam"><?= esc($civil['place_of_exam']) ?></td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="license_no"><?= esc($civil['license_no']) ?></td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="license_valid_until" data-value="<?= esc($civil['license_valid_until_raw']) ?>"><?= esc($civil['license_valid_until']) ?></td>
+                                <td class="px-3 py-2 border-b text-center" data-key="certificate">
+                                    <?php if (!empty($civil['certificate'])): ?>
+                                        <button class="viewCertificateBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                            data-file="<?= esc($civil['certificate']) ?>">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                            </svg>
+                                            View
+                                        </button>
+                                    <?php else: ?>
+                                        <span class="text-gray-400">-</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td class="px-3 py-2 border-b text-center">
+                                    <div class="flex justify-center gap-1">
+                                        <button class="editCivilBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                            </svg>
+                                            Edit
+                                        </button>
+                                        <button class="deleteCivilBtn inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr id="noCivilRow">
+                            <td class="px-3 py-4 text-center text-gray-500 italic" colspan="8">
+                                No civil service found for this applicant.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 <div id="editCivilModal"
@@ -1731,12 +1640,12 @@ usort($civilRecords, function ($a, $b) {
 
             <div>
                 <label class="text-xs font-semibold">Place of Examination <span class="text-red-500">*</span></label>
-                <input type="text" name="place_of_exam" required class="w-full border px-2 py-1 rounded text-xs">
+                <input type="text" name="place_of_exam" required class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter place of examination">
             </div>
 
             <div>
                 <label class="text-xs font-semibold">License / PRC No. <span class="text-red-500">*</span></label>
-                <input type="text" name="license_no" required class="w-full border px-2 py-1 rounded text-xs">
+                <input type="text" name="license_no" required class="w-full border px-2 py-1 rounded text-xs" placeholder="Enter license or PRC number">
             </div>
 
             <div>
@@ -1797,7 +1706,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalEditData = null;
 
     function formatToInputDate(displayDate) {
-        if (!displayDate || displayDate === 'N/A') return '';
+        if (!displayDate || displayDate === '-' || displayDate === 'N/A') return '';
+        
+        // Handle database format (YYYY-MM-DD)
+        if (displayDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return displayDate; // Already in correct format
+        }
+        
+        // Handle display format (Month DD, YYYY)
         const parts = displayDate.split(' ');
         if (parts.length !== 3) return '';
         const monthNames = {
@@ -1814,43 +1730,47 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(row = null){
         const isEdit = !!row;
         isAddMode = !isEdit;
-
+    
+        // Update modal title based on action
+        const modalTitle = document.querySelector('#editCivilModal h3');
+        modalTitle.textContent = isEdit ? 'Edit Civil Service' : 'Add Civil Service';
+    
         if(isEdit){
             const rowId = row.dataset.id;
             currentEditingRowId = rowId;
             certificateInput.removeAttribute('required'); // optional
-
+    
             originalEditData = {
                 id: rowId,
                 eligibility: row.querySelector('[data-key="eligibility"]').textContent.trim(),
                 rating: row.querySelector('[data-key="rating"]').textContent.trim(),
-                date_of_exam: row.querySelector('[data-key="date_of_exam"]').textContent,
-                license_valid_until: row.querySelector('[data-key="license_valid_until"]').textContent,
+                date_of_exam: row.querySelector('[data-key="date_of_exam"]').dataset.value || row.querySelector('[data-key="date_of_exam"]').textContent,
+                license_valid_until: row.querySelector('[data-key="license_valid_until"]').dataset.value || row.querySelector('[data-key="license_valid_until"]').textContent,
                 place_of_exam: row.querySelector('[data-key="place_of_exam"]').textContent.trim(),
                 license_no: row.querySelector('[data-key="license_no"]').textContent.trim()
             };
-
+    
             // Initialize tempEditData for this row if not exists
             if(!tempEditDataById[rowId]) tempEditDataById[rowId] = {};
-
+    
             const tempEditData = tempEditDataById[rowId];
-
+    
             // Prefill form: tempEditData if exists, otherwise original
             editForm.id.value = originalEditData.id;
             editForm.eligibility.value = tempEditData.eligibility ?? originalEditData.eligibility;
             editForm.rating.value = tempEditData.rating ?? originalEditData.rating;
-            editForm.date_of_exam.value = tempEditData.date_of_exam ?? (originalEditData.date_of_exam !== 'N/A' ? formatToInputDate(originalEditData.date_of_exam) : '');
-            editForm.license_valid_until.value = tempEditData.license_valid_until ?? (originalEditData.license_valid_until !== 'N/A' ? formatToInputDate(originalEditData.license_valid_until) : '');
+            editForm.date_of_exam.value = tempEditData.date_of_exam ?? (originalEditData.date_of_exam !== '-' ? formatToInputDate(originalEditData.date_of_exam) : '');
+            editForm.license_valid_until.value = tempEditData.license_valid_until ?? (originalEditData.license_valid_until !== '-' ? formatToInputDate(originalEditData.license_valid_until) : '');
             editForm.place_of_exam.value = tempEditData.place_of_exam ?? originalEditData.place_of_exam;
             editForm.license_no.value = tempEditData.license_no ?? originalEditData.license_no;
-
+    
         } else {
             // === Add mode ===
             currentEditingRowId = null;
             editForm.reset();
             editForm.id.value = '';
             certificateInput.setAttribute('required','required');
-
+    
             editForm.eligibility.value = tempAddData.eligibility ?? '';
             editForm.rating.value = tempAddData.rating ?? '';
             editForm.date_of_exam.value = tempAddData.date_of_exam ?? '';
@@ -1858,7 +1778,7 @@ document.addEventListener('DOMContentLoaded', () => {
             editForm.place_of_exam.value = tempAddData.place_of_exam ?? '';
             editForm.license_no.value = tempAddData.license_no ?? '';
         }
-
+    
         editModal.classList.remove('pointer-events-none','opacity-0');
         setTimeout(()=> modalBox.classList.remove('scale-95','opacity-0'),10);
     }
@@ -1983,81 +1903,105 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <div class="tab-content hidden" id="tab-training">
-    <h2 class="text-lg font-bold text-clsuGreen mb-2">Trainings</h2>
-
-    <div class="overflow-x-auto mb-4">
-     <table class="table-auto w-full border border-gray-300 text-xs" id="table-training">
-    <thead>
-        <tr class="bg-gray-100">
-            <th class="px-1 py-1 border border-gray-300 w-36">Training Name</th>
-            <th class="px-1 py-1 border border-gray-300 w-28">Category</th>
-            <th class="px-1 py-1 border border-gray-300 w-28">Venue</th>
-            <th class="px-1 py-1 border border-gray-300 w-20">Training From</th>
-            <th class="px-1 py-1 border border-gray-300 w-20">Training To</th>
-            <th class="px-1 py-1 border border-gray-300 w-28">Facilitator</th>
-            <th class="px-1 py-1 border border-gray-300 w-24">Sponsor</th>
-            <th class="px-1 py-1 border border-gray-300 w-14">Hours</th>
-            <th class="px-1 py-1 border border-gray-300 w-28">Remarks</th>
-            <th class="px-1 py-1 border border-gray-300 w-20">Certificate</th>
-            <th class="px-1 py-1 border border-gray-300 w-20">TrainingDuration</th>
-            <th class="px-1 py-1 border border-gray-300 w-20">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        <?php if(!empty($trainingRecords)): ?>
-            <?php foreach($trainingRecords as $training): ?>
-            <tr 
-                data-id="<?= esc($training['id_applicant_training']) ?>"
-                data-date_from="<?= esc($training['date_from']) ?>"
-                data-date_to="<?= esc($training['date_to']) ?>"
-            >
-                <td class="px-1 py-1 border" data-key="training_name"><?= esc($training['training_name']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_category_id"><?= esc($training['training_category_name']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_venue"><?= esc($training['training_venue']) ?></td>
-                <td class="px-1 py-1 border" data-key="date_from"><?= esc($training['date_from_formatted']) ?></td>
-                <td class="px-1 py-1 border" data-key="date_to"><?= esc($training['date_to_formatted']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_facilitator"><?= esc($training['training_facilitator']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_sponsor"><?= esc($training['training_sponsor']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_hours"><?= esc($training['training_hours']) ?></td>
-                <td class="px-1 py-1 border" data-key="training_remarks"><?= esc($training['training_remarks']) ?></td>
-<td class="px-1 py-1 border text-center">
-    <?php if(!empty($training['certificate_file'])): ?>
-        <button class="viewCertificateBtn text-blue-600 hover:underline text-xs" 
-                data-file="<?= esc($training['certificate_file']) ?>">
-            View
+    <div class="flex justify-between items-center mb-3">
+        <h2 class="text-lg font-bold text-clsuGreen">Trainings</h2>
+        <button id="addTrainingBtn" class="bg-clsuGreen text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-green-800 transition-colors duration-200 flex items-center">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Trainings
         </button>
-    <?php else: ?> - <?php endif; ?>
-</td>
-
-
-                <td class="px-1 py-1 border text-center" data-key="training_duration">
-                    <?= esc($training['training_duration'] ?? '-') ?>
-                </td>
-                <td class="px-1 py-1 border text-center">
-                    <button class="editTrainingBtn text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                    <button class="deleteTrainingBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            </tr>
-            <?php endforeach; ?>
-
-            <!-- Total Duration Row -->
-            <tr class="bg-gray-100 font-semibold">
-                <td class="px-1 py-1 border text-right" colspan="10">Total Duration:</td>
-                <td class="px-1 py-1 border text-center" colspan="2"><?= esc($totalTrainingDuration ?? '-') ?></td>
-            </tr>
-
-        <?php else: ?>
-            <tr>
-                <td class="px-2 py-2 border text-center italic text-gray-500" colspan="12">No trainings found for this applicant.</td>
-            </tr>
-        <?php endif; ?>
-    </tbody>
-</table>
-
     </div>
 
-    <div class="flex justify-end gap-2 -mt-1">
-        <button id="addTrainingBtn" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Add Trainings</button>
+    <!-- Professional Compact Trainings Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="table-training">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Training Name</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Category</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Venue</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">From</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">To</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Facilitator</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Sponsor</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Hours</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Remarks</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Certificate</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Training Duration</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <?php if(!empty($trainingRecords)): ?>
+                        <?php foreach($trainingRecords as $training): ?>
+                        <tr class="hover:bg-gray-50 transition-colors"
+                            data-id="<?= esc($training['id_applicant_training']) ?>"
+                            data-date_from="<?= esc($training['date_from']) ?>"
+                            data-date_to="<?= esc($training['date_to']) ?>"
+                        >
+                            <td class="px-3 py-2 border-b text-gray-800 font-medium" data-key="training_name"><?= esc($training['training_name']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="training_category_id"><?= esc($training['training_category_name']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="training_venue"><?= esc($training['training_venue']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_from"><?= esc($training['date_from_formatted']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_to"><?= esc($training['date_to_formatted']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="training_facilitator"><?= esc($training['training_facilitator']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="training_sponsor"><?= esc($training['training_sponsor']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="training_hours"><?= esc($training['training_hours']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700" data-key="training_remarks"><?= esc($training['training_remarks']) ?></td>
+                            <td class="px-3 py-2 border-b text-center">
+                                <?php if(!empty($training['certificate_file'])): ?>
+                                    <button class="viewCertificateBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors" 
+                                            data-file="<?= esc($training['certificate_file']) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View
+                                    </button>
+                                <?php else: ?>
+                                    <span class="text-gray-400">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-center text-gray-700" data-key="training_duration">
+                                <?= esc($training['training_duration'] ?? '-') ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-center">
+                                <div class="flex justify-center gap-1">
+                                    <button class="editTrainingBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="deleteTrainingBtn inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+
+                        <!-- Total Duration Row -->
+                        <tr class="bg-gray-50 font-semibold">
+                            <td class="px-3 py-2 border-b text-right text-gray-700" colspan="10">Total Duration:</td>
+                            <td class="px-3 py-2 border-b text-center text-clsuGreen font-bold" colspan="2"><?= esc($totalTrainingDuration ?? '-') ?></td>
+                        </tr>
+
+                    <?php else: ?>
+                        <tr>
+                            <td class="px-3 py-4 text-center text-gray-500 italic" colspan="12">
+                                No trainings found for this applicant.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -2184,6 +2128,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function openModal(row = null) {
         currentEditingRowId = row ? row.dataset.id : null;
         isAddMode = !row;
+
+        // Update modal title based on action
+        const modalTitle = document.querySelector('#editTrainingModal h3');
+        modalTitle.textContent = row ? 'Edit Trainings' : 'Add Trainings';
 
         if(row){ // Edit mode
             certificateInput.removeAttribute('required');
@@ -2364,152 +2312,223 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 <div class="tab-content hidden" id="tab-files">
-    <h2 class="text-xl font-bold text-clsuGreen mb-2">Files</h2>
+    <h2 class="text-lg font-bold text-clsuGreen mb-3">Files</h2>
 
-    <div id="filesContent">
-        <div class="overflow-x-auto mb-2">
-            <table class="table-auto w-full border-collapse text-xs">
-
-                <!-- PS / Note at the top -->
-                <thead>
+    <!-- Professional Compact Files Table -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs" id="table-files">
+                <thead class="bg-gray-50">
                     <tr>
-                        <th colspan="3" class="px-2 py-1 text-red-600 text-sm border-b text-left">
+                        <th colspan="3" class="px-3 py-2 text-red-600 text-sm border-b text-left font-medium">
                             PS: Upload PDF files only, not exceeding 5 MB.
                         </th>
                     </tr>
-                </thead>
-
-                <!-- Table Head -->
-                <thead class="bg-gray-100">
                     <tr>
-                        <th class="px-2 py-1 border text-left">Files</th>
-                        <th class="px-2 py-1 border text-left w-1/2">Uploads</th>
-                        <th class="px-2 py-1 border text-center">Actions</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Files</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700">Uploads</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
                     </tr>
                 </thead>
-
-                <tbody>
+                <tbody class="divide-y divide-gray-100">
                     <!-- 1. PDS -->
-                    <tr>
-                        <th class="px-2 py-1 border text-left">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">
                             1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)
-                        </th>
-                        <td class="px-2 py-1 border view-mode">
+                        </td>
+                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['pds'])): ?>
-                                <button class="viewFileBtn text-blue-600 hover:underline"
+                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         data-file="<?= esc($fileRecords['pds']) ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                     <?= esc($fileRecords['pds']) ?>
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-500 italic">No file available</span>
+                                <span class="text-gray-400 italic">No file available</span>
                             <?php endif; ?>
                             <input type="file" name="pds" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
-                     <td class="px-1 py-1 border text-center">
-                                <button class="edit-file text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-file text-red-600 px-1"><i class="fas fa-trash"></i></button>
-                        
+                        <td class="px-3 py-2 border-b text-center">
+                            <div class="flex justify-center gap-1">
+                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- 2. Performance Rating -->
-                    <tr>
-                        <th class="px-2 py-1 border text-left">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">
                             2. Performance rating in the present position for the last rating period
-                        </th>
-                        <td class="px-2 py-1 border view-mode">
+                        </td>
+                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['performance_rating'])): ?>
-                                <button class="viewFileBtn text-blue-600 hover:underline"
+                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         data-file="<?= esc($fileRecords['performance_rating']) ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                     <?= esc($fileRecords['performance_rating']) ?>
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-500 italic">No file available</span>
+                                <span class="text-gray-400 italic">No file available</span>
                             <?php endif; ?>
                             <input type="file" name="performance_rating" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
-                       <td class="px-1 py-1 border text-center">
-                                <button class="edit-file text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-file text-red-600 px-1"><i class="fas fa-trash"></i></button>
+                        <td class="px-3 py-2 border-b text-center">
+                            <div class="flex justify-center gap-1">
+                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- 3. Resume -->
-                    <tr>
-                        <th class="px-2 py-1 border text-left">3. Resume</th>
-                        <td class="px-2 py-1 border view-mode">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">3. Resume</td>
+                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['resume'])): ?>
-                                <button class="viewFileBtn text-blue-600 hover:underline"
+                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         data-file="<?= esc($fileRecords['resume']) ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                     <?= esc($fileRecords['resume']) ?>
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-500 italic">No file available</span>
+                                <span class="text-gray-400 italic">No file available</span>
                             <?php endif; ?>
                             <input type="file" name="resume" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
-                    <td class="px-1 py-1 border text-center">
-                                <button class="edit-file text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-file text-red-600 px-1"><i class="fas fa-trash"></i></button>
+                        <td class="px-3 py-2 border-b text-center">
+                            <div class="flex justify-center gap-1">
+                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- 4. TOR -->
-                    <tr>
-                        <th class="px-2 py-1 border text-left">4. Transcript of Records</th>
-                        <td class="px-2 py-1 border view-mode">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">4. Transcript of Records</td>
+                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['tor'])): ?>
-                                <button class="viewFileBtn text-blue-600 hover:underline"
+                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         data-file="<?= esc($fileRecords['tor']) ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                     <?= esc($fileRecords['tor']) ?>
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-500 italic">No file available</span>
+                                <span class="text-gray-400 italic">No file available</span>
                             <?php endif; ?>
                             <input type="file" name="tor" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
-                        <td class="px-1 py-1 border text-center">
-                                <button class="edit-file text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-file text-red-600 px-1"><i class="fas fa-trash"></i></button>
+                        <td class="px-3 py-2 border-b text-center">
+                            <div class="flex justify-center gap-1">
+                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
 
                     <!-- 5. Diploma -->
-                    <tr>
-                        <th class="px-2 py-1 border text-left">5. Diploma</th>
-                        <td class="px-2 py-1 border view-mode">
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">5. Diploma</td>
+                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['diploma'])): ?>
-                                <button class="viewFileBtn text-blue-600 hover:underline"
+                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
                                         data-file="<?= esc($fileRecords['diploma']) ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
                                     <?= esc($fileRecords['diploma']) ?>
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-500 italic">No file available</span>
+                                <span class="text-gray-400 italic">No file available</span>
                             <?php endif; ?>
                             <input type="file" name="diploma" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
-                         <td class="px-1 py-1 border text-center">
-                                <button class="edit-file text-blue-600 px-1"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="delete-file text-red-600 px-1"><i class="fas fa-trash"></i></button>
+                        <td class="px-3 py-2 border-b text-center">
+                            <div class="flex justify-center gap-1">
+                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Delete
+                                </button>
+                            </div>
                         </td>
                     </tr>
-
                 </tbody>
             </table>
         </div>
-
-   <p class="text-xs text-gray-500 mb-2 view-mode">
-    <?php
-    if (!empty($fileRecords['uploaded_at']) && $fileRecords['uploaded_at'] != '0000-00-00 00:00:00') {
-        $dt = new DateTime($fileRecords['uploaded_at'], new DateTimeZone('Asia/Manila'));
-        echo 'Uploaded on: ' . $dt->format('F j, Y h:i A');
-    } else {
-        echo 'Upload date not available';
-    }
-    ?>
-</p>
-
     </div>
+
+    <p class="text-xs text-gray-500 mt-2">
+        <?php
+        if (!empty($fileRecords['uploaded_at']) && $fileRecords['uploaded_at'] != '0000-00-00 00:00:00') {
+            $dt = new DateTime($fileRecords['uploaded_at'], new DateTimeZone('Asia/Manila'));
+            echo 'Uploaded on: ' . $dt->format('F j, Y h:i A');
+        } else {
+            echo 'Upload date not available';
+        }
+        ?>
+    </p>
 </div>
 
 <div id="fileViewerModal"

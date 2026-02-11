@@ -45,12 +45,33 @@ class Applications extends BaseController
     if (!$job) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
 
     $user_id = session()->get('user_id');
-    if (!$user_id) return redirect()->to('/login');
+    if (!$user_id) {
+        // Store the job ID in session for redirect after login
+        session()->set('redirect_after_login', '/applications/apply/' . $id);
+        return redirect()->to('/login');
+    }
+
+    // Check if user already applied for this job
+    $db = \Config\Database::connect();
+    $existingApplication = $db->table('job_applications')
+        ->where([
+            'user_id' => $user_id,
+            'job_vacancy_id' => $id
+        ])
+        ->whereIn('application_status', ['Submitted', 'Submitted. For Evaluation', 'Under Review', 'Shortlisted', 'For Interview'])
+        ->get()
+        ->getRow();
+
+    if ($existingApplication) {
+        // User already applied - show SweetAlert and redirect to dashboard
+        session()->setFlashdata('already_applied', true);
+        session()->setFlashdata('job_title', $job['position_title']);
+        return redirect()->to('/dashboard');
+    }
 
     $profile = $this->applicantPersonal->where('user_id', $user_id)->first();
 
     // Fetch family info
-    $db = \Config\Database::connect();
     $family = $db->table('applicant_fam')
                  ->where('user_id', $user_id)
                  ->get()
@@ -220,31 +241,69 @@ public function submit($id = null)
         ]);
     }
 
-    // =========================
-    // INSERT INTO application_civil_service
-    // =========================
-    $eligibilities = $this->request->getPost('eligibility') ?? [];
-    $ratings = $this->request->getPost('rating') ?? [];
-    $exam_dates = $this->request->getPost('date_of_exam') ?? [];
-    $exam_places = $this->request->getPost('place_of_exam') ?? [];
-    $license_nos = $this->request->getPost('license_no') ?? [];
-    $license_valid_until = $this->request->getPost('license_valid_until') ?? [];
+// =========================
+// INSERT INTO application_civil_service
+// =========================
+// Get civil service data from form submission
+$eligibilities = $this->request->getPost('eligibility') ?? [];
+$ratings = $this->request->getPost('rating') ?? [];
+$exam_dates = $this->request->getPost('date_of_exam') ?? [];
+$exam_places = $this->request->getPost('place_of_exam') ?? [];
+$license_nos = $this->request->getPost('license_no') ?? [];
+$valid_until_dates = $this->request->getPost('license_valid_until') ?? [];
 
-    for ($i = 0; $i < count($eligibilities); $i++) {
-        if (!empty($eligibilities[$i])) {
-            $db->table('application_civil_service')->insert([
-                'job_application_id' => $application_id,
-                'eligibility' => $eligibilities[$i] ?: 'N/A',
-                'rating' => $ratings[$i] ?: 'N/A',
-                'date_of_exam' => !empty($exam_dates[$i]) ? date('Y-m-d', strtotime($exam_dates[$i])) : null,
-                'place_of_exam' => $exam_places[$i] ?? 'N/A',
-                'license_no' => $license_nos[$i] ?? 'N/A',
-                'license_valid_until' => !empty($license_valid_until[$i]) ? date('Y-m-d', strtotime($license_valid_until[$i])) : null,
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
+// Process only the civil service records that were submitted in the form
+$totalCivilRecords = count($eligibilities);
+for ($i = 0; $i < $totalCivilRecords; $i++) {
+    // Skip if eligibility is empty (deleted rows won't be submitted)
+    if (empty(trim($eligibilities[$i]))) {
+        continue;
+    }
+    
+    // Get the corresponding record from applicant_civil_service table
+    $user_id = session()->get('user_id');
+    $cs_record = $db->table('applicant_civil_service')
+                   ->where('user_id', $user_id)
+                   ->where('eligibility', $eligibilities[$i])
+                   ->where('rating', $ratings[$i])
+                   ->orderBy('date_of_exam', 'DESC')
+                   ->get()
+                   ->getRowArray();
+    
+    if (!$cs_record) {
+        continue; // Skip if record not found
+    }
+    
+    $cs = $cs_record;
+    // Copy certificate file if it exists
+    $certificateName = null;
+    if (!empty($cs['certificate'])) {
+        $sourcePath = WRITEPATH . 'uploads/civil_service/' . $cs['certificate'];
+        if (file_exists($sourcePath)) {
+            $certificateName = $cs['certificate'];
+            // Copy file to application-specific location
+            $destinationPath = WRITEPATH . 'uploads/civil_service/' . $certificateName;
+            if (!file_exists($destinationPath)) {
+                copy($sourcePath, $destinationPath);
+            }
         }
     }
+
+    // Insert into application_civil_service table
+    $db->table('application_civil_service')->insert([
+        'job_application_id' => $application_id,
+        'eligibility' => $cs['eligibility'] ?? 'N/A',
+        'rating' => $cs['rating'] ?? 'N/A',
+        'date_of_exam' => !empty($cs['date_of_exam']) ? date('Y-m-d', strtotime($cs['date_of_exam'])) : null,
+        'place_of_exam' => $cs['place_of_exam'] ?? 'N/A',
+        'license_no' => $cs['license_no'] ?? 'N/A',
+        'license_valid_until' => !empty($cs['license_valid_until']) ? date('Y-m-d', strtotime($cs['license_valid_until'])) : null,
+        'certificate' => $certificateName,
+        'created_at' => date('Y-m-d H:i:s'),
+        'updated_at' => date('Y-m-d H:i:s')
+    ]);
+}
+
 // =========================
 // INSERT INTO application_trainings
 // =========================
@@ -323,7 +382,7 @@ for ($i = 0; $i < $totalRows; $i++) {
 // =========================
 // FILE UPLOADS: application_documents (FINAL FIX)
 // =========================
-$files = ['pds','performance','resume','tor','diploma'];
+$files = ['pds','performance_rating','resume','tor','diploma'];
 
 $writablePath = WRITEPATH . 'uploads/files/';
 $publicPath   = FCPATH . 'uploads/';
@@ -345,7 +404,7 @@ foreach ($files as $fileInput) {
         if (file_exists($writablePath . $oldFile)) {
             if ($fileInput === 'pds') {
                 $docData['pds'] = $oldFile;
-            } elseif ($fileInput === 'performance') {
+            } elseif ($fileInput === 'performance_rating') {
                 $docData['performance_rating'] = $oldFile;
             } else {
                 $docData[$fileInput] = $oldFile;
@@ -356,7 +415,7 @@ foreach ($files as $fileInput) {
             copy($publicPath . $oldFile, $writablePath . $oldFile);
             if ($fileInput === 'pds') {
                 $docData['pds'] = $oldFile;
-            } elseif ($fileInput === 'performance') {
+            } elseif ($fileInput === 'performance_rating') {
                 $docData['performance_rating'] = $oldFile;
             } else {
                 $docData[$fileInput] = $oldFile;
@@ -377,7 +436,7 @@ foreach ($files as $fileInput) {
         // Map to correct database field names
         if ($fileInput === 'pds') {
             $docData['pds'] = $newName;
-        } elseif ($fileInput === 'performance') {
+        } elseif ($fileInput === 'performance_rating') {
             $docData['performance_rating'] = $newName;
         } else {
             $docData[$fileInput] = $newName;
@@ -457,21 +516,70 @@ public function view($application_id = null)
     }
 
     // -------------------------
-    // Fetch education
+    // Fetch education with joins
     // -------------------------
-    $app['education'] = $db->table('application_education')
-                           ->where('job_application_id', $application_id)
-                           ->orderBy('id_application_education', 'ASC')
+    $app['education'] = $db->table('application_education ae')
+                           ->select('ae.*, ddl.degree_level_name, ld.degree_name')
+                           ->join('lib_degree_level ddl', 'ae.degree_level_id = ddl.id_degree_level', 'left')
+                           ->join('lib_degrees ld', 'ae.degree_id = ld.id_degree', 'left')
+                           ->where('ae.job_application_id', $application_id)
+                           ->orderBy('ddl.id_degree_level', 'ASC')
                            ->get()
                            ->getResultArray() ?? [];
-    foreach ($app['education'] as &$edu) {
-        $from = $edu['period_from'] ?? '-';
-        $to   = $edu['period_to'] ?? '-';
-        $edu['period'] = $from . ' - ' . $to;
-        if (!empty($edu['school_name'])) $edu['school_name'] = ucwords(strtolower($edu['school_name']));
-        if (!empty($edu['level'])) $edu['level'] = ucwords(strtolower($edu['level']));
-        if (!empty($edu['highest_level_units'])) $edu['highest_level_units'] = ucwords(strtolower($edu['highest_level_units']));
-        if (!empty($edu['awards'])) $edu['awards'] = ucwords(strtolower($edu['awards']));
+    
+    // Group education by level
+    $educationByLevel = [];
+    $allLevels = [
+        1 => 'Elementary',
+        2 => 'Secondary', 
+        3 => 'Vocational / Trade Course',
+        4 => 'College',
+        5 => 'Graduate Studies',
+        6 => 'Doctorate'
+    ];
+    
+    // Initialize all levels
+    foreach ($allLevels as $levelId => $levelName) {
+        $educationByLevel[$levelName] = [];
+    }
+    
+    // Group existing records by level
+    foreach ($app['education'] as $edu) {
+        $levelName = $edu['degree_level_name'] ?? 'Unknown';
+        if (isset($educationByLevel[$levelName])) {
+            $educationByLevel[$levelName][] = $edu;
+        }
+    }
+    
+    // Reformat for view
+    $app['education_display'] = [];
+    foreach ($allLevels as $levelId => $levelName) {
+        if (!empty($educationByLevel[$levelName])) {
+            foreach ($educationByLevel[$levelName] as $index => $edu) {
+                $app['education_display'][] = [
+                    'level' => $index === 0 ? $levelName : '', // Show level name only on first row
+                    'school_name' => !empty($edu['school_name']) && strtoupper($edu['school_name']) !== 'N/A' ? $edu['school_name'] : '-',
+                    'degree_course' => !empty($edu['degree_name']) ? $edu['degree_name'] : (!empty($edu['degree_course']) && strtoupper($edu['degree_course']) !== 'N/A' ? $edu['degree_course'] : '-'),
+                    'period_from' => !empty($edu['period_from']) && strtoupper($edu['period_from']) !== 'N/A' ? $edu['period_from'] : '-',
+                    'period_to' => !empty($edu['period_to']) && strtoupper($edu['period_to']) !== 'N/A' ? $edu['period_to'] : '-',
+                    'highest_level_units' => !empty($edu['highest_level_units']) && strtoupper($edu['highest_level_units']) !== 'N/A' ? $edu['highest_level_units'] : '-',
+                    'year_graduated' => !empty($edu['year_graduated']) && strtoupper($edu['year_graduated']) !== 'N/A' ? $edu['year_graduated'] : '-',
+                    'awards' => !empty($edu['awards']) && strtoupper($edu['awards']) !== 'N/A' ? $edu['awards'] : '-'
+                ];
+            }
+        } else {
+            // Add empty row for level with no records
+            $app['education_display'][] = [
+                'level' => $levelName,
+                'school_name' => '-',
+                'degree_course' => '-',
+                'period_from' => '-',
+                'period_to' => '-',
+                'highest_level_units' => '-',
+                'year_graduated' => '-',
+                'awards' => '-'
+            ];
+        }
     }
 
     // -------------------------
@@ -753,6 +861,7 @@ $family = $db->table('application_fam')
         'documents'       => $documents
     ]);
 }
+
 public function update($job_application_id = null)
 {
     if (!$job_application_id) {
@@ -903,55 +1012,51 @@ foreach ($famIds as $id => $lastName) {
         $db->table('application_work_experience')->insert($workData);
     }
 
-    // -------------------
-    // Update Civil Service
-    // -------------------
-$csTable = $db->table('application_civil_service');
-$eligibilities = $this->request->getPost('eligibility') ?? [];
-$ratings       = $this->request->getPost('rating') ?? [];
-$dates_exam    = $this->request->getPost('date_of_exam') ?? [];
-$places_exam   = $this->request->getPost('place_of_exam') ?? [];
-$license_nos   = $this->request->getPost('license_no') ?? [];
-$valid_untils  = $this->request->getPost('license_valid_until') ?? [];
+// -------------------
+// Update Civil Service Records
+// -------------------
+$user_id = session()->get('user_id');
+$civilServices = $db->table('applicant_civil_service')
+                   ->where('user_id', $user_id)
+                   ->orderBy('date_of_exam', 'DESC')
+                   ->get()
+                   ->getResultArray();
 
-// Handle uploaded CS certificates (multiple files)
-$uploadedCSFiles = $this->request->getFileMultiple('cs_certificate');
+$civilTable = $db->table('application_civil_service');
 
-$csTable->where('job_application_id', $job_application_id)->delete();
+// Delete existing records for this application
+$civilTable->where('job_application_id', $job_application_id)->delete();
 
-for ($i = 0; $i < count($eligibilities); $i++) {
-
-    // Skip empty rows
-    if (
-        empty($eligibilities[$i]) &&
-        empty($ratings[$i]) &&
-        empty($dates_exam[$i]) &&
-        empty($places_exam[$i]) &&
-        empty($license_nos[$i]) &&
-        empty($valid_untils[$i])
-    ) continue;
-
-    $certificateFile = null;
-
-    // Save uploaded file if exists
-    if (isset($uploadedCSFiles[$i]) && $uploadedCSFiles[$i]->isValid() && !$uploadedCSFiles[$i]->hasMoved()) {
-        $certificateFile = time() . '_' . $uploadedCSFiles[$i]->getRandomName();
-        $uploadedCSFiles[$i]->move(WRITEPATH . 'uploads/civil_service/', $certificateFile);
+foreach ($civilServices as $cs) {
+    // Copy certificate file if it exists
+    $certificateName = null;
+    if (!empty($cs['certificate'])) {
+        $sourcePath = WRITEPATH . 'uploads/civil_service/' . $cs['certificate'];
+        if (file_exists($sourcePath)) {
+            $certificateName = $cs['certificate'];
+            // Copy file to application-specific location
+            $destinationPath = WRITEPATH . 'uploads/civil_service/' . $certificateName;
+            if (!file_exists($destinationPath)) {
+                copy($sourcePath, $destinationPath);
+            }
+        }
     }
 
-    $csTable->insert([
+    // Insert into application_civil_service table
+    $civilTable->insert([
         'job_application_id' => $job_application_id,
-        'eligibility'        => $eligibilities[$i] ?: '-',
-        'rating'             => $ratings[$i] ?: '-',
-        'date_of_exam'       => !empty($dates_exam[$i]) ? date('Y-m-d', strtotime($dates_exam[$i])) : null,
-        'place_of_exam'      => $places_exam[$i] ?: '-',
-        'license_no'         => $license_nos[$i] ?: '-',
-        'license_valid_until'=> !empty($valid_untils[$i]) ? date('Y-m-d', strtotime($valid_untils[$i])) : null,
-        'certificate_file'   => $certificateFile,  // store uploaded certificate
+        'eligibility'        => $cs['eligibility'] ?? 'N/A',
+        'rating'             => $cs['rating'] ?? 'N/A',
+        'date_of_exam'       => !empty($cs['date_of_exam']) ? date('Y-m-d', strtotime($cs['date_of_exam'])) : null,
+        'place_of_exam'      => $cs['place_of_exam'] ?? 'N/A',
+        'license_no'         => $cs['license_no'] ?? 'N/A',
+        'license_valid_until'=> !empty($cs['license_valid_until']) ? date('Y-m-d', strtotime($cs['license_valid_until'])) : null,
+        'certificate'        => $certificateName,
         'created_at'         => $currentDate,
         'updated_at'         => $currentDate
     ]);
 }
+
 
 
     // -------------------
@@ -1124,7 +1229,7 @@ $record = $db->table('application_documents')
 
     // 4️⃣ File path
     $file = $record[$doc];
-    $filePath = WRITEPATH . 'uploads/' . $file;
+    $filePath = WRITEPATH . 'uploads/files/' . $file;
 
     if (!file_exists($filePath)) {
         throw new \CodeIgniter\Exceptions\PageNotFoundException('File does not exist on server.');
@@ -1267,7 +1372,14 @@ public function viewCivilCertificate($filename = null)
         throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("File not found: $filename");
     }
 
-    return $this->response->download($filePath, null)->setFileName($filename);
+    // Determine mime type
+    $mime = mime_content_type($filePath);
+
+    // Stream file inline (don't force download)
+    return $this->response
+        ->setHeader('Content-Type', $mime)
+        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+        ->setBody(file_get_contents($filePath));
 }
 
 

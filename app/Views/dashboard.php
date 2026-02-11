@@ -127,86 +127,85 @@ window.onclick = function(event) {
 </div>
 
 <div class="right w-full flex-1 space-y-2">
-<div class="card bg-white p-6 rounded-lg shadow">
-    <h3 class="text-clsuGreen font-bold mb-2">My Job Applications</h3>
- <table class="w-full table-auto border-collapse text-xs"> <!-- smaller font -->
-    <thead class="bg-gray-100 text-xs"> <!-- header smaller font -->
-            <tr>
-                <th class="border-b p-2 text-left">No.</th>
-                <th class="border-b p-2 text-left">Position</th>
-                <th class="border-b p-2 text-left">Office / Department</th>
-                <th class="border-b p-2 text-left">Posting Date</th>
-                <th class="border-b p-2 text-left">Closing Date</th>
-                <th class="border-b p-2 text-left">Status</th>
-                <th class="border-b p-2 text-left">Action</th>
-            </tr>
-        </thead>
-       <tbody>
-    <?php if(empty($applications)): ?>
-        <tr>
-            <td colspan="7" class="p-2 text-gray-500 text-center">No data available in table</td>
-        </tr>
-    <?php else: $i = 1; foreach($applications as $app): ?>
-        <tr class="bg-white hover:bg-gray-50">
-            <td class="p-2"><?= $i++ ?></td>
-            <td class="p-2"><?= esc($app['position_title']) ?></td>
-            <td class="p-2"><?= esc($app['department']) ?></td>
-            <td class="p-2"><?= !empty($app['posting_date']) ? date('M d, Y', strtotime($app['posting_date'])) : 'N/A' ?></td>
-            <td class="p-2"><?= !empty($app['closing_date']) ? date('M d, Y', strtotime($app['closing_date'])) : 'N/A' ?></td>
-            <td class="p-2">
-                <?php
-                    $status = $app['application_status'] ?? 'Submitted. For Evaluation';
-
-                    $statusClasses = [
-                        'Submitted' => 'bg-yellow-400 text-black',
-                        'Under Evaluation' => 'bg-blue-500 text-white',
-                        'Not qualified' => 'bg-red-500 text-white',
-                        'Shortlisted.' => 'bg-blue-300 text-black',
-                        'Scheduled for Interview' => 'bg-purple-500 text-white',
-                        'Withdrawn application' => 'bg-gray-400 text-black',
-                        'Did not attend interview' => 'bg-red-600 text-white',
-                        'Interviewed. Awaiting Result' => 'bg-yellow-300 text-black',
-                        'Not selected.' => 'bg-red-400 text-white',
-                        'Job offered.' => 'bg-green-500 text-white',
-                        'Rejected job offer.' => 'bg-red-700 text-white',
-                        'ACCEPTED.' => 'bg-green-600 text-white',
-                    ];
-
-                    $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
-                    $badgeClass = $statusClasses[$status] ?? 'bg-gray-400 text-white';
-                ?>
-                <span class="px-3 py-1 rounded-full text-xs font-semibold <?= $badgeClass ?>">
-                    <?= esc($displayText) ?>
-                </span>
-            </td>
-           <td class="p-2 whitespace-nowrap">
-    <div class="flex items-center gap-1">
-        <a href="<?= base_url('applications/view/' . $app['id_job_application']) ?>" 
-           class="bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center">
-            <i class="fas fa-eye mr-1"></i> View
-        </a>
-
-<a href="javascript:void(0)"
-   class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
-   data-id="<?= $app['id_job_application'] ?>"
-   data-url="<?= base_url('applications/getFiles/' . $app['id_job_application']) ?>">
-    <i class="fas fa-pencil-alt mr-1"></i> Edit
-</a>
-
-
-        <a href="#"
-            class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center withdraw-btn"
-            data-id="<?= $app['id_job_application'] ?>">
-            <i class="fas fa-times mr-1"></i> Withdraw
-        </a>
+<div class="card bg-white p-4 rounded-lg shadow">
+    <h3 class="text-clsuGreen font-bold mb-3 text-sm">My Job Applications</h3>
+    <div class="overflow-x-auto">
+        <table class="w-full table-auto border-collapse text-xs">
+            <thead class="bg-gray-50 text-xs">
+                <tr>
+                    <th class="border-b p-2 text-left font-semibold">No.</th>
+                    <th class="border-b p-2 text-left font-semibold">Position</th>
+                    <th class="border-b p-2 text-left font-semibold">Office</th>
+                    <th class="border-b p-2 text-left font-semibold">Date Applied</th>
+                    <th class="border-b p-2 text-left font-semibold">Interview</th>
+                    <th class="border-b p-2 text-left font-semibold">Status</th>
+                    <th class="border-b p-2 text-left font-semibold">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(empty($applications)): ?>
+                    <tr>
+                        <td colspan="7" class="p-3 text-gray-500 text-center italic text-xs">No applications found</td>
+                    </tr>
+                <?php else: $i = 1; foreach($applications as $app): ?>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="p-2 border-b"><?= $i++ ?></td>
+                        <td class="p-2 border-b font-medium"><?= esc($app['position_title']) ?></td>
+                        <td class="p-2 border-b text-gray-600"><?= esc($app['department']) ?></td>
+                        <td class="p-2 border-b"><?= !empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : '-' ?></td>
+                        <td class="p-2 border-b"><?= '-' ?></td>
+                        <td class="p-2 border-b">
+                            <?php
+                                $status = $app['application_status'] ?? 'Submitted';
+                                $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
+                                
+                                $statusClasses = [
+                                    'Submitted' => 'bg-yellow-100 text-yellow-800',
+                                    'Under Evaluation' => 'bg-blue-100 text-blue-800',
+                                    'Not qualified' => 'bg-red-100 text-red-800',
+                                    'Shortlisted' => 'bg-blue-100 text-blue-800',
+                                    'Scheduled for Interview' => 'bg-purple-100 text-purple-800',
+                                    'Withdrawn application' => 'bg-gray-100 text-gray-800',
+                                    'Did not attend interview' => 'bg-red-100 text-red-800',
+                                    'Interviewed. Awaiting Result' => 'bg-yellow-100 text-yellow-800',
+                                    'Not selected' => 'bg-red-100 text-red-800',
+                                    'Job offered' => 'bg-green-100 text-green-800',
+                                    'Rejected job offer' => 'bg-red-100 text-red-800',
+                                    'ACCEPTED' => 'bg-green-100 text-green-800',
+                                ];
+                                
+                                $badgeClass = $statusClasses[$displayText] ?? 'bg-gray-100 text-gray-800';
+                            ?>
+                            <span class="px-2 py-1 rounded-full text-xs font-medium <?= $badgeClass ?>">
+                                <?= esc($displayText) ?>
+                            </span>
+                        </td>
+                        <td class="p-2 border-b">
+                            <div class="flex gap-1">
+                                <a href="<?= base_url('applications/view/' . $app['id_job_application']) ?>" 
+                                   class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                    </svg>
+                                    View
+                                </a>
+                                
+                                <a href="#" 
+                                   class="inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors withdraw-btn"
+                                   data-id="<?= $app['id_job_application'] ?>">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                    Withdraw
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                <?php endforeach; endif; ?>
+            </tbody>
+        </table>
     </div>
-</td>
-
-        </tr>
-    <?php endforeach; endif; ?>
-</tbody>
-    </table>
-   <div id="applicationsPagination" class="flex justify-end mt-4 gap-2"></div>
 </div>
 
 <div class="card bg-white p-6 rounded-lg">
@@ -242,7 +241,13 @@ window.onclick = function(event) {
 
         <p class="text-sm text-gray-700 mt-2">
             <?= esc($vac['description']) ?> 
-            <button onclick="openModal(<?= $vac['id'] ?>)" class="text-blue-600 hover:underline ml-1 text-sm">See more</button>
+            <button onclick="openModal(<?= $vac['id'] ?>)" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+                See more
+            </button>
         </p>
 
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3">
@@ -283,12 +288,15 @@ foreach ($applications as $app) {
 
 ?>
 <?php if($applied && !in_array($appStatus, $inactiveStatuses)): ?>
-    <span class="px-3 py-1 rounded-lg bg-yellow-400 text-black text-sm font-semibold cursor-not-allowed">
+    <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-lg bg-yellow-400 text-black cursor-not-allowed">
         Submitted
     </span>
 <?php else: ?>
     <form method="GET" action="<?= base_url('applications/apply/' . $vac['id']) ?>">
-        <button class="bg-clsuGreen text-white px-4 py-1 rounded-lg text-sm hover:bg-green-800">
+        <button class="inline-flex items-center px-3 py-1 text-xs font-medium bg-clsuGreen text-white rounded-lg hover:bg-green-800 transition-colors">
+            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
             Apply
         </button>
     </form>
@@ -315,78 +323,130 @@ foreach ($applications as $app) {
 
 <!-- Job Details Modal -->
 <div id="jobModal"
-     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50 backdrop-blur-sm">
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40">
     
-<div id="modalCard" class="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col">
+<div id="modalCard" class="bg-white w-full max-w-5xl max-h-[90vh] rounded-lg shadow-xl flex flex-col">
     <div class="flex items-center justify-between px-6 py-4 border-b flex-shrink-0">
       <div>
-        <h2 id="modalTitle" class="text-xl font-bold text-clsuGreen leading-tight"></h2>
-        <p id="modalOfficeText" class="text-sm text-gray-500 mt-1"></p>
+        <h2 id="modalTitle" class="text-lg font-bold text-clsuGreen leading-tight"></h2>
+        <p id="modalOfficeText" class="text-sm text-gray-600 mt-1"></p>
       </div>
-      <button onclick="closeModal()" class="text-gray-400 hover:text-red-500 text-xl font-bold">✕</button>
     </div>
 
     <!-- Content (scrollable) -->
     <div class="px-6 py-5 space-y-4 text-sm text-gray-800 overflow-y-auto flex-1">
       
-      <!-- Job Overview (2 columns) -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-        <p><strong>Office:</strong> <span id="modalOffice"></span></p>
-        <p><strong>Salary Grade:</strong> <span id="modalSalaryGrade"></span></p>
-        <p><strong>Item No.:</strong> <span id="modalItemNo"></span></p>
-        <p><strong>Monthly Salary:</strong> <span id="modalSalary"></span></p>
-        <p><strong>Posted:</strong> <span id="modalPosted"></span></p>
-        <p class="text-red-600 font-semibold"><strong>Deadline:</strong> <span id="modalDeadline"></span></p>
+      <!-- Job Overview -->
+      <div class="grid grid-cols-2 gap-3">
+        <div><span class="font-medium text-gray-700">Office:</span> <span id="modalOffice" class="ml-2"></span></div>
+        <div><span class="font-medium text-gray-700">Salary Grade:</span> <span id="modalSalaryGrade" class="ml-2"></span></div>
+        <div><span class="font-medium text-gray-700">Item No.:</span> <span id="modalItemNo" class="ml-2"></span></div>
+        <div><span class="font-medium text-gray-700">Monthly Salary:</span> <span id="modalSalary" class="text-clsuGreen font-semibold ml-2"></span></div>
+        <div><span class="font-medium text-gray-700">Posted:</span> <span id="modalPosted" class="ml-2"></span></div>
+        <div class="text-red-600 font-semibold"><span class="font-medium text-gray-700">Deadline:</span> <span id="modalDeadline" class="ml-2"></span></div>
       </div>
 
-      <hr class="my-3">
+      <hr class="my-4 border-gray-200">
 
-      <!-- Job Description -->
-      <details class="border rounded">
-        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
-          Job Description
-        </summary>
-        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
-          <p id="modalDescription"></p>
-        </div>
-      </details>
+      <!-- Job Details with Dropdowns -->
+      <div class="space-y-3">
+        <!-- Job Description -->
+        <details class="border border-gray-200 rounded-lg bg-white">
+          <summary class="cursor-pointer px-4 py-3 font-medium text-gray-800 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-sm flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Job Description
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </summary>
+          <div class="px-4 py-3 text-gray-700 border-t border-gray-200 text-sm">
+            <p id="modalDescription"></p>
+          </div>
+        </details>
 
-      <!-- Qualification Standards -->
-      <details class="border rounded">
-        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
-          Qualification Standards
-        </summary>
-        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
-          <ul class="list-disc ml-4 space-y-0.5">
-            <li><strong>Education:</strong> <span id="modalEducation"></span></li>
-            <li><strong>Training:</strong> <span id="modalTraining"></span></li>
-            <li><strong>Experience:</strong> <span id="modalExperience"></span></li>
-            <li><strong>Eligibility:</strong> <span id="modalEligibility"></span></li>
-          </ul>
-        </div>
-      </details>
+        <!-- Qualification Standards -->
+        <details class="border border-gray-200 rounded-lg bg-white">
+          <summary class="cursor-pointer px-4 py-3 font-medium text-gray-800 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-sm flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              Qualification Standards
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </summary>
+          <div class="px-4 py-3 text-gray-700 border-t border-gray-200 text-sm">
+            <ul class="space-y-2">
+              <li class="flex">
+                <span class="font-medium text-gray-700 w-20">Education:</span>
+                <span id="modalEducation" class="text-gray-900"></span>
+              </li>
+              <li class="flex">
+                <span class="font-medium text-gray-700 w-20">Training:</span>
+                <span id="modalTraining" class="text-gray-900"></span>
+              </li>
+              <li class="flex">
+                <span class="font-medium text-gray-700 w-20">Experience:</span>
+                <span id="modalExperience" class="text-gray-900"></span>
+              </li>
+              <li class="flex">
+                <span class="font-medium text-gray-700 w-20">Eligibility:</span>
+                <span id="modalEligibility" class="text-gray-900"></span>
+              </li>
+            </ul>
+          </div>
+        </details>
 
-      <!-- Duties -->
-      <details class="border rounded">
-        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
-          Duties and Responsibilities
-        </summary>
-        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
-          <p id="modalDuties"></p>
-        </div>
-      </details>
+        <!-- Duties and Responsibilities -->
+        <details class="border border-gray-200 rounded-lg bg-white">
+          <summary class="cursor-pointer px-4 py-3 font-medium text-gray-800 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-sm flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              Duties and Responsibilities
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </summary>
+          <div class="px-4 py-3 text-gray-700 border-t border-gray-200 text-sm">
+            <p id="modalDuties"></p>
+          </div>
+        </details>
 
-      <!-- Requirements -->
-      <details class="border rounded">
-        <summary class="cursor-pointer px-3 py-1.5 font-semibold bg-gray-100 text-sm">
-          Application Requirements
-        </summary>
-        <div class="px-4 py-2 text-gray-700 max-h-60 overflow-y-auto">
-          <p id="modalRequirements"></p>
-        </div>
-      </details>
+        <!-- Application Requirements -->
+        <details class="border border-gray-200 rounded-lg bg-white">
+          <summary class="cursor-pointer px-4 py-3 font-medium text-gray-800 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-sm flex items-center justify-between">
+            <div class="flex items-center">
+              <svg class="w-4 h-4 mr-2 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              Application Requirements
+            </div>
+            <svg class="w-4 h-4 text-gray-500 transform transition-transform duration-200 group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </summary>
+          <div class="px-4 py-3 text-gray-700 border-t border-gray-200 text-sm">
+            <p id="modalRequirements"></p>
+          </div>
+        </details>
+      </div>
     </div>
-    <div class="border-t px-6 py-4 flex justify-between bg-gray-50 flex-shrink-0 rounded-b-2xl">
+    
+    <!-- Action Buttons -->
+    <div class="border-t px-6 py-4 flex justify-end bg-gray-50 flex-shrink-0 rounded-b-lg">
+        <button onclick="closeModal()" 
+                class="px-5 py-2.5 text-sm font-medium text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors shadow-sm hover:shadow-md">
+            Cancel
+        </button>
     </div>
   </div>
 </div>
@@ -394,54 +454,231 @@ foreach ($applications as $app) {
 <script>
 const jobs = <?= json_encode($vacancies) ?>;
 const jobCards = Array.from(document.querySelectorAll('.job-card'));
-let perPage = 5, currentPage = 1, filteredType = 'all';
+let perPage = 5, currentPage = 1, filteredJobs = [];
+
+// Initialize filtered jobs with all jobs
+filteredJobs = [...jobCards];
+
 function renderJobs() {
-    let filteredJobs = jobCards; // no filter, show all jobs
-
-    const searchValue = document.querySelector('input[placeholder="Search jobs..."]').value.toLowerCase();
-    filteredJobs = filteredJobs.filter(card => card.dataset.title.includes(searchValue));
-
+    // Get search term
+    const searchValue = document.querySelector('input[placeholder="Search jobs..."]').value.toLowerCase().trim();
+    
+    // Filter jobs based on search
+    if (searchValue) {
+        filteredJobs = jobCards.filter(card => {
+            const title = card.dataset.title || '';
+            return title.includes(searchValue);
+        });
+    } else {
+        filteredJobs = [...jobCards]; // Reset to all jobs
+    }
+    
     const totalPages = Math.ceil(filteredJobs.length / perPage);
-    if(currentPage > totalPages) currentPage = totalPages || 1; // handle empty
-
+    
+    // Reset to first page if current page exceeds total pages
+    if (currentPage > totalPages && totalPages > 0) {
+        currentPage = 1;
+    }
+    
+    // Handle empty state
+    if (filteredJobs.length === 0) {
+        // Hide all job cards
+        jobCards.forEach(card => card.style.display = 'none');
+        
+        // Show no results message
+        showNoResultsMessage(searchValue);
+        hidePagination();
+        return;
+    }
+    
+    // Hide no results message if it exists
+    hideNoResultsMessage();
+    
     const start = (currentPage - 1) * perPage;
     const paginated = filteredJobs.slice(start, start + perPage);
-
+    
     // Hide all cards
     jobCards.forEach(card => card.style.display = 'none');
+    
     // Show paginated cards
     paginated.forEach(card => card.style.display = 'block');
-
+    
     // Render pagination
+    renderPagination(totalPages);
+}
+
+function showNoResultsMessage(searchTerm) {
+    // Check if message already exists
+    let noResultsDiv = document.getElementById('noResultsMessage');
+    if (!noResultsDiv) {
+        noResultsDiv = document.createElement('div');
+        noResultsDiv.id = 'noResultsMessage';
+        noResultsDiv.className = 'text-center py-12';
+        document.querySelector('.space-y-4').appendChild(noResultsDiv);
+    }
+    
+    noResultsDiv.innerHTML = `
+        <div class="bg-gray-50 rounded-xl p-8 border border-gray-200 max-w-md mx-auto">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-200 flex items-center justify-center">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">No positions found</h3>
+            <p class="text-gray-500">
+                ${searchTerm ? 
+                    `No job positions match for "<span class="font-medium text-gray-700">${searchTerm}</span>". Try adjusting your search terms.` :
+                    'There are currently no available job positions.'
+                }
+            </p>
+        </div>
+    `;
+}
+
+function hideNoResultsMessage() {
+    const noResultsDiv = document.getElementById('noResultsMessage');
+    if (noResultsDiv) {
+        noResultsDiv.remove();
+    }
+}
+
+function hidePagination() {
+    const pagination = document.getElementById('pagination');
+    if (pagination) {
+        pagination.innerHTML = '';
+        pagination.className = 'flex justify-center mt-6 gap-2 hidden';
+    }
+}
+
+function renderPagination(totalPages) {
     const pagination = document.getElementById('pagination');
     pagination.innerHTML = '';
-    pagination.className = 'flex justify-end mt-6 gap-1';
-
+    pagination.className = 'flex justify-center mt-6 gap-2';
+    
+    if (totalPages <= 1) {
+        pagination.className = 'flex justify-center mt-6 gap-2 hidden';
+        return;
+    }
+    
     // Prev button
     const prevBtn = document.createElement('button');
     prevBtn.textContent = 'Prev';
-    prevBtn.className = `px-3 py-1 rounded text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+    prevBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        currentPage === 1 
+            ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
+    }`;
     prevBtn.disabled = currentPage === 1;
-    prevBtn.addEventListener('click', () => { if(currentPage > 1){ currentPage--; renderJobs(); } });
+    prevBtn.addEventListener('click', () => { 
+        if(currentPage > 1){ 
+            currentPage--; 
+            renderJobs(); 
+        } 
+    });
     pagination.appendChild(prevBtn);
-
-    // Current page (single number)
-    const currentBtn = document.createElement('button');
-    currentBtn.textContent = currentPage;
-    currentBtn.className = 'px-3 py-1 rounded bg-clsuGreen text-white text-sm';
-    pagination.appendChild(currentBtn);
-
+    
+    // Page numbers (show up to 5 pages around current page)
+    const maxVisible = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisible/2));
+    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+    
+    // Adjust start page if near the end
+    if (endPage - startPage + 1 < maxVisible) {
+        startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+    
+    // First page button (if not in visible range)
+    if (startPage > 1) {
+        const firstBtn = document.createElement('button');
+        firstBtn.textContent = '1';
+        firstBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm';
+        firstBtn.addEventListener('click', () => { 
+            currentPage = 1; 
+            renderJobs(); 
+        });
+        pagination.appendChild(firstBtn);
+        
+        if (startPage > 2) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.className = 'px-2 py-2 text-gray-500';
+            pagination.appendChild(dots);
+        }
+    }
+    
+    // Page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.textContent = i;
+        pageBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            i === currentPage 
+                ? 'bg-clsuGreen text-white shadow-md' 
+                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
+        }`;
+        if (i !== currentPage) {
+            pageBtn.addEventListener('click', () => { 
+                currentPage = i; 
+                renderJobs(); 
+            });
+        }
+        pagination.appendChild(pageBtn);
+    }
+    
+    // Last page button (if not in visible range)
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            dots.className = 'px-2 py-2 text-gray-500';
+            pagination.appendChild(dots);
+        }
+        
+        const lastBtn = document.createElement('button');
+        lastBtn.textContent = totalPages;
+        lastBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm';
+        lastBtn.addEventListener('click', () => { 
+            currentPage = totalPages; 
+            renderJobs(); 
+        });
+        pagination.appendChild(lastBtn);
+    }
+    
     // Next button
     const nextBtn = document.createElement('button');
     nextBtn.textContent = 'Next';
-    nextBtn.className = `px-3 py-1 rounded text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
+    nextBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        currentPage === totalPages 
+            ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
+    }`;
     nextBtn.disabled = currentPage === totalPages;
-    nextBtn.addEventListener('click', () => { if(currentPage < totalPages){ currentPage++; renderJobs(); } });
+    nextBtn.addEventListener('click', () => { 
+        if(currentPage < totalPages){ 
+            currentPage++; 
+            renderJobs(); 
+        } 
+    });
     pagination.appendChild(nextBtn);
 }
 
+// Debounced search handler
+let searchTimeout;
+document.querySelector('input[placeholder="Search jobs..."]').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        currentPage = 1; // Reset to first page on new search
+        renderJobs();
+    }, 300); // 300ms debounce
+});
 
-document.querySelector('input[placeholder="Search jobs..."]').addEventListener('keyup',()=>renderJobs());
+// Also handle Enter key
+document.querySelector('input[placeholder="Search jobs..."]').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        clearTimeout(searchTimeout);
+        currentPage = 1;
+        renderJobs();
+    }
+});
 function openModal(id){
     const job = jobs.find(j => j.id == id);
     if(!job) return;
@@ -452,7 +689,7 @@ function openModal(id){
     document.getElementById('modalOffice').textContent = job.office;
     document.getElementById('modalSalaryGrade').textContent = job.salary_grade;
     document.getElementById('modalItemNo').textContent = job.plantilla_item_no;
-    document.getElementById('modalSalary').textContent = job.monthly_salary;
+    document.getElementById('modalSalary').textContent = '₱' + parseFloat(job.monthly_salary).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
    document.getElementById('modalPosted').textContent =
     new Date(job.created_at).toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -477,10 +714,17 @@ document.getElementById('modalDeadline').textContent =
     const modal = document.getElementById('jobModal');
     const card  = document.getElementById('modalCard');
 
-    // Show modal
+    // Show modal instantly
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-
+    
+    // Force reflow
+    modal.offsetHeight;
+    
+    // Add smooth transition classes
+    modal.classList.add('transition-all', 'duration-300', 'ease-out');
+    card.classList.add('transition-all', 'duration-300', 'ease-out');
+    
     // Animate card IN
     setTimeout(() => {
         card.classList.remove('opacity-0', 'scale-95');
@@ -493,15 +737,41 @@ function closeModal(){
     const card  = document.getElementById('modalCard');
 
     // Animate card OUT
-    card.classList.add('opacity-0', 'scale-95');
     card.classList.remove('opacity-100', 'scale-100');
+    card.classList.add('opacity-0', 'scale-95');
 
     setTimeout(() => {
+        modal.classList.remove('flex', 'transition-all', 'duration-300', 'ease-out');
+        card.classList.remove('transition-all', 'duration-300', 'ease-out');
         modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }, 200);
+    }, 300);
 }
 
+// Ensure dropdown functionality is preserved
+document.addEventListener('DOMContentLoaded', function() {
+    // Preserve existing dropdown functionality
+    const existingDropdown = document.querySelector('.account-menu');
+    if (existingDropdown) {
+        const dropdownButton = existingDropdown.querySelector('button');
+        const dropdownMenu = document.getElementById('accountDropdown');
+        
+        if (dropdownButton && dropdownMenu) {
+            dropdownButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(e) {
+                if (!existingDropdown.contains(e.target)) {
+                    dropdownMenu.style.display = 'none';
+                }
+            });
+        }
+    }
+});
+
+// Initialize on page load
 renderJobs();
 </script>
 
@@ -810,3 +1080,19 @@ document.getElementById('existingFiles').innerHTML = html;
 
 </body>
 </html>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Show SweetAlert if user tried to apply for already applied job
+document.addEventListener('DOMContentLoaded', function() {
+    <?php if(session()->getFlashdata('already_applied')): ?>
+        Swal.fire({
+            icon: 'info',
+            title: 'Already Applied',
+            text: 'You have already submitted an application for "<?= session()->getFlashdata('job_title') ?>"',
+            confirmButtonColor: '#0B6B3A'
+        });
+    <?php endif; ?>
+});
+</script>

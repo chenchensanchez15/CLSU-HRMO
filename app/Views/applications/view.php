@@ -270,6 +270,45 @@ window.onclick = function(event) {
     </tbody>
   </table>
 </div>
+
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Additional Personal Details</h2>
+<div class="overflow-x-auto mb-6">
+  <table class="table-auto w-full border-collapse text-xs">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="px-2 py-1 border">Are you CLSU Permanent Employee?</th>
+        <th class="px-2 py-1 border">Religion</th>
+        <th class="px-2 py-1 border">Indigenous Person</th>
+        <th class="px-2 py-1 border">Person with Disability</th>
+        <th class="px-2 py-1 border">Solo Parent</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="px-2 py-1 border">
+          <?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?>
+          <?php if (!empty($app['personal']['clsu_employee_specify']) && $app['personal']['is_clsu_employee'] === 'Yes'): ?>
+            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></span>
+          <?php endif; ?>
+        </td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['religion'] ?? '-') ?></td>
+        <td class="px-2 py-1 border">
+          <?= esc($app['personal']['is_indigenous'] ?? 'No') ?>
+          <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
+            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></span>
+          <?php endif; ?>
+        </td>
+        <td class="px-2 py-1 border">
+          <?= esc($app['personal']['is_pwd'] ?? 'No') ?>
+          <?php if (!empty($app['personal']['pwd_specify']) && $app['personal']['is_pwd'] === 'Yes'): ?>
+            <br><span class="text-xs text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></span>
+          <?php endif; ?>
+        </td>
+        <td class="px-2 py-1 border"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 <h2 class="text-lg font-semibold text-clsuGreen mb-2">Family Background</h2>
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
@@ -339,28 +378,32 @@ foreach ($relations as $relation):
     <thead class="bg-gray-100">
       <tr>
         <th class="px-2 py-1 border">Level</th>
-        <th class="px-2 py-1 border">School Name</th>
-        <th class="px-2 py-1 border">Period of Attendance</th>
+        <th class="px-2 py-1 border">Name of School</th>
+        <th class="px-2 py-1 border">Degree / Course</th>
+        <th class="px-2 py-1 border">From</th>
+        <th class="px-2 py-1 border">To</th>
         <th class="px-2 py-1 border">Highest Level / Units Earned</th>
         <th class="px-2 py-1 border">Year Graduated</th>
-        <th class="px-2 py-1 border">Awards / Honors</th>
+        <th class="px-2 py-1 border">Scholarship / Academic Honors</th>
       </tr>
     </thead>
     <tbody>
-      <?php if (!empty($app['education'])): ?>
-          <?php foreach ($app['education'] as $edu): ?>
+      <?php if (!empty($app['education_display'])): ?>
+          <?php foreach ($app['education_display'] as $edu): ?>
       <tr>
-        <td class="px-2 py-1 border"><?= esc($edu['level'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['school_name'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['period'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['highest_level_units'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['year_graduated'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($edu['awards'] ?? '-') ?></td>
+        <td class="px-2 py-1 border font-semibold"><?= esc($edu['level']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['school_name']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['degree_course']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['period_from']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['period_to']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['highest_level_units']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['year_graduated']) ?></td>
+        <td class="px-2 py-1 border"><?= esc($edu['awards']) ?></td>
       </tr>
           <?php endforeach; ?>
       <?php else: ?>
       <tr>
-        <td class="px-2 py-1 border text-center" colspan="6">No education records found.</td>
+        <td class="px-2 py-1 border text-center" colspan="8">No education records found.</td>
       </tr>
       <?php endif; ?>
     </tbody>
@@ -419,6 +462,7 @@ foreach ($relations as $relation):
         <th class="px-2 py-1 border">Place of Examination</th>
         <th class="px-2 py-1 border">License / PRC No.</th>
         <th class="px-2 py-1 border">Valid Until</th>
+        <th class="px-2 py-1 border">Certificate</th>
       </tr>
     </thead>
     <tbody>
@@ -435,11 +479,22 @@ foreach ($relations as $relation):
         <td class="px-2 py-1 border">
           <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
         </td>
+        <td class="px-2 py-1 border text-center">
+          <?php if (!empty($cs['certificate'])): ?>
+            <button type="button" 
+                    class="view-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
+                    data-file="<?= site_url('applications/viewCivilCertificate/' . urlencode($cs['certificate'])) ?>">
+              View Certificate
+            </button>
+          <?php else: ?>
+            -
+          <?php endif; ?>
+        </td>
       </tr>
         <?php endforeach; ?>
       <?php else: ?>
       <tr>
-        <td class="px-2 py-1 border text-center" colspan="6">No civil service records found.</td>
+        <td class="px-2 py-1 border text-center" colspan="7">No civil service records found.</td>
       </tr>
       <?php endif; ?>
     </tbody>
@@ -447,7 +502,7 @@ foreach ($relations as $relation):
 </div>
 
 <!-- TRAININGS -->
-<h2 class="text-lg font-semibold text-clsuGreen mb-2">Trainings / Seminars / Workshops</h2>
+<h2 class="text-lg font-semibold text-clsuGreen mb-2">Trainings</h2>
 <div class="overflow-x-auto mb-6">
   <table class="table-auto w-full border-collapse text-xs">
     <thead class="bg-gray-100">
@@ -473,12 +528,13 @@ foreach ($relations as $relation):
         <td class="px-2 py-1 border"><?= esc($tr['training_hours'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($tr['training_sponsor'] ?? '-') ?></td>
         <td class="px-2 py-1 border"><?= esc($tr['training_remarks'] ?? '-') ?></td>
-        <td class="px-2 py-1 border">
+        <td class="px-2 py-1 border text-center">
           <?php if (!empty($tr['certificate_file'])): ?>
-       <a href="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>" target="_blank" class="text-blue-600 hover:underline">
-    <?= esc($tr['certificate_file']) ?>
-</a>
-
+            <button type="button" 
+                    class="view-training-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
+                    data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
+              View Certificate
+            </button>
           <?php else: ?>
             -
           <?php endif; ?>
@@ -487,7 +543,7 @@ foreach ($relations as $relation):
         <?php endforeach; ?>
       <?php else: ?>
       <tr>
-        <td class="px-2 py-1 border text-center" colspan="8">No trainings/seminars records found.</td>
+        <td class="px-2 py-1 border text-center" colspan="8">No trainings records found.</td>
       </tr>
       <?php endif; ?>
     </tbody>
@@ -506,25 +562,30 @@ foreach ($relations as $relation):
     </thead>
     <tbody>
       <?php
-      // List of document fields in the database
-      $docs = ['resume', 'tor', 'diploma', 'certificate'];
+      // List of document fields in the database (5 documents)
+      $docs = [
+          'pds' => 'Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
+          'performance_rating' => 'Performance Rating n the present position for the last rating period',
+          'resume' => 'Resume',
+          'tor' => 'Transcript of Records (TOR)',
+          'diploma' => 'Diploma'
+      ];
 
       // Loop through each document type
-      foreach ($docs as $doc):
-          $file = $app['documents'][$doc] ?? null;
+      foreach ($docs as $key => $label):
+          $file = $app['documents'][$key] ?? null;
       ?>
       <tr>
-        <td class="px-2 py-1 border font-semibold"><?= ucfirst($doc) ?></td>
-        <td class="px-2 py-1 border">
+        <td class="px-2 py-1 border font-semibold"><?= esc($label) ?></td>
+        <td class="px-2 py-1 border text-center">
           <?php if (!empty($file)): ?>
-         <a href="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$doc) ?>"
-   target="_blank"
-   class="text-blue-600 hover:underline">
-
-              <?= esc($file) ?>
-            </a>
+            <button type="button" 
+                    class="view-document-btn text-blue-600 text-xs font-medium hover:text-blue-800"
+                    data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
+              View Document
+            </button>
           <?php else: ?>
-            -
+            <span class="text-gray-500 text-xs italic">No file available</span>
           <?php endif; ?>
         </td>
       </tr>
@@ -552,12 +613,160 @@ foreach ($relations as $relation):
     </div>
 </footer>
 
+<!-- Certificate Modal -->
+<div id="certificate-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
+        <iframe id="certificate-frame" class="flex-1 w-full h-full border-none"></iframe>
+    </div>
+</div>
+
+<!-- Training Certificate Modal -->
+<div id="training-certificate-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
+        <iframe id="training-certificate-frame" class="flex-1 w-full h-full border-none"></iframe>
+    </div>
+</div>
+
+<!-- Documents Modal -->
+<div id="document-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
+        <iframe id="document-frame" class="flex-1 w-full h-full border-none"></iframe>
+    </div>
+</div>
+
 <div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
         <button onclick="closeModal()" class="float-right text-gray-500 text-xl">✕</button>
         <div id="modalContent"></div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Civil Service Certificate Modal
+    const certModal = document.getElementById('certificate-modal');
+    const certIframe = document.getElementById('certificate-frame');
+    
+    // Training Certificate Modal
+    const trainingModal = document.getElementById('training-certificate-modal');
+    const trainingIframe = document.getElementById('training-certificate-frame');
+    
+    // Documents Modal
+    const documentModal = document.getElementById('document-modal');
+    const documentIframe = document.getElementById('document-frame');
+
+    // Handle clicks on view buttons
+    document.addEventListener('click', async function(e) {
+        const civilBtn = e.target.closest('.view-certificate-btn');
+        const trainingBtn = e.target.closest('.view-training-certificate-btn');
+        const documentBtn = e.target.closest('.view-document-btn');
+        
+        if (civilBtn || trainingBtn || documentBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const fileUrl = (civilBtn || trainingBtn || documentBtn).dataset.file;
+            const isTraining = !!trainingBtn;
+            const isDocument = !!documentBtn;
+            
+            if (!fileUrl) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No file selected',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return;
+            }
+
+            try {
+                // Check if file exists first
+                const res = await fetch(fileUrl);
+                
+                // If JSON returned → file missing or error
+                if (res.headers.get('content-type')?.includes('application/json')) {
+                    const data = await res.json();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'File not found or already deleted.',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                    return;
+                }
+                 
+                // File exists → show in appropriate modal
+                if (isTraining) {
+                    trainingIframe.src = fileUrl;
+                    trainingModal.classList.remove('hidden');
+                } else if (isDocument) {
+                    documentIframe.src = fileUrl;
+                    documentModal.classList.remove('hidden');
+                } else {
+                    certIframe.src = fileUrl;
+                    certModal.classList.remove('hidden');
+                }
+                
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Unable to open file.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                console.error(err);
+            }
+        }
+    });
+
+    // Close civil service modal when clicking outside
+    certModal.addEventListener('click', function(e) {
+        if (e.target === certModal) {
+            certIframe.src = '';
+            certModal.classList.add('hidden');
+        }
+    });
+
+    // Close training modal when clicking outside
+    trainingModal.addEventListener('click', function(e) {
+        if (e.target === trainingModal) {
+            trainingIframe.src = '';
+            trainingModal.classList.add('hidden');
+        }
+    });
+
+    // Close documents modal when clicking outside
+    documentModal.addEventListener('click', function(e) {
+        if (e.target === documentModal) {
+            documentIframe.src = '';
+            documentModal.classList.add('hidden');
+        }
+    });
+
+    // Close with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!certModal.classList.contains('hidden')) {
+                certIframe.src = '';
+                certModal.classList.add('hidden');
+            }
+            if (!trainingModal.classList.contains('hidden')) {
+                trainingIframe.src = '';
+                trainingModal.classList.add('hidden');
+            }
+            if (!documentModal.classList.contains('hidden')) {
+                documentIframe.src = '';
+                documentModal.classList.add('hidden');
+            }
+        }
+    });
+
+});
+</script>
 
 </body>
 </html>
