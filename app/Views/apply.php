@@ -78,18 +78,155 @@
       enctype="multipart/form-data"
       action="<?= base_url('applications/submit/' . $job['id']) ?>">
     <input type="hidden" name="job_position_id" value="<?= esc($job['id']) ?>">
-
+    
 <!-- Step 1: Personal Information -->
 <div class="step" id="step-1">
-           <!-- Instruction Note -->
-        <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-            *Do not leave blank entries. Put N/A for not applicable.
-        </div>
+
+
+
+    <!-- Additional Personal Details -->
+    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
+        Additional Personal Details
+    </div>
+    <table class="table-auto w-full border-collapse text-xs mb-4">
+        <tbody>
+
+            <!-- ROW 1 -->
+            <tr>
+                <td class="border p-0" colspan="3">
+                    <table class="w-full border-collapse text-xs">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-2 py-1 border w-1/2">Are you CLSU Permanent Employee?</th>
+                                <th class="px-2 py-1 border w-1/2">Religion</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-2 py-1 border">
+                                    <select name="is_clsu_employee"
+                                            required
+                                            class="w-full text-xs px-2 py-1"
+                                            onchange="toggleSpecify(this, 'clsu_specify')">
+                                        <option value="">Select</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                    <input type="text"
+                                           id="clsu_specify"
+                                           name="clsu_employee_specify"
+                                           placeholder="Specify"
+                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
+                                </td>
+                                <td class="px-2 py-1 border">
+                                    <input type="text"
+                                           name="religion"
+                                           placeholder="Enter Religion"
+                                           required
+                                           class="w-full text-xs px-2 py-1">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+
+            <!-- ROW 2 -->
+            <tr>
+                <td class="border p-0" colspan="3">
+                    <table class="w-full border-collapse text-xs">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-2 py-1 border w-1/3">Indigenous Person</th>
+                                <th class="px-2 py-1 border w-1/3">Person with Disability</th>
+                                <th class="px-2 py-1 border w-1/3">Solo Parent</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="px-2 py-1 border">
+                                    <select name="is_indigenous"
+                                            required
+                                            class="w-full text-xs px-2 py-1"
+                                            onchange="toggleSpecify(this, 'indigenous_specify')">
+                                        <option value="">Select</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                    <input type="text"
+                                           id="indigenous_specify"
+                                           name="indigenous_specify"
+                                           placeholder="Specify"
+                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
+                                </td>
+
+                                <td class="px-2 py-1 border">
+                                    <select name="is_pwd"
+                                            required
+                                            class="w-full text-xs px-2 py-1"
+                                            onchange="toggleSpecify(this, 'pwd_specify')">
+                                        <option value="">Select</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                    <input type="text"
+                                           id="pwd_specify"
+                                           name="pwd_specify"
+                                           placeholder="Specify"
+                                           class="w-full text-xs px-2 py-1 mt-1 hidden">
+                                </td>
+
+                                <td class="px-2 py-1 border">
+                                    <select name="is_solo_parent"
+                                            required
+                                            class="w-full text-xs px-2 py-1">
+                                        <option value="">Select</option>
+                                        <option value="Yes">Yes</option>
+                                        <option value="No">No</option>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <!-- Script for toggling specify input -->
+    <script>
+    function toggleSpecify(select, inputId) {
+        const input = document.getElementById(inputId);
+        if (select.value === 'Yes') {
+            input.classList.remove('hidden');
+            input.setAttribute('required', 'required');
+        } else {
+            input.classList.add('hidden');
+            input.value = '';
+            input.removeAttribute('required');
+        }
+    }
+    </script>
+
+    <!-- Personal Information -->
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">Personal Information</div>
 
-    <!-- Hidden job_application_id -->
-    <input type="hidden" name="job_application_id" value="<?= esc($job_application_id ?? '') ?>">
+    <!-- Hidden inputs to store data in DB -->
+    <input type="hidden" name="first_name" value="<?= esc($profile['first_name'] ?? '') ?>">
+    <input type="hidden" name="middle_name" value="<?= esc($profile['middle_name'] ?? '') ?>">
+    <input type="hidden" name="last_name" value="<?= esc($profile['last_name'] ?? '') ?>">
+    <input type="hidden" name="extension" value="<?= esc($profile['suffix'] ?? '') ?>">
+    <input type="hidden" name="sex" value="<?= esc($profile['sex'] ?? '') ?>">
+    <input type="hidden" name="date_of_birth" value="<?= esc($profile['date_of_birth'] ?? '') ?>">
+    <input type="hidden" name="civil_status" value="<?= esc($profile['civil_status'] ?? '') ?>">
+    <input type="hidden" name="email" value="<?= esc($profile['email'] ?? '') ?>">
+    <input type="hidden" name="phone" value="<?= esc($profile['phone'] ?? '') ?>">
+    <input type="hidden" name="citizenship" value="<?= esc($profile['citizenship'] ?? '') ?>">
+    <input type="hidden" name="residential_address" value="<?= esc($profile['residential_address'] ?? '') ?>">
+    <input type="hidden" name="permanent_address" value="<?= esc($profile['permanent_address'] ?? '') ?>">
 
+    <!-- Visible UI table -->
     <table class="table-auto w-full border-collapse text-xs mb-4">
         <thead class="bg-gray-100">
             <tr>
@@ -101,18 +238,10 @@
         </thead>
         <tbody>
             <tr>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="first_name" value="<?= esc($profile['first_name'] ?? '') ?>" placeholder="Enter First Name" required class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="middle_name" value="<?= esc($profile['middle_name'] ?? '') ?>" placeholder="Enter Middle Name" class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="last_name" value="<?= esc($profile['last_name'] ?? '') ?>" placeholder="Enter Last Name" required class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="extension" value="<?= esc($profile['suffix'] ?? '') ?>" placeholder="Enter Suffix" class="px-2 py-1 w-full text-xs">
-                </td>
+                <td class="px-2 py-1 border"><?= esc($profile['first_name'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['middle_name'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['last_name'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['suffix'] ?? '-') ?></td>
             </tr>
         </tbody>
     </table>
@@ -123,31 +252,13 @@
                 <th class="px-2 py-1 border">Sex</th>
                 <th class="px-2 py-1 border">Date of Birth</th>
                 <th class="px-2 py-1 border">Civil Status</th>
-                
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td class="px-2 py-1 border">
-                    <select name="sex" required class="px-2 py-1 w-full text-xs">
-                        <option value="">Select Sex</option>
-                        <option value="Male" <?= ($profile['sex'] ?? '') === 'Male' ? 'selected' : '' ?>>Male</option>
-                        <option value="Female" <?= ($profile['sex'] ?? '') === 'Female' ? 'selected' : '' ?>>Female</option>
-                    </select>
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="date" name="date_of_birth" value="<?= esc($profile['date_of_birth'] ?? '') ?>" required class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <select name="civil_status" required class="px-2 py-1 w-full text-xs">
-                        <option value="">Select Civil Status</option>
-                        <option value="Single" <?= ($profile['civil_status'] ?? '') === 'Single' ? 'selected' : '' ?>>Single</option>
-                        <option value="Married" <?= ($profile['civil_status'] ?? '') === 'Married' ? 'selected' : '' ?>>Married</option>
-                        <option value="Widowed" <?= ($profile['civil_status'] ?? '') === 'Widowed' ? 'selected' : '' ?>>Widowed</option>
-                        <option value="Separated" <?= ($profile['civil_status'] ?? '') === 'Separated' ? 'selected' : '' ?>>Separated</option>
-                        <option value="Divorced" <?= ($profile['civil_status'] ?? '') === 'Divorced' ? 'selected' : '' ?>>Divorced</option>
-                    </select>
-                </td>
+                <td class="px-2 py-1 border"><?= esc($profile['sex'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= !empty($profile['date_of_birth']) ? date('F j, Y', strtotime($profile['date_of_birth'])) : '-' ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['civil_status'] ?? '-') ?></td>
             </tr>
         </tbody>
     </table>
@@ -162,29 +273,13 @@
         </thead>
         <tbody>
             <tr>
-                <td class="px-2 py-1 border">
-                    <input type="email" name="email" value="<?= esc($profile['email'] ?? '') ?>" placeholder="Enter Email" required class="px-2 py-1 w-full text-xs">
-                </td>
-               <td class="px-2 py-1 border">
-    <input 
-        type="text" 
-        name="phone" 
-        value="<?= esc($profile['phone'] ?? '') ?>" 
-        placeholder="Enter Phone Number" 
-        required 
-        class="px-2 py-1 w-full text-xs" 
-        pattern="\d{11}" 
-        title="Phone number must be exactly 11 digits"
-        maxlength="11"
-        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-    >
-</td>
-                  <td class="px-2 py-1 border">
-                    <input type="text" name="citizenship" value="<?= esc($profile['citizenship'] ?? '') ?>" placeholder="Enter Citizenship" required class="px-2 py-1 w-full text-xs">
-                </td>
+                <td class="px-2 py-1 border"><?= esc($profile['email'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['phone'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['citizenship'] ?? '-') ?></td>
             </tr>
         </tbody>
     </table>
+
     <table class="table-auto w-full border-collapse text-xs mb-4">
         <thead class="bg-gray-100">
             <tr>
@@ -194,29 +289,22 @@
         </thead>
         <tbody>
             <tr>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="residential_address" value="<?= esc($profile['residential_address'] ?? '') ?>" placeholder="Enter Residential Address" required class="px-2 py-1 w-full text-xs">
-                </td>
-                <td class="px-2 py-1 border">
-                    <input type="text" name="permanent_address" value="<?= esc($profile['permanent_address'] ?? '') ?>" placeholder="Enter Permanent Address" required class="px-2 py-1 w-full text-xs">
-                </td>
+                <td class="px-2 py-1 border"><?= esc($profile['residential_address'] ?? '-') ?></td>
+                <td class="px-2 py-1 border"><?= esc($profile['permanent_address'] ?? '-') ?></td>
             </tr>
         </tbody>
     </table>
 
-<div class="text-right mt-2">
-    <button type="button" id="step1Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
-        Next
-    </button>
+    <div class="text-right mt-2">
+        <button type="button" id="step1Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+            Next
+        </button>
+    </div>
+
 </div>
-</div>
+
 <!-- Step 2: Family Background -->
 <div class="step hidden" id="step-2">
-        <!-- Instruction Note -->
-        <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-            *Do not leave blank entries. Put N/A for not applicable.
-        </div>
-
     <div>
         <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
             Family Background
@@ -239,23 +327,21 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="spouse_surname" placeholder="Enter Surname" value="<?= esc($spouse['last_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="spouse_first_name" placeholder="Enter First Name" value="<?= esc($spouse['first_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="spouse_middle_name" placeholder="Enter Middle Name" value="<?= esc($spouse['middle_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs">
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="spouse_ext_name" placeholder="Enter Extension" value="<?= esc($spouse['extension'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs">
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['last_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['first_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['middle_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['extension'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="spouse_surname" value="<?= esc($spouse['last_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="spouse_first_name" value="<?= esc($spouse['first_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="spouse_middle_name" value="<?= esc($spouse['middle_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="spouse_ext_name" value="<?= esc($spouse['extension'] ?? 'N/A') ?>">
                 </div>
-
+            
                 <div class="overflow-x-auto mb-2">
                     <table class="table-auto w-full border-collapse text-xs">
                         <thead class="bg-gray-100">
@@ -266,26 +352,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-1 py-1 border">
-                                    <input 
-                                        type="text" 
-                                        name="spouse_contact" 
-                                        placeholder="Enter Contact Number" 
-                                        value="<?= esc($spouse['contact_no'] ?? '') ?>" 
-                                        required 
-                                        class="px-1 py-1 w-full text-xs" 
-                                        maxlength="11"
-                                        pattern="\d{11}" 
-                                        title="Contact number must be exactly 11 digits"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                                    >
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="spouse_occupation" placeholder="Enter Occupation" value="<?= esc($spouse['occupation'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['contact_no'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($spouse['occupation'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="spouse_contact" value="<?= esc($spouse['contact_no'] ?? 'N/A') ?>">
+                    <input type="hidden" name="spouse_occupation" value="<?= esc($spouse['occupation'] ?? 'N/A') ?>">
                 </div>
             </div>
 
@@ -304,23 +379,21 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="father_surname" placeholder="Enter Surname" value="<?= esc($father['last_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="father_first_name" placeholder="Enter First Name" value="<?= esc($father['first_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="father_middle_name" placeholder="Enter Middle Name" value="<?= esc($father['middle_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs">
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="father_ext_name" placeholder="Enter Extension" value="<?= esc($father['extension'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs">
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($father['last_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($father['first_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($father['middle_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($father['extension'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="father_surname" value="<?= esc($father['last_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="father_first_name" value="<?= esc($father['first_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="father_middle_name" value="<?= esc($father['middle_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="father_ext_name" value="<?= esc($father['extension'] ?? 'N/A') ?>">
                 </div>
-
+            
                 <div class="overflow-x-auto mb-2">
                     <table class="table-auto w-full border-collapse text-xs">
                         <thead class="bg-gray-100">
@@ -331,26 +404,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-1 py-1 border">
-                                    <input 
-                                        type="text" 
-                                        name="father_contact" 
-                                        placeholder="Enter Contact Number" 
-                                        value="<?= esc($father['contact_no'] ?? '') ?>" 
-                                        required 
-                                        class="px-1 py-1 w-full text-xs" 
-                                        maxlength="11"
-                                        pattern="\d{11}" 
-                                        title="Contact number must be exactly 11 digits"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                                    >
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="father_occupation" placeholder="Enter Occupation" value="<?= esc($father['occupation'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($father['contact_no'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($father['occupation'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="father_contact" value="<?= esc($father['contact_no'] ?? 'N/A') ?>">
+                    <input type="hidden" name="father_occupation" value="<?= esc($father['occupation'] ?? 'N/A') ?>">
                 </div>
             </div>
 
@@ -368,20 +430,19 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="mother_maiden_surname" placeholder="Enter Surname" value="<?= esc($mother['last_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="mother_first_name" placeholder="Enter First Name" value="<?= esc($mother['first_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="mother_middle_name" placeholder="Enter Middle Name" value="<?= esc($mother['middle_name'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs">
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($mother['last_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($mother['first_name'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($mother['middle_name'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="mother_maiden_surname" value="<?= esc($mother['last_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="mother_first_name" value="<?= esc($mother['first_name'] ?? 'N/A') ?>">
+                    <input type="hidden" name="mother_middle_name" value="<?= esc($mother['middle_name'] ?? 'N/A') ?>">
                 </div>
-
+            
                 <div class="overflow-x-auto mb-2">
                     <table class="table-auto w-full border-collapse text-xs">
                         <thead class="bg-gray-100">
@@ -392,26 +453,15 @@
                         </thead>
                         <tbody>
                             <tr>
-                                       <td class="px-1 py-1 border">
-                                    <input 
-                                        type="text" 
-                                        name="mother_contact" 
-                                        placeholder="Enter Contact Number" 
-                                        value="<?= esc($mother['contact_no'] ?? '') ?>" 
-                                        required 
-                                        class="px-1 py-1 w-full text-xs" 
-                                        maxlength="11"
-                                        pattern="\d{11}" 
-                                        title="Contact number must be exactly 11 digits"
-                                        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-                                    >
-                                </td>
-                                <td class="px-1 py-1 border">
-                                    <input type="text" name="mother_occupation" placeholder="Enter Occupation" value="<?= esc($mother['occupation'] ?? 'N/A') ?>" class="px-1 py-1 w-full text-xs" required>
-                                </td>
+                                <td class="px-1 py-1 border"><?= esc($mother['contact_no'] ?? 'N/A') ?></td>
+                                <td class="px-1 py-1 border"><?= esc($mother['occupation'] ?? 'N/A') ?></td>
                             </tr>
                         </tbody>
                     </table>
+            
+                    <!-- Hidden Inputs -->
+                    <input type="hidden" name="mother_contact" value="<?= esc($mother['contact_no'] ?? 'N/A') ?>">
+                    <input type="hidden" name="mother_occupation" value="<?= esc($mother['occupation'] ?? 'N/A') ?>">
                 </div>
             </div>
 
@@ -429,176 +479,110 @@
     </div>
 </div>
 
+
 <?php
-$db = \Config\Database::connect(); // ← Add this line
-$user_id = session()->get('user_id'); // adjust according to your session
+$db = \Config\Database::connect();
+$user_id = session()->get('user_id');
 
-$builder = $db->table('applicant_education');
-$applicant_education = $builder->where('user_id', $user_id)->get()->getResultArray();
+// Fetch all applicant education for this user
+$educationRecords = $db->table('applicant_education')
+                       ->where('user_id', $user_id)
+                       ->orderBy('degree_level_id', 'ASC')
+                       ->get()
+                       ->getResultArray();
 
-// Prepare education_data array for prefilling the form
-$education_data = [];
-if (!empty($applicant_education)) {
-    foreach ($applicant_education as $edu) {
-        switch ($edu['level']) {
-            case 'Elementary':
-                $education_data['elementary'] = $edu;
-                break;
-            case 'Secondary':
-                $education_data['secondary'] = $edu;
-                break;
-            case 'Vocational/Trade':
-                $education_data['vocational'] = $edu;
-                break;
-            case 'College':
-                $education_data['college'] = $edu;
-                break;
-            case 'Graduate Studies':
-                $education_data['graduate'] = $edu;
-                break;
-        }
-    }
-}
+// Fetch all degree levels
+$libDegreeLevels = $db->table('lib_degree_level')->get()->getResultArray();
 
-// Ensure every level has a default array to avoid undefined index errors
-$levels = ['elementary', 'secondary', 'vocational', 'college', 'graduate'];
-foreach ($levels as $level) {
-    if (!isset($education_data[$level])) {
-        $education_data[$level] = [
-            'school_name' => '',
-            'degree_course' => '',
-            'period_from' => '',
-            'period_to' => '',
-            'highest_level_units' => '',
-            'year_graduated' => '',
-            'awards' => ''
+// Prepare final rows grouped by level
+$finalEducation = [];
+
+foreach($libDegreeLevels as $levelObj){
+    $levelId = $levelObj['id_degree_level'];
+    $levelName = $levelObj['degree_level_name'];
+
+    // Filter records for this level
+    $levelRecords = array_filter($educationRecords, fn($r) => $r['degree_level_id'] == $levelId);
+
+    // If no records exist, just add a placeholder
+    if(empty($levelRecords)){
+        $finalEducation[] = [
+            'level_name' => $levelName,
+            'school_name' => '-',
+            'degree_course' => '-',
+            'period_from' => '-',
+            'period_to' => '-',
+            'highest_level_units' => '-',
+            'year_graduated' => '-',
+            'awards' => '-',
         ];
+    } else {
+        // Add all records for this level
+        $firstRow = true;
+        foreach($levelRecords as $edu){
+            $finalEducation[] = [
+                'level_name' => $firstRow ? $levelName : '', // only show level on first row
+                'school_name' => $edu['school_name'] ?? '-',
+                'degree_course' => $edu['degree_course'] ?? '-',
+                'period_from' => $edu['period_from'] ?? '-',
+                'period_to' => $edu['period_to'] ?? '-',
+                'highest_level_units' => $edu['highest_level_units'] ?? '-',
+                'year_graduated' => $edu['year_graduated'] ?? '-',
+                'awards' => $edu['awards'] ?? '-',
+            ];
+            $firstRow = false;
+        }
     }
 }
 ?>
 
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
-        <!-- Instruction Note -->
-    <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-        *Do not leave blank entries. Put N/A for not applicable.
-    </div>
-
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">Educational Background</div>
 
-    <?php
-    $levels = [
-        'Elementary' => 'elementary',
-        'Secondary' => 'secondary',
-        'Vocational / Trade' => 'vocational',
-        'College' => 'college',
-        'Graduate Studies' => 'graduate'
-    ];
-
-    function format_period($from, $to) {
-        if (!$from && !$to) return '';
-        return trim("$from – $to");
-    }
-    ?>
-
-    <?php foreach($levels as $label => $key): ?>
-    <!-- Level Label -->
-    <p class="font-semibold text-xs mb-1"><?= $label ?></p>
-
- <!-- First row: School Name, Degree / Course, Highest Level / Units -->
-<div class="overflow-x-auto mb-1">
-    <table class="table-auto w-full border-collapse text-xs">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-1 py-1 border">School Name</th>
-                <th class="px-1 py-1 border">Degree / Course</th>
-                <th class="px-1 py-1 border">Highest Level / Units</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-1 py-1 border">
-                    <input type="text" name="<?= $key ?>_school" value="<?= esc($education_data[$key]['school_name'] ?? '') ?>" placeholder="Enter School Name" class="px-1 py-1 w-full text-xs" required>
-                </td>
-                <td class="px-1 py-1 border">
-                    <input type="text" name="<?= $key ?>_degree" value="<?= esc($education_data[$key]['degree_course'] ?? '') ?>" placeholder="Enter Degree / Course" class="px-1 py-1 w-full text-xs" required>
-                </td>
-                <td class="px-1 py-1 border">
-                    <input type="text" name="<?= $key ?>_units" value="<?= esc($education_data[$key]['highest_level_units'] ?? '') ?>" placeholder="Enter Highest Level / Units" class="px-1 py-1 w-full text-xs" required>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<div class="overflow-x-auto mb-2">
-    <table class="table-auto w-full border-collapse text-xs">
-        <thead class="bg-gray-100">
-            <tr>
-                <th class="px-1 py-1 border">Period From</th>
-                <th class="px-1 py-1 border">Period To</th>
-                <th class="px-1 py-1 border">Year Graduated</th>
-                <th class="px-1 py-1 border">Awards / Honors</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td class="px-1 py-1 border">
-                    <input 
-                        type="text" 
-                        name="<?= $key ?>_period_from" 
-                        value="<?= esc($education_data[$key]['period_from'] ?? '') ?>" 
-                        placeholder="From" 
-                        class="px-1 py-1 w-full text-xs" 
-                        maxlength="4"
-                        oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);" 
-                        required
-                    >
-                </td>
-                <td class="px-1 py-1 border">
-                    <input 
-                        type="text" 
-                        name="<?= $key ?>_period_to" 
-                        value="<?= esc($education_data[$key]['period_to'] ?? '') ?>" 
-                        placeholder="To" 
-                        class="px-1 py-1 w-full text-xs" 
-                        maxlength="4"
-                        oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);" 
-                        required
-                    >
-                </td>
-                <td class="px-1 py-1 border">
-                    <input 
-                        type="text" 
-                        name="<?= $key ?>_year" 
-                        value="<?= esc($education_data[$key]['year_graduated'] ?? '') ?>" 
-                        placeholder="Year Graduated" 
-                        class="px-1 py-1 w-full text-xs" 
-                        maxlength="4"
-                        oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,4);" 
-                        required
-                    >
-                </td>
-                <td class="px-1 py-1 border">
-                    <input type="text" name="<?= $key ?>_awards" value="<?= esc($education_data[$key]['awards'] ?? '') ?>" placeholder="Awards / Honors" class="px-1 py-1 w-full text-xs" required>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-    <?php endforeach; ?>
+    <div class="overflow-x-auto mb-5">
+        <table class="table-auto w-full text-left border-collapse text-xs">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-2 py-1 border">Level</th>
+                    <th class="px-2 py-1 border">Name of School</th>
+                    <th class="px-2 py-1 border">Degree / Course</th>
+                    <th class="px-2 py-1 border">From</th>
+                    <th class="px-2 py-1 border">To</th>
+                    <th class="px-2 py-1 border">Highest Level / Units Earned</th>
+                    <th class="px-2 py-1 border">Year Graduated</th>
+                    <th class="px-2 py-1 border">Scholarship / Academic Honors</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach($finalEducation as $edu): ?>
+                <tr class="hover:bg-gray-50">
+                    <td class="px-2 py-1 border font-semibold"><?= esc($edu['level_name']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['school_name']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['degree_course']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['period_from']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['period_to']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['highest_level_units']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['year_graduated']) ?></td>
+                    <td class="px-2 py-1 border"><?= esc($edu['awards']) ?></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
 
     <div class="text-right mt-2">
-        <button type="button" onclick="prevStep(3)" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">Previous</button>
-        <button type="button" id="step3Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">Next</button>
+        <button type="button" onclick="prevStep(3)" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">
+            Previous
+        </button>
+        <button type="button" id="step3Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+            Next
+        </button>
     </div>
 </div>
-
-<!-- Step 4: Work Experience -->
+<!-- Step 4: Work Experience (Read-Only) -->
 <div class="step hidden" id="step-4">
-         <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-            *Do not leave blank entries. Put N/A for not applicable.
-        </div>
+
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
         Work Experience
     </div>
@@ -612,95 +596,58 @@ foreach ($levels as $level) {
         ->getResultArray();
     ?>
 
-    <div class="overflow-x-auto mb-2 relative">
-        <!-- Add button -->
-        <button
-            type="button"
-            id="add-work-btn"
-            class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0"
-        >
-            Add Work Exp
-        </button>
-
-        <table id="work-table" class="table-auto w-full border-collapse text-xs mt-10">
+    <div class="overflow-x-auto mb-2">
+        <table id="work-table" class="table-auto w-full border-collapse text-xs mt-2">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="px-2 py-1 border">Position Title</th>
                     <th class="px-2 py-1 border">Office / Company</th>
                     <th class="px-2 py-1 border">Inclusive Dates</th>
                     <th class="px-2 py-1 border">Status of Appointment</th>
-                    <th class="px-2 py-1 border">Government Service (Yes / No)</th>
-                    <th class="px-2 py-1 border">Actions</th>
+                    <th class="px-2 py-1 border">Government Service</th>
                 </tr>
             </thead>
 
             <tbody>
                 <?php if (!empty($work_experiences)): ?>
                     <?php foreach ($work_experiences as $work): ?>
-                        <tr>
+                        <tr class="hover:bg-gray-50">
                             <td class="px-2 py-1 border">
-                                <input
-                                    type="text"
-                                    name="position_title[]"
-                                    value="<?= esc($work['position_title']) ?>"
-                                    placeholder="Position Title"
-                                    class="px-2 py-1 w-full text-xs"
-                                >
+                                <?= esc($work['position_title'] ?? '-') ?>
+                                <input type="hidden" name="position_title[]" value="<?= esc($work['position_title'] ?? 'N/A') ?>">
                             </td>
-
                             <td class="px-2 py-1 border">
-                                <input
-                                    type="text"
-                                    name="office[]"
-                                    value="<?= esc($work['office']) ?>"
-                                    placeholder="Office / Company"
-                                    class="px-2 py-1 w-full text-xs"
-                                >
+                                <?= esc($work['office'] ?? '-') ?>
+                                <input type="hidden" name="office[]" value="<?= esc($work['office'] ?? 'N/A') ?>">
                             </td>
-
-                            <td class="px-2 py-1 border flex space-x-1">
-                                <input
-                                    type="date"
-                                    name="date_from[]"
-                                    value="<?= esc($work['date_from']) ?>"
-                                    class="px-2 py-1 w-1/2 text-xs"
-                                >
-                                <input
-                                    type="date"
-                                    name="date_to[]"
-                                    value="<?= esc($work['date_to']) ?>"
-                                    class="px-2 py-1 w-1/2 text-xs"
-                                >
-                            </td>
-
                             <td class="px-2 py-1 border">
-                                <input
-                                    type="text"
-                                    name="status_of_appointment[]"
-                                    value="<?= esc($work['status_of_appointment']) ?>"
-                                    placeholder="e.g. Contractual, Permanent"
-                                    class="px-2 py-1 w-full text-xs"
-                                >
+                                <?= !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-' ?> 
+                                - 
+                                <?= !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-' ?>
+                                <input type="hidden" name="date_from[]" value="<?= !empty($work['date_from']) ? date('Y-m-d', strtotime($work['date_from'])) : '' ?>">
+                                <input type="hidden" name="date_to[]" value="<?= !empty($work['date_to']) ? date('Y-m-d', strtotime($work['date_to'])) : '' ?>">
                             </td>
-
-<td class="px-2 py-1 border">
-    <select name="govt_service[]" class="px-1 py-1 w-full text-xs">
-        <option value="">Select</option>
-        <option value="Yes" <?= esc($work['govt_service']) === 'Yes' ? 'selected' : '' ?>>Yes</option>
-        <option value="No" <?= esc($work['govt_service']) === 'No' ? 'selected' : '' ?>>No</option>
-    </select>
-</td>
-                            <td class="px-2 py-1 border text-center">
-                                <button type="button" class="text-red-500 hover:underline remove-row">
-                                 <i class="fa-solid fa-trash"></i>
-                                </button>
+                            <td class="px-2 py-1 border">
+                                <?= esc($work['status_of_appointment'] ?? '-') ?>
+                                <input type="hidden" name="status_of_appointment[]" value="<?= esc($work['status_of_appointment'] ?? 'N/A') ?>">
+                            </td>
+                            <td class="px-2 py-1 border">
+                                <?= esc($work['govt_service'] ?? '-') ?>
+                                <input type="hidden" name="govt_service[]" value="<?= esc($work['govt_service'] ?? 'No') ?>">
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td class="px-2 py-1 border text-center" colspan="6">
+                        <td class="px-2 py-1 border text-center" colspan="5">
                             No work experience added.
+                            <!-- Add empty hidden inputs to avoid undefined index errors -->
+                            <input type="hidden" name="position_title[]" value="N/A">
+                            <input type="hidden" name="office[]" value="N/A">
+                            <input type="hidden" name="date_from[]" value="">
+                            <input type="hidden" name="date_to[]" value="">
+                            <input type="hidden" name="status_of_appointment[]" value="N/A">
+                            <input type="hidden" name="govt_service[]" value="No">
                         </td>
                     </tr>
                 <?php endif; ?>
@@ -719,7 +666,6 @@ foreach ($levels as $level) {
         </button>
     </div>
 </div>
-
 <?php
 $user_id = session()->get('user_id');
 $app = $db->table('job_applications')
@@ -727,37 +673,22 @@ $app = $db->table('job_applications')
     ->orderBy('applied_at', 'DESC')
     ->get()
     ->getRowArray();
+
+$civil_services = $db->table('applicant_civil_service')
+    ->where('user_id', $user_id)
+    ->orderBy('date_of_exam', 'DESC')
+    ->get()
+    ->getResultArray();
 ?>
 
-<!-- Step 5: Civil Service -->
 <div class="step hidden" id="step-5">
-        <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-        *Do not leave blank entries. Put N/A for not applicable.
-    </div>
+
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
         Civil Service Eligibility
     </div>
 
-    <?php
-    $user_id = session()->get('user_id');
-    $civil_services = $db->table('applicant_civil_service')
-        ->where('user_id', $user_id)
-        ->orderBy('date_of_exam', 'DESC')
-        ->get()
-        ->getResultArray();
-    ?>
-
     <div class="overflow-x-auto mb-2 relative">
-        <!-- Add button -->
-        <button
-            type="button"
-            id="add-cs-btn"
-            class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0"
-        >
-            Add Civil Service
-        </button>
-
-        <table id="cs-table" class="table-auto w-full border-collapse text-xs mt-10">
+        <table id="cs-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="px-2 py-1 border">Eligibility</th>
@@ -766,39 +697,57 @@ $app = $db->table('job_applications')
                     <th class="px-2 py-1 border">Place of Exam</th>
                     <th class="px-2 py-1 border">License No.</th>
                     <th class="px-2 py-1 border">License Valid Until</th>
+                    <th class="px-2 py-1 border">Certificate</th>
                     <th class="px-2 py-1 border">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!empty($civil_services)): ?>
                     <?php foreach($civil_services as $cs): ?>
-                        <tr>
+                        <tr class="hover:bg-gray-50">
                             <td class="px-2 py-1 border">
-                                <input type="text" name="eligibility[]" value="<?= esc($cs['eligibility']) ?>" class="px-2 py-1 w-full text-xs" required>
+                                <?= esc($cs['eligibility'] ?? '-') ?>
+                                <input type="hidden" name="eligibility[]" value="<?= esc($cs['eligibility'] ?? '-') ?>">
                             </td>
                             <td class="px-2 py-1 border">
-                                <input type="text" name="rating[]" value="<?= esc($cs['rating']) ?>" class="px-2 py-1 w-full text-xs" required>
+                                <?= esc($cs['rating'] ?? '-') ?>
+                                <input type="hidden" name="rating[]" value="<?= esc($cs['rating'] ?? '-') ?>">
                             </td>
                             <td class="px-2 py-1 border">
-                                <input type="date" name="date_of_exam[]" value="<?= esc($cs['date_of_exam']) ?>" class="px-2 py-1 w-full text-xs">
+                                <?= !empty($cs['date_of_exam']) ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
+                                <input type="hidden" name="date_of_exam[]" value="<?= !empty($cs['date_of_exam']) ? date('Y-m-d', strtotime($cs['date_of_exam'])) : '' ?>">
                             </td>
                             <td class="px-2 py-1 border">
-                                <input type="text" name="place_of_exam[]" value="<?= esc($cs['place_of_exam']) ?>" class="px-2 py-1 w-full text-xs">
+                                <?= esc($cs['place_of_exam'] ?? '-') ?>
+                                <input type="hidden" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?? '-') ?>">
                             </td>
                             <td class="px-2 py-1 border">
-                                <input type="text" name="license_no[]" value="<?= esc($cs['license_no']) ?>" class="px-2 py-1 w-full text-xs">
+                                <?= esc($cs['license_no'] ?? '-') ?>
+                                <input type="hidden" name="license_no[]" value="<?= esc($cs['license_no'] ?? '-') ?>">
                             </td>
                             <td class="px-2 py-1 border">
-                                <input type="date" name="license_valid_until[]" value="<?= esc($cs['license_valid_until']) ?>" class="px-2 py-1 w-full text-xs">
+                                <?= !empty($cs['license_valid_until']) ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
+                                <input type="hidden" name="license_valid_until[]" value="<?= !empty($cs['license_valid_until']) ? date('Y-m-d', strtotime($cs['license_valid_until'])) : '' ?>">
                             </td>
                             <td class="px-2 py-1 border text-center">
-                                <button type="button" class="text-red-500 hover:underline remove-cs-row"><i class="fa-solid fa-trash"></i></button>
+                                <?php if (!empty($cs['certificate'])): ?>
+                                    <button type="button"
+                                        class="view-certificate-btn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                        data-file="<?= base_url('account/viewCivilCertificate/' . urlencode($cs['certificate'])) ?>">
+                                        View
+                                    </button>
+                                <?php else: ?>-<?php endif; ?>
+                            </td>
+                            <td class="px-2 py-1 border text-center">
+                                <button type="button" class="text-red-500 hover:underline remove-cs-row">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td class="px-2 py-1 border text-center" colspan="7">
+                        <td class="px-2 py-1 border text-center" colspan="8">
                             No civil service record added.
                         </td>
                     </tr>
@@ -817,12 +766,72 @@ $app = $db->table('job_applications')
     </div>
 </div>
 
+<div id="certificate-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-6xl h-full flex flex-col shadow-lg relative">
+        <iframe id="certificate-frame" src="" class="flex-1 w-full h-full border-none rounded-b-2xl"></iframe>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const csTableBody = document.querySelector('#cs-table tbody');
+    const certModal = document.getElementById('certificate-modal');
+    const iframe = document.getElementById('certificate-frame');
+
+    function openCertificate(file) {
+        if (!file || file.trim() === '') {
+            Swal.fire({icon:'error',title:'File not found',text:'No certificate file is available.'});
+            return;
+        }
+        iframe.src = file;
+        certModal.classList.remove('hidden');
+    }
+
+    function closeCertificate() {
+        iframe.src = '';
+        certModal.classList.add('hidden');
+    }
+
+    function attachViewCertificate(button) {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            openCertificate(this.getAttribute('data-file'));
+        });
+    }
+
+    certModal.addEventListener('click', function (e) {
+        if (e.target === certModal) closeCertificate();
+    });
+
+    function attachDeleteEvent(button) {
+        button.addEventListener('click', function () {
+            const row = this.closest('tr');
+            Swal.fire({
+                title:'Are you sure?',
+                text:'This will remove the record from the table!',
+                icon:'warning',
+                showCancelButton:true
+            }).then(result=>{
+                if(result.isConfirmed){
+                    row.remove();
+                    if(csTableBody.querySelectorAll('tr').length===0){
+                        csTableBody.innerHTML=`<tr><td class="px-2 py-1 border text-center" colspan="8">No civil service record added.</td></tr>`;
+                    }
+                }
+            });
+        });
+    }
+
+    document.querySelectorAll('.remove-cs-row').forEach(attachDeleteEvent);
+    document.querySelectorAll('.view-certificate-btn').forEach(attachViewCertificate);
+
+});
+</script>
 <?php
 $user_id = session()->get('user_id');
-
-/* ===============================
-   Prefill applicant trainings
-================================ */
 $trainings = $db->table('applicant_trainings at')
     ->select('at.*, tc.training_category_name')
     ->join('lib_training_category tc', 'tc.id_training_category = at.training_category_id', 'left')
@@ -830,38 +839,21 @@ $trainings = $db->table('applicant_trainings at')
     ->orderBy('at.date_from', 'DESC')
     ->get()
     ->getResultArray();
-
-/* ===============================
-   Training categories
-================================ */
-$categories = $db->table('lib_training_category')->get()->getResultArray();
 ?>
 
-<!-- ===============================
-     STEP 6: TRAININGS
-================================ -->
 <div class="step hidden" id="step-6">
-
-    <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-        * Do not leave blank entries. Put N/A for not applicable.
-    </div>
 
     <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
         Trainings
     </div>
 
     <div class="overflow-x-auto mb-2 relative">
-        <button type="button"
-                id="add-training-btn"
-                class="bg-clsuGreen text-white px-4 py-1 rounded text-xs font-semibold hover:bg-green-800 absolute right-0 top-0">
-            Add Training
-        </button>
-
-        <table id="training-table" class="table-auto w-full border-collapse text-xs mt-6">
+        <table id="training-table" class="table-auto w-full border-collapse text-xs">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="px-2 py-1 border">Category</th>
                     <th class="px-2 py-1 border">Training Name</th>
+                    <th class="px-2 py-1 border">Venue</th>
                     <th class="px-2 py-1 border">Date From</th>
                     <th class="px-2 py-1 border">Date To</th>
                     <th class="px-2 py-1 border">Facilitator</th>
@@ -869,99 +861,72 @@ $categories = $db->table('lib_training_category')->get()->getResultArray();
                     <th class="px-2 py-1 border">Sponsor</th>
                     <th class="px-2 py-1 border">Remarks</th>
                     <th class="px-2 py-1 border">Certificate</th>
-                    <th class="px-2 py-1 border">Actions</th>
+                    <th class="px-2 py-1 border text-center">Actions</th>
                 </tr>
             </thead>
-
             <tbody>
             <?php if (!empty($trainings)): ?>
                 <?php foreach ($trainings as $tr): ?>
                     <tr>
                         <td class="px-2 py-1 border">
-                            <select name="training_category_id[]" class="px-2 py-1 w-full text-xs">
-                                <option value="">Select Category</option>
-                                <?php foreach ($categories as $cat): ?>
-                                    <option value="<?= esc($cat['id_training_category']) ?>"
-                                        <?= $cat['id_training_category'] == $tr['training_category_id'] ? 'selected' : '' ?>>
-                                        <?= esc($cat['training_category_name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <?= esc($tr['training_category_name']) ?>
+                            <input type="hidden" name="training_category_id[]" value="<?= esc($tr['training_category_id']) ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="text" name="training_name[]" value="<?= esc($tr['training_name']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= esc($tr['training_name']) ?>
+                            <input type="hidden" name="training_name[]" value="<?= esc($tr['training_name']) ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="date" name="training_date_from[]" value="<?= esc($tr['date_from']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= esc($tr['training_venue']) ?>
+                            <input type="hidden" name="training_venue[]" value="<?= esc($tr['training_venue']) ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="date" name="training_date_to[]" value="<?= esc($tr['date_to']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= !empty($tr['date_from']) ? date('F d, Y', strtotime($tr['date_from'])) : '-' ?>
+                            <input type="hidden" name="training_date_from[]" value="<?= !empty($tr['date_from']) ? date('Y-m-d', strtotime($tr['date_from'])) : '' ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="text" name="training_facilitator[]" value="<?= esc($tr['training_facilitator']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= !empty($tr['date_to']) ? date('F d, Y', strtotime($tr['date_to'])) : '-' ?>
+                            <input type="hidden" name="training_date_to[]" value="<?= !empty($tr['date_to']) ? date('Y-m-d', strtotime($tr['date_to'])) : '' ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="number" name="training_hours[]" value="<?= esc($tr['training_hours']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= esc($tr['training_facilitator']) ?>
+                            <input type="hidden" name="training_facilitator[]" value="<?= esc($tr['training_facilitator']) ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="text" name="training_sponsor[]" value="<?= esc($tr['training_sponsor']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= esc($tr['training_hours']) ?>
+                            <input type="hidden" name="training_hours[]" value="<?= esc($tr['training_hours']) ?>">
                         </td>
-
                         <td class="px-2 py-1 border">
-                            <input type="text" name="training_remarks[]" value="<?= esc($tr['training_remarks']) ?>" class="px-2 py-1 w-full text-xs">
+                            <?= esc($tr['training_sponsor']) ?>
+                            <input type="hidden" name="training_sponsor[]" value="<?= esc($tr['training_sponsor']) ?>">
                         </td>
-
- <!-- ===============================
-     CERTIFICATE (FIXED)
-=============================== -->
-<td class="px-2 py-1 border">
-    <?php if (!empty($tr['certificate_file'])): ?>
- <p class="text-xs text-green-700 mb-1">
-            Uploaded: 
-            <a href="<?= base_url('uploads/' . $tr['certificate_file']) ?>" 
-               target="_blank" 
-               class="underline text-blue-600 text-xs">
-                View
-            </a>
-        </p>
-
-        <!-- Keep old file in hidden input for update -->
-        <input type="hidden"
-               name="existing_certificate_file[]"
-               value="<?= esc($tr['certificate_file']) ?>">
-
-        <!-- Option to upload new certificate -->
-        <input type="file"
-               name="training_certificate[]"
-               class="text-xs mt-1">
-    <?php else: ?>
-        <!-- No existing file, just upload -->
-        <input type="file"
-               name="training_certificate[]"
-               class="text-xs">
-
-        <input type="hidden"
-               name="existing_certificate_file[]"
-               value="">
-    <?php endif; ?>
-</td>
-
-<td class="px-2 py-1 border text-center">
-    <button type="button" class="deleteTrainingBtn text-red-600 px-1">
-        <i class="fa-solid fa-trash"></i>
-    </button>
-</td>
+                        <td class="px-2 py-1 border">
+                            <?= esc($tr['training_remarks']) ?>
+                            <input type="hidden" name="training_remarks[]" value="<?= esc($tr['training_remarks']) ?>">
+                        </td>
+                        <td class="px-2 py-1 border text-center">
+                            <?php if (!empty($tr['certificate_file'])): ?>
+                                <button type="button"
+                                    class="viewCertificateBtn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                    data-file="<?= base_url('file/view-training/' . $tr['id_applicant_training'] . '/' . $tr['certificate_file']) ?>">
+                                    View
+                                </button>
+                                <input type="hidden" name="existing_certificate_file[]" value="<?= esc($tr['certificate_file']) ?>">
+                            <?php else: ?>
+                                <span class="text-gray-400 text-xs">No certificate</span>
+                                <input type="hidden" name="existing_certificate_file[]" value="">
+                            <?php endif; ?>
+                        </td>
+                        <td class="px-2 py-1 border text-center">
+                            <button type="button" class="deleteTrainingBtn text-red-600 px-1">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="10" class="px-2 py-1 border text-center">
+                    <td colspan="11" class="px-2 py-1 border text-center">
                         No training record added.
                     </td>
                 </tr>
@@ -970,92 +935,91 @@ $categories = $db->table('lib_training_category')->get()->getResultArray();
         </table>
     </div>
 
-    <!-- ===============================
-         NAV BUTTONS
-    ================================ -->
     <div class="text-right mt-3">
-        <button type="button" onclick="prevStep(6)"
-                class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">
+        <button type="button" onclick="prevStep(6)" class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">
             Previous
         </button>
-
-        <button type="button" onclick="nextStep(6)"
-                class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
+        <button type="button" onclick="nextStep(6)" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
             Next
         </button>
     </div>
 </div>
 
-<!-- ===============================
-     JS: ADD TRAINING ROW
-================================ -->
-<script>
-document.addEventListener('DOMContentLoaded', function () {
+<div id="certificateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-6xl h-[90vh] shadow-lg">
+        <iframe id="certificateFrame" src="" class="w-full h-full border-none"></iframe>
+    </div>
+</div>
 
-    const categoryOptions = `<?php foreach ($categories as $cat): ?>
-        <option value="<?= esc($cat['id_training_category']) ?>">
-            <?= esc($cat['training_category_name']) ?>
-        </option>
-    <?php endforeach; ?>`;
-
-    document.getElementById('add-training-btn').addEventListener('click', function () {
-
-        const tbody = document.querySelector('#training-table tbody');
-
-        const emptyRow = tbody.querySelector('td[colspan="10"]');
-        if (emptyRow) emptyRow.closest('tr').remove();
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td class="px-2 py-1 border">
-                <select name="training_category_id[]" class="px-2 py-1 w-full text-xs">
-                    <option value="">Select Category</option>
-                    ${categoryOptions}
-                </select>
-            </td>
-            <td class="px-2 py-1 border"><input type="text" name="training_name[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="date" name="training_date_from[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="date" name="training_date_to[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="training_facilitator[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="number" name="training_hours[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="training_sponsor[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border"><input type="text" name="training_remarks[]" class="px-2 py-1 w-full text-xs"></td>
-            <td class="px-2 py-1 border">
-                <input type="file" name="training_certificate[]" class="text-xs">
-                <input type="hidden" name="existing_certificate_file[]" value="">
-            </td>
-            <td class="px-2 py-1 border text-center">
-                <button type="button" class="deleteTrainingBtn text-red-600 px-1">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-
-});
-</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+
     const tbody = document.querySelector('#training-table tbody');
+    const modal = document.getElementById('certificateModal');
+    const frame = document.getElementById('certificateFrame');
 
-    // Delete any training row
-    tbody.addEventListener('click', function(e) {
-        if (e.target.closest('.deleteTrainingBtn')) {
-            e.target.closest('tr').remove();
-
-            // Show "No training record added" if table is empty
-            if (tbody.querySelectorAll('tr').length === 0) {
-                const emptyRow = document.createElement('tr');
-                emptyRow.innerHTML = `
-                    <td colspan="10" class="px-2 py-1 border text-center">
+    function checkEmptyTable() {
+        if (!tbody.querySelector('tr')) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="px-2 py-1 border text-center text-gray-500">
                         No training record added.
                     </td>
-                `;
-                tbody.appendChild(emptyRow);
-            }
+                </tr>`;
+        }
+    }
+
+    tbody.addEventListener('click', function(e) {
+
+        const viewBtn = e.target.closest('.viewCertificateBtn');
+        const deleteBtn = e.target.closest('.deleteTrainingBtn');
+
+        if (viewBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            frame.src = viewBtn.dataset.file;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            return;
+        }
+
+        if (deleteBtn) {
+            const row = deleteBtn.closest('tr');
+            const trainingName = row.children[1].textContent.trim();
+
+            Swal.fire({
+                title: 'Are you sure?',
+                text: 'This will remove the record from the table!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'Cancel'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    row.remove();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: `Training "${trainingName}" has been deleted.`,
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+                    checkEmptyTable();
+                }
+            });
+        }
+
+    });
+
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            frame.src = '';
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
         }
     });
+
 });
 </script>
 
@@ -1071,28 +1035,27 @@ $documents = $db->table('applicant_documents')
     ->getRowArray();
 
 $documents = $documents ?? [
+    'pds'         => '',
+    'performance' => '',
     'resume'      => '',
     'tor'         => '',
-    'diploma'     => '',
-    'certificate' => ''
+    'diploma'     => ''
 ];
 ?>
 
-<!-- Step 7: File Attachments -->
+<!-- Step 7: File Attachments (VIEW ONLY) -->
 <div class="step hidden" id="step-7">
-
-    <div class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mb-4">
-        * Do not leave blank entries. Put N/A for not applicable.
+    <div class="bg-gray-100 px-3 py-1 rounded font-semibold text-xs mb-2">
+        File Attachments
     </div>
-
-    <h2 class="text-sm font-semibold text-clsuGreen mb-2">File Attachments</h2>
 
     <?php
     $docLabels = [
-        'resume'      => '1. Resume (PDF)',
-        'tor'         => '2. Transcript of Records (TOR) (PDF)',
-        'diploma'     => '3. Diploma (PDF)',
-        'certificate' => '4. Certificate (optional, PDF)'
+        'pds'         => '1. Fully accomplished Personal Data Sheet (PDS)',
+        'performance' => '2. Performance rating (last rating period)',
+        'resume'      => '3. Resume (PDF)',
+        'tor'         => '4. Transcript of Records (TOR)',
+        'diploma'     => '5. Diploma'
     ];
     ?>
 
@@ -1105,38 +1068,20 @@ $documents = $documents ?? [
                         <?= esc($label) ?>
                     </th>
                     <td class="px-2 py-2 border">
-
                         <?php if (!empty($documents[$key])): ?>
-                            <!-- VIEW + REPLACE -->
-                            <div class="flex items-center gap-2">
-                        <p class="text-xs text-green-700 mb-1">
-        Uploaded: 
-        <a href="<?= base_url('uploads/' . $documents[$key]) ?>" 
-           target="_blank" 
-           class="underline text-blue-600 text-xs">
-            View
-        </a>
-    </p>
-
-                                <!-- 🔑 KEEP OLD FILE -->
-                                <input type="hidden"
-                                       name="existing_<?= $key ?>"
-                                       value="<?= esc($documents[$key]) ?>">
-
-                                <input type="file"
-                                       name="<?= $key ?>"
-                                       accept=".pdf"
-                                       class="text-xs">
-                            </div>
+                            <button 
+                                type="button"
+                                class="viewFileBtn text-blue-600 text-xs font-medium hover:text-blue-800"
+                                data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
+                                View
+                            </button>
+                            <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key]) ?>">
                         <?php else: ?>
-                            <!-- UPLOAD -->
-                            <input type="file"
-                                   name="<?= $key ?>"
-                                   accept=".pdf"
-                                   class="w-full text-xs"
-                                   <?= $key !== 'certificate' ? 'required' : '' ?>>
+                            <span class="text-red-600 text-xs">
+                                No file available
+                            </span>
+                            <input type="hidden" name="existing_<?= $key ?>" value="">
                         <?php endif; ?>
-
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -1144,19 +1089,65 @@ $documents = $documents ?? [
         </table>
     </div>
 
+    <!-- Navigation Buttons -->
     <div class="text-right mt-3">
         <button type="button" onclick="prevStep(7)"
-                class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold">
+                class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">
             Previous
         </button>
 
-       <button type="submit"
-        class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold" id="submitApplication">
-    Submit Application
-</button>
-
+        <!-- Only this submits -->
+        <button type="submit"
+                class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800"
+                id="submitApplication">
+            Submit Application
+        </button>
     </div>
 </div>
+
+<!-- File Preview Modal -->
+<div id="fileModal" 
+     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+
+    <div class="bg-white w-full max-w-6xl h-[90vh] shadow-lg">
+        <iframe id="fileFrame" src="" class="w-full h-full" frameborder="0"></iframe>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const modal = document.getElementById('fileModal');
+    const frame = document.getElementById('fileFrame');
+
+    // Open file preview
+    document.addEventListener('click', function(e) {
+        const viewBtn = e.target.closest('.viewFileBtn');
+
+        if (viewBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const file = viewBtn.dataset.file;
+
+            if (!file) return;
+
+            frame.src = file;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+    });
+
+    // Close modal when clicking outside iframe
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            frame.src = '';
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    });
+
+});
+</script>
 
 
 <script>
@@ -1185,7 +1176,6 @@ function prevStep(currentStep){
         </div>
     </div>
 </footer>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -1234,60 +1224,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // ---------- Add Rows Helper ----------
-    function addRow(buttonId, tableSelector, rowHTML, emptyColspan){
-        document.getElementById(buttonId).addEventListener('click', function () {
-            const tableBody = document.querySelector(tableSelector + ' tbody');
-            const emptyRow = tableBody.querySelector('td[colspan="' + emptyColspan + '"]');
-            if (emptyRow) emptyRow.closest('tr').remove();
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = rowHTML;
-            tableBody.appendChild(newRow);
-        });
-    }
-
-    // ---------- Civil Service Row ----------
-    addRow('add-cs-btn', '#cs-table', `
-        <td class="px-2 py-1 border"><input type="text" name="eligibility[]" placeholder="Eligibility" class="px-2 py-1 w-full text-xs" required></td>
-        <td class="px-2 py-1 border"><input type="text" name="rating[]" placeholder="Rating" class="px-2 py-1 w-full text-xs" required></td>
-        <td class="px-2 py-1 border"><input type="date" name="date_of_exam[]" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border"><input type="text" name="place_of_exam[]" placeholder="Place of Exam" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border"><input type="text" name="license_no[]" placeholder="License No." class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border"><input type="date" name="license_valid_until[]" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-1 py-1 border text-center"><button type="button" class="deleteCSBtn text-red-600 px-1"><i class="fa-solid fa-trash"></i></button></td>
-    `, 7);
-
-    // ---------- Work Experience Row ----------
-    addRow('add-work-btn', '#work-table', `
-        <td class="px-2 py-1 border"><input type="text" name="position_title[]" placeholder="Position Title" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border"><input type="text" name="office[]" placeholder="Office / Company" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border flex space-x-1"><input type="date" name="date_from[]" class="px-2 py-1 w-1/2 text-xs"><input type="date" name="date_to[]" class="px-2 py-1 w-1/2 text-xs"></td>
-        <td class="px-2 py-1 border"><input type="text" name="status_of_appointment[]" placeholder="Status of Appointment" class="px-2 py-1 w-full text-xs"></td>
-        <td class="px-2 py-1 border"><select name="govt_service[]" class="px-2 py-1 w-full text-xs"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></td>
-        <td class="px-2 py-1 border text-center"><button type="button" class="remove-row text-red-500"><i class="fa-solid fa-trash"></i></button></td>
-    `, 6);
-
-    // ---------- Delete Rows ----------
-    document.addEventListener('click', function(e){
-        // Civil Service
-        if (e.target.closest('.deleteCSBtn') || e.target.closest('.remove-cs-row')) {
-            const tableBody = document.querySelector('#cs-table tbody');
-            e.target.closest('tr').remove();
-            if (tableBody.querySelectorAll('tr').length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center border px-2 py-1">No civil service record added.</td></tr>';
-            }
-        }
-
-        // Work
-        if (e.target.closest('.remove-row')) {
-            const tableBody = document.querySelector('#work-table tbody');
-            e.target.closest('tr').remove();
-            if (tableBody.querySelectorAll('tr').length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="6" class="text-center border px-2 py-1">No work experience added.</td></tr>';
-            }
-        }
-    });
-
     // ---------- Submit Form ----------
     const form = document.getElementById('applicationForm');
     const submitBtn = document.getElementById('submitApplication');
@@ -1320,7 +1256,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     catch { data = { success: false, message: 'Invalid server response' }; }
 
                     if (data.success) {
-                        // ✅ SweetAlert2 success after saving
                         Swal.fire({
                             icon: 'success',
                             title: 'Application Submitted!',

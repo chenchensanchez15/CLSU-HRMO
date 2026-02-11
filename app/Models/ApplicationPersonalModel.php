@@ -23,7 +23,15 @@ class ApplicationPersonalModel extends Model
         'citizenship',
         'residential_address',
         'permanent_address',
-        'photo'
+        'photo',
+        'is_clsu_employee',
+        'clsu_employee_specify',
+        'religion',
+        'is_indigenous',
+        'indigenous_specify',
+        'is_pwd',
+        'pwd_specify',
+        'is_solo_parent'
     ];
 
     protected $useTimestamps = true;

@@ -12,6 +12,7 @@ use App\Models\ApplicantEducationModel;
 use App\Models\ApplicantWorkExperienceModel;
 use App\Models\ApplicantDocumentsModel; 
 use App\Models\ApplicationEducationModel;
+use App\Models\ApplicationCivilServiceModel;
 
 class Applications extends BaseController
 {
@@ -22,6 +23,7 @@ class Applications extends BaseController
     protected $educationModel;
     protected $workModel;
     protected $documentModel; 
+    protected $civilServiceModel; 
 
     public function __construct()
     {
@@ -32,6 +34,7 @@ class Applications extends BaseController
         $this->educationModel = new ApplicantEducationModel();
         $this->workModel = new ApplicantWorkExperienceModel();
         $this->documentModel = new ApplicantDocumentsModel(); 
+        $this->civilServiceModel = new ApplicationCivilServiceModel();
     }
     
     public function apply($id = null)
@@ -115,6 +118,14 @@ public function submit($id = null)
         'citizenship' => $this->request->getPost('citizenship'),
         'residential_address' => $this->request->getPost('residential_address') ?? '-',
         'permanent_address' => $this->request->getPost('permanent_address') ?? '-',
+        'is_clsu_employee' => $this->request->getPost('is_clsu_employee') ?? 'No',
+        'clsu_employee_specify' => $this->request->getPost('clsu_employee_specify') ?? null,
+        'religion' => $this->request->getPost('religion') ?? null,
+        'is_indigenous' => $this->request->getPost('is_indigenous') ?? 'No',
+        'indigenous_specify' => $this->request->getPost('indigenous_specify') ?? null,
+        'is_pwd' => $this->request->getPost('is_pwd') ?? 'No',
+        'pwd_specify' => $this->request->getPost('pwd_specify') ?? null,
+        'is_solo_parent' => $this->request->getPost('is_solo_parent') ?? 'No',
         'created_at' => date('Y-m-d H:i:s'),
         'updated_at' => date('Y-m-d H:i:s')
     ]);
@@ -160,33 +171,29 @@ public function submit($id = null)
     // =========================
     // INSERT INTO application_education
     // =========================
-    $educationLevels = [
-        'Elementary' => 'elementary',
-        'Secondary' => 'secondary',
-        'Vocational / Trade' => 'vocational',
-        'College' => 'college',
-        'Graduate Studies' => 'graduate'
-    ];
-
-    foreach ($educationLevels as $level => $key) {
-        $school = $this->request->getPost($key.'_school');
-        $degree = $this->request->getPost($key.'_degree');
-
-        if ($school || $degree) {
-            $db->table('application_education')->insert([
-                'job_application_id' => $application_id,
-                'level' => $level,
-                'school_name' => $school ?: 'N/A',
-                'degree_course' => $degree ?: 'N/A',
-                'period_from' => $this->request->getPost($key.'_period_from') ?: 'N/A',
-                'period_to' => $this->request->getPost($key.'_period_to') ?: 'N/A',
-                'highest_level_units' => $this->request->getPost($key.'_units') ?: 'N/A',
-                'year_graduated' => $this->request->getPost($key.'_year') ?: 'N/A',
-                'awards' => $this->request->getPost($key.'_awards') ?: 'N/A',
-                'created_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
-        }
+    $user_id = session()->get('user_id');
+    $educationRecords = $db->table('applicant_education')
+                         ->where('user_id', $user_id)
+                         ->orderBy('degree_level_id', 'ASC')
+                         ->get()
+                         ->getResultArray();
+    
+    foreach ($educationRecords as $edu) {
+        $db->table('application_education')->insert([
+            'job_application_id' => $application_id,
+            'degree_level_id' => $edu['degree_level_id'] ?? null,
+            'degree_id' => $edu['degree_id'] ?? null,
+            'level' => '', // Will be populated from lib_degree_level
+            'school_name' => $edu['school_name'] ?? 'N/A',
+            'degree_course' => $edu['degree_course'] ?? 'N/A',
+            'period_from' => $edu['period_from'] ?? 'N/A',
+            'period_to' => $edu['period_to'] ?? 'N/A',
+            'highest_level_units' => $edu['highest_level_units'] ?? 'N/A',
+            'year_graduated' => $edu['year_graduated'] ?? 'N/A',
+            'awards' => $edu['awards'] ?? 'N/A',
+            'created_at' => date('Y-m-d H:i:s'),
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
     }
 
     // =========================
@@ -243,6 +250,7 @@ public function submit($id = null)
 // =========================
 $training_categories   = $this->request->getPost('training_category_id') ?? [];
 $training_names        = $this->request->getPost('training_name') ?? [];
+$training_venues       = $this->request->getPost('training_venue') ?? [];
 $training_from         = $this->request->getPost('training_date_from') ?? [];
 $training_to           = $this->request->getPost('training_date_to') ?? [];
 $training_facilitators = $this->request->getPost('training_facilitator') ?? [];
@@ -295,6 +303,7 @@ for ($i = 0; $i < $totalRows; $i++) {
         'job_application_id'   => $application_id,
         'training_category_id' => $training_categories[$i] ?? 1,
         'training_name'        => $training_names[$i],
+        'training_venue'       => $training_venues[$i] ?? 'N/A',
         'date_from'            => !empty($training_from[$i])
                                     ? date('Y-m-d', strtotime($training_from[$i]))
                                     : null,
@@ -314,56 +323,79 @@ for ($i = 0; $i < $totalRows; $i++) {
 // =========================
 // FILE UPLOADS: application_documents (FINAL FIX)
 // =========================
-$files = ['resume','tor','diploma','certificate'];
+$files = ['pds','performance','resume','tor','diploma'];
 
-$writablePath = WRITEPATH . 'uploads/';
+$writablePath = WRITEPATH . 'uploads/files/';
 $publicPath   = FCPATH . 'uploads/';
 
-$docData = [];
+$docData = [
+    'pds' => null,
+    'performance_rating' => null,
+    'resume' => null,
+    'tor' => null,
+    'diploma' => null
+];
 
+// Handle existing files first (READ-ONLY scenario)
 foreach ($files as $fileInput) {
-
-    $file     = $this->request->getFile($fileInput);
-    $oldFile  = $this->request->getPost('existing_' . $fileInput);
-
-    // 1️⃣ NEW UPLOAD
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-
-        $newName = time() . '_' . $file->getRandomName();
-        $file->move($writablePath, $newName);
-        $docData[$fileInput] = $newName;
-    }
-
-    // 2️⃣ KEEP OLD FILE
-    elseif (!empty($oldFile)) {
-
+    $oldFile = $this->request->getPost('existing_' . $fileInput);
+    
+    if (!empty($oldFile)) {
+        // Check if file exists in writable directory
         if (file_exists($writablePath . $oldFile)) {
-            $docData[$fileInput] = $oldFile;
+            if ($fileInput === 'pds') {
+                $docData['pds'] = $oldFile;
+            } elseif ($fileInput === 'performance') {
+                $docData['performance_rating'] = $oldFile;
+            } else {
+                $docData[$fileInput] = $oldFile;
+            }
         }
+        // Check if file exists in public directory and copy it
         elseif (file_exists($publicPath . $oldFile)) {
             copy($publicPath . $oldFile, $writablePath . $oldFile);
-            $docData[$fileInput] = $oldFile;
-        }
-        else {
-            $docData[$fileInput] = null;
+            if ($fileInput === 'pds') {
+                $docData['pds'] = $oldFile;
+            } elseif ($fileInput === 'performance') {
+                $docData['performance_rating'] = $oldFile;
+            } else {
+                $docData[$fileInput] = $oldFile;
+            }
         }
     }
+}
 
-    else {
-        $docData[$fileInput] = null;
+// Handle new file uploads (if any)
+foreach ($files as $fileInput) {
+    $file = $this->request->getFile($fileInput);
+    
+    // Only process if it's a valid new upload
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+        $newName = time() . '_' . $file->getRandomName();
+        $file->move($writablePath, $newName);
+        
+        // Map to correct database field names
+        if ($fileInput === 'pds') {
+            $docData['pds'] = $newName;
+        } elseif ($fileInput === 'performance') {
+            $docData['performance_rating'] = $newName;
+        } else {
+            $docData[$fileInput] = $newName;
+        }
     }
 }
 
 // INSERT PER-APPLICATION SNAPSHOT
 $db->table('application_documents')->insert([
     'job_application_id' => $application_id,
-    'resume'      => $docData['resume'],
-    'tor'         => $docData['tor'],
-    'diploma'     => $docData['diploma'],
-    'certificate' => $docData['certificate'],
-    'uploaded_at' => date('Y-m-d H:i:s'),
-    'created_at'  => date('Y-m-d H:i:s'),
-    'updated_at'  => date('Y-m-d H:i:s')
+    'pds'              => $docData['pds'],
+    'performance_rating' => $docData['performance_rating'],
+    'resume'           => $docData['resume'],
+    'tor'              => $docData['tor'],
+    'diploma'          => $docData['diploma'],
+    'uploaded_at'      => date('Y-m-d H:i:s'),
+    'created_at'       => date('Y-m-d H:i:s'),
+    'updated_at'       => date('Y-m-d H:i:s')
 ]);
 
     return $this->response->setJSON([
@@ -731,84 +763,101 @@ public function update($job_application_id = null)
     $currentDate = date('Y-m-d H:i:s');
 
     // -------------------
-    // Update Personal Information
+    // Update Personal Information + Additional Personal Details
     // -------------------
-    $personalData = [
-        'first_name'          => $this->request->getPost('first_name') ?: '-',
-        'middle_name'         => $this->request->getPost('middle_name') ?: '-',
-        'last_name'           => $this->request->getPost('last_name') ?: '-',
-        'extension'           => $this->request->getPost('name_extension') ?: '-',
-        'date_of_birth'       => $this->request->getPost('birth_date') ?: null,
-        'sex'                 => $this->request->getPost('sex') ?: '-',
-        'civil_status'        => $this->request->getPost('civil_status') ?: '-',
-        'citizenship'         => $this->request->getPost('citizenship') ?: '-',
-        'email'               => $this->request->getPost('email') ?: '-',
-        'phone'               => $this->request->getPost('phone') ?: '-',
-        'residential_address' => $this->request->getPost('residential_address') ?: '-',
-        'permanent_address'   => $this->request->getPost('permanent_address') ?: '-',
-        'updated_at'          => $currentDate
-    ];
+$personalData = [
+    'first_name'             => $this->request->getPost('first_name') ?: '-',
+    'middle_name'            => $this->request->getPost('middle_name') ?: '-',
+    'last_name'              => $this->request->getPost('last_name') ?: '-',
+    'extension'              => $this->request->getPost('extension') ?: '-',
+    'date_of_birth'          => $this->request->getPost('date_of_birth') ?: null,
+    'sex'                    => $this->request->getPost('sex') ?: '-',
+    'civil_status'           => $this->request->getPost('civil_status') ?: '-',
+    'citizenship'            => $this->request->getPost('citizenship') ?: '-',
+    'email'                  => $this->request->getPost('email') ?: '-',
+    'phone'                  => $this->request->getPost('phone') ?: '-',
+    'residential_address'    => $this->request->getPost('residential_address') ?: '-',
+    'permanent_address'      => $this->request->getPost('permanent_address') ?: '-',
 
-    $db->table('application_personal')
-       ->where('job_application_id', $job_application_id)
-       ->update($personalData);
+    // Additional Personal Details
+    'is_clsu_employee'       => $this->request->getPost('is_clsu_employee') ?: 'No',
+    'clsu_employee_specify'  => ($this->request->getPost('is_clsu_employee') === 'Yes') ? $this->request->getPost('clsu_employee_specify') ?: '-' : null,
+    'religion'               => $this->request->getPost('religion') ?: '-',
 
-    // -------------------
+    'is_indigenous'          => $this->request->getPost('is_indigenous') ?: 'No',
+    'indigenous_specify'     => ($this->request->getPost('is_indigenous') === 'Yes') ? $this->request->getPost('indigenous_specify') ?: '-' : null,
+
+    'is_pwd'                 => $this->request->getPost('is_pwd') ?: 'No',
+    'pwd_specify'            => ($this->request->getPost('is_pwd') === 'Yes') ? $this->request->getPost('pwd_specify') ?: '-' : null,
+
+    'is_solo_parent'         => $this->request->getPost('is_solo_parent') ?: 'No',
+
+    'updated_at'             => date('Y-m-d H:i:s')
+];
+
+$db->table('application_personal')
+   ->where('job_application_id', $job_application_id)
+   ->update($personalData);
+
+   // -------------------
     // Update Family Background
     // -------------------
-    $famTable = $db->table('application_fam');
-    $famIds = $this->request->getPost('fam_last_name') ?? [];
+   $famTable = $db->table('application_fam');
+$famIds = $this->request->getPost('fam_last_name') ?? [];
 
-    foreach ($famIds as $id => $lastName) {
-        $data = [
-            'first_name'  => $this->request->getPost('fam_first_name')[$id] ?? '-',
-            'middle_name' => $this->request->getPost('fam_middle_name')[$id] ?? '-',
-            'last_name'   => $lastName ?: '-',
-            'extension'   => $this->request->getPost('fam_extension')[$id] ?? '-',
-            'occupation'  => $this->request->getPost('fam_occupation')[$id] ?? '-',
-            'contact_no'  => $this->request->getPost('fam_contact_no')[$id] ?? null,
-            'updated_at'  => $currentDate
-        ];
+foreach ($famIds as $id => $lastName) {
+    // Skip empty rows
+    if (empty(trim($lastName))) continue;
 
-        if (!empty($data['contact_no'])) {
-            $data['contact_no'] = preg_replace('/\D/', '', $data['contact_no']);
-            $data['contact_no'] = substr($data['contact_no'], 0, 11);
-        }
+    $data = [
+        'first_name'  => $this->request->getPost('fam_first_name')[$id] ?? '-',
+        'middle_name' => $this->request->getPost('fam_middle_name')[$id] ?? '-',
+        'last_name'   => $lastName ?: '-',
+        'extension'   => $this->request->getPost('fam_extension')[$id] ?? '-',
+        'occupation'  => $this->request->getPost('fam_occupation')[$id] ?? '-',
+        'contact_no'  => $this->request->getPost('fam_contact_no')[$id] ?? null,
+        'updated_at'  => date('Y-m-d H:i:s')
+    ];
 
-        if ($id) {
-            // Update existing row
-            $famTable->where('id_application_fam', $id)->update($data);
-        } else {
-            // Insert new row
-            $data['job_application_id'] = $job_application_id;
-            $data['relationship'] = $this->request->getPost('fam_relationship')[$id] ?? 'Unknown';
-            $data['created_at'] = $currentDate;
-            $famTable->insert($data);
-        }
+    // Clean phone numbers
+    if (!empty($data['contact_no'])) {
+        $data['contact_no'] = preg_replace('/\D/', '', $data['contact_no']);
+        $data['contact_no'] = substr($data['contact_no'], 0, 11);
     }
+
+    // Update or insert
+    if (!empty($id)) {
+        $famTable->where('id_application_fam', $id)->update($data);
+    } else {
+        $data['job_application_id'] = $job_application_id;
+        $data['relationship'] = $this->request->getPost('fam_relationship')[$id] ?? 'Unknown';
+        $data['created_at'] = date('Y-m-d H:i:s');
+        $famTable->insert($data);
+    }
+}
 
     // -------------------
     // Update Educational Background
     // -------------------
     $eduLevels = [
-        'Elementary'        => 'elementary',
-        'Secondary'         => 'secondary',
-        'Vocational / Trade'=> 'vocational',
-        'College'           => 'college',
-        'Graduate Studies'  => 'graduate'
+        'Elementary'         => 'elementary',
+        'Secondary'          => 'secondary',
+        'Vocational / Trade' => 'vocational',
+        'College'            => 'college',
+        'Graduate Studies'   => 'graduate'
     ];
     $eduTable = $db->table('application_education');
 
     foreach ($eduLevels as $level => $key) {
         $data = [
-            'school_name'        => $this->request->getPost($key.'_school') ?: '-',
-            'degree_course'      => $this->request->getPost($key.'_degree') ?: '-',
-            'period_from'        => $this->request->getPost($key.'_period_from') ?: null,
-            'period_to'          => $this->request->getPost($key.'_period_to') ?: null,
-            'highest_level_units'=> $this->request->getPost($key.'_units') ?: '-',
-            'year_graduated'     => $this->request->getPost($key.'_year') ?: '-',
-            'awards'             => $this->request->getPost($key.'_awards') ?: '-',
-            'updated_at'         => $currentDate
+            'school_name'         => $this->request->getPost($key.'_school') ?: '-',
+            'degree_course'       => $this->request->getPost($key.'_degree') ?: '-',
+            'period_from'         => $this->request->getPost($key.'_period_from') ?: null,
+            'period_to'           => $this->request->getPost($key.'_period_to') ?: null,
+            'highest_level_units' => $this->request->getPost($key.'_units') ?: '-',
+            'year_graduated'      => $this->request->getPost($key.'_year') ?: '-',
+            'awards'              => $this->request->getPost($key.'_awards') ?: '-',
+            'updated_at'          => $currentDate
         ];
 
         $existing = $eduTable->where('job_application_id', $job_application_id)
@@ -830,11 +879,11 @@ public function update($job_application_id = null)
     // -------------------
     // Update Work Experience
     // -------------------
-    $positions = $this->request->getPost('position_title') ?? [];
-    $offices   = $this->request->getPost('office') ?? [];
-    $dates_from = $this->request->getPost('date_from') ?? [];
-    $dates_to   = $this->request->getPost('date_to') ?? [];
-    $statuses   = $this->request->getPost('status_of_appointment') ?? [];
+    $positions    = $this->request->getPost('position_title') ?? [];
+    $offices      = $this->request->getPost('office') ?? [];
+    $dates_from   = $this->request->getPost('date_from') ?? [];
+    $dates_to     = $this->request->getPost('date_to') ?? [];
+    $statuses     = $this->request->getPost('status_of_appointment') ?? [];
     $govt_services = $this->request->getPost('govt_service') ?? [];
 
     $db->table('application_work_experience')->where('job_application_id', $job_application_id)->delete();
@@ -857,40 +906,58 @@ public function update($job_application_id = null)
     // -------------------
     // Update Civil Service
     // -------------------
-    $csTable = $db->table('application_civil_service');
-    $eligibilities = $this->request->getPost('eligibility') ?? [];
-    $ratings       = $this->request->getPost('rating') ?? [];
-    $dates_exam    = $this->request->getPost('date_of_exam') ?? [];
-    $places_exam   = $this->request->getPost('place_of_exam') ?? [];
-    $license_nos   = $this->request->getPost('license_no') ?? [];
-    $valid_untils  = $this->request->getPost('license_valid_until') ?? [];
+$csTable = $db->table('application_civil_service');
+$eligibilities = $this->request->getPost('eligibility') ?? [];
+$ratings       = $this->request->getPost('rating') ?? [];
+$dates_exam    = $this->request->getPost('date_of_exam') ?? [];
+$places_exam   = $this->request->getPost('place_of_exam') ?? [];
+$license_nos   = $this->request->getPost('license_no') ?? [];
+$valid_untils  = $this->request->getPost('license_valid_until') ?? [];
 
-    $csTable->where('job_application_id', $job_application_id)->delete();
+// Handle uploaded CS certificates (multiple files)
+$uploadedCSFiles = $this->request->getFileMultiple('cs_certificate');
 
-    for ($i = 0; $i < count($eligibilities); $i++) {
-        if (
-            empty($eligibilities[$i]) &&
-            empty($ratings[$i]) &&
-            empty($dates_exam[$i]) &&
-            empty($places_exam[$i]) &&
-            empty($license_nos[$i]) &&
-            empty($valid_untils[$i])
-        ) continue;
+$csTable->where('job_application_id', $job_application_id)->delete();
 
-        $csTable->insert([
-            'job_application_id' => $job_application_id,
-            'eligibility'        => $eligibilities[$i] ?: '-',
-            'rating'             => $ratings[$i] ?: '-',
-            'date_of_exam'       => !empty($dates_exam[$i]) ? date('Y-m-d', strtotime($dates_exam[$i])) : null,
-            'place_of_exam'      => $places_exam[$i] ?: '-',
-            'license_no'         => $license_nos[$i] ?: '-',
-            'license_valid_until'=> !empty($valid_untils[$i]) ? date('Y-m-d', strtotime($valid_untils[$i])) : null,
-            'created_at'         => $currentDate,
-            'updated_at'         => $currentDate
-        ]);
+for ($i = 0; $i < count($eligibilities); $i++) {
+
+    // Skip empty rows
+    if (
+        empty($eligibilities[$i]) &&
+        empty($ratings[$i]) &&
+        empty($dates_exam[$i]) &&
+        empty($places_exam[$i]) &&
+        empty($license_nos[$i]) &&
+        empty($valid_untils[$i])
+    ) continue;
+
+    $certificateFile = null;
+
+    // Save uploaded file if exists
+    if (isset($uploadedCSFiles[$i]) && $uploadedCSFiles[$i]->isValid() && !$uploadedCSFiles[$i]->hasMoved()) {
+        $certificateFile = time() . '_' . $uploadedCSFiles[$i]->getRandomName();
+        $uploadedCSFiles[$i]->move(WRITEPATH . 'uploads/civil_service/', $certificateFile);
     }
 
-// -------------------
+    $csTable->insert([
+        'job_application_id' => $job_application_id,
+        'eligibility'        => $eligibilities[$i] ?: '-',
+        'rating'             => $ratings[$i] ?: '-',
+        'date_of_exam'       => !empty($dates_exam[$i]) ? date('Y-m-d', strtotime($dates_exam[$i])) : null,
+        'place_of_exam'      => $places_exam[$i] ?: '-',
+        'license_no'         => $license_nos[$i] ?: '-',
+        'license_valid_until'=> !empty($valid_untils[$i]) ? date('Y-m-d', strtotime($valid_untils[$i])) : null,
+        'certificate_file'   => $certificateFile,  // store uploaded certificate
+        'created_at'         => $currentDate,
+        'updated_at'         => $currentDate
+    ]);
+}
+
+
+    // -------------------
+    // Update Trainings
+    // -------------------
+   // -------------------
 // Update Trainings
 // -------------------
 $training_ids          = $this->request->getPost('training_id') ?? [];
@@ -898,6 +965,7 @@ $training_categories   = $this->request->getPost('training_category_id') ?? [];
 $training_names        = $this->request->getPost('training_name') ?? [];
 $training_from         = $this->request->getPost('training_date_from') ?? [];
 $training_to           = $this->request->getPost('training_date_to') ?? [];
+$training_venues       = $this->request->getPost('training_venue') ?? []; // <-- added
 $training_facilitators = $this->request->getPost('training_facilitator') ?? [];
 $training_hours        = $this->request->getPost('training_hours') ?? [];
 $training_sponsors     = $this->request->getPost('training_sponsor') ?? [];
@@ -906,21 +974,14 @@ $existingFiles         = $this->request->getPost('existing_certificate_file') ??
 
 $trainTable = $db->table('application_trainings');
 $writablePath = WRITEPATH . 'uploads/trainings/';
-$currentDate = date('Y-m-d H:i:s');
-
-// Get all uploaded files as array
 $uploadedFiles = $this->request->getFileMultiple('training_certificate');
-
 $totalRows = count($training_names);
 
 for ($i = 0; $i < $totalRows; $i++) {
-
-    // Skip empty training name
     if (empty(trim($training_names[$i] ?? ''))) continue;
 
     $certificateFile = $existingFiles[$i] ?? null;
 
-    // Handle uploaded file
     if (isset($uploadedFiles[$i]) && $uploadedFiles[$i]->isValid() && !$uploadedFiles[$i]->hasMoved()) {
         $certificateFile = time() . '_' . $uploadedFiles[$i]->getRandomName();
         $uploadedFiles[$i]->move($writablePath, $certificateFile);
@@ -929,6 +990,7 @@ for ($i = 0; $i < $totalRows; $i++) {
     $data = [
         'training_category_id' => $training_categories[$i] ?? 1,
         'training_name'        => $training_names[$i],
+        'training_venue'       => $training_venues[$i] ?? 'N/A', // <-- added
         'date_from'            => !empty($training_from[$i]) ? date('Y-m-d', strtotime($training_from[$i])) : null,
         'date_to'              => !empty($training_to[$i]) ? date('Y-m-d', strtotime($training_to[$i])) : null,
         'training_facilitator' => $training_facilitators[$i] ?? 'N/A',
@@ -940,10 +1002,8 @@ for ($i = 0; $i < $totalRows; $i++) {
     ];
 
     if (!empty($training_ids[$i])) {
-        // Update existing row
         $trainTable->where('id_application_trainings', $training_ids[$i])->update($data);
     } else {
-        // Insert new row
         $data['job_application_id'] = $job_application_id;
         $data['added_date']         = date('Y-m-d');
         $data['created_at']         = $currentDate;
@@ -951,9 +1011,6 @@ for ($i = 0; $i < $totalRows; $i++) {
     }
 }
 
-// -------------------
-// Delete Trainings if removed
-// -------------------
 $deletedTrainings = $this->request->getPost('deleted_training_ids');
 if (!empty($deletedTrainings)) {
     $deletedIds = array_filter(explode(',', $deletedTrainings));
@@ -962,16 +1019,15 @@ if (!empty($deletedTrainings)) {
     }
 }
 
-// -------------------
-// Update Documents
-// -------------------
-$files = ['resume', 'tor', 'diploma', 'certificate'];
-$uploadPath = WRITEPATH . 'uploads/'; // <-- save directly here
+    // -------------------
+    // Update Documents
+    // -------------------
+   // Include PDS and Performance Rating
+$files = ['pds', 'performance_rating', 'resume', 'tor', 'diploma', 'certificate'];
+$uploadPath = WRITEPATH . 'uploads/files/'; // ensure correct path
 $docTable = $db->table('application_documents');
 
-// Fetch existing documents for this application
 $existingDocs = $docTable->where('job_application_id', $job_application_id)->get()->getRowArray() ?? [];
-
 $docData = [];
 $currentDate = date('Y-m-d H:i:s');
 
@@ -980,13 +1036,11 @@ foreach ($files as $fileInput) {
     $oldFile = $this->request->getPost('existing_' . $fileInput);
 
     if ($file && $file->isValid() && !$file->hasMoved()) {
-        // Save new uploaded file directly in writable/uploads/
         $newName = time() . '_' . $file->getRandomName();
         $file->move($uploadPath, $newName);
         $docData[$fileInput] = $newName;
         $docData['uploaded_at'] = $currentDate;
     } elseif (!empty($oldFile)) {
-        // Keep existing file if present
         $docData[$fileInput] = $oldFile;
     } else {
         $docData[$fileInput] = null;
@@ -996,14 +1050,13 @@ foreach ($files as $fileInput) {
 $docData['updated_at'] = $currentDate;
 
 if ($existingDocs) {
-    // Update existing row
     $docTable->where('job_application_id', $job_application_id)->update($docData);
 } else {
-    // Insert new row
     $docData['job_application_id'] = $job_application_id;
     $docData['created_at'] = $currentDate;
     $docTable->insert($docData);
 }
+
 
     return redirect()->to('dashboard')->with('success', 'Application updated successfully!');
 }
@@ -1167,23 +1220,55 @@ public function viewPhoto($user_id)
                           ->setBody(file_get_contents($filePath));
 }
 
-public function viewTrainingCertificate($application_id, $filename)
-{
-    // Sanitize the filename to prevent path traversal
-    $filename = basename($filename);
+ public function viewTrainingCertificate($id, $filename)
+    {
+        $filename = basename($filename); // sanitize
+        $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
 
-    // Full path to the file in writable/uploads/trainings/
-    $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
+        if (!file_exists($filePath)) {
+            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Certificate not found.');
+        }
 
-    // Check if the file exists
-    if (!file_exists($filePath)) {
-        throw PageNotFoundException::forPageNotFound('Certificate file not found.');
+        return $this->response
+                    ->setHeader('Content-Type', 'application/pdf')
+                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                    ->setBody(file_get_contents($filePath));
     }
 
-    // Stream the PDF inline so it opens in a new tab
-    return $this->response->setHeader('Content-Type', 'application/pdf')
-                          ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                          ->setBody(file_get_contents($filePath));
+public function getFiles($id)
+{
+    $model = new \App\Models\ApplicantDocumentsModel();
+    $files = $model->where('job_application_id', $id)->first();
+
+    if (!$files) {
+        return $this->response->setJSON([]);
+    }
+
+    return $this->response->setJSON([
+        'resume'      => $files['resume'] ? base_url('uploads/' . $files['resume']) : null,
+        'tor'         => $files['tor'] ? base_url('uploads/' . $files['tor']) : null,
+        'certificate' => $files['certificate'] ? base_url('uploads/' . $files['certificate']) : null,
+    ]);
 }
+
+public function viewCivilCertificate($filename = null)
+{
+    if (!$filename) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+    }
+
+    // Decode filename from URL
+    $filename = urldecode($filename);
+
+    // Adjust path to match your actual folder
+    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
+
+    if (!file_exists($filePath)) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("File not found: $filename");
+    }
+
+    return $this->response->download($filePath, null)->setFileName($filename);
+}
+
 
 }

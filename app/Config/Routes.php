@@ -63,3 +63,14 @@ $routes->get('applications/viewTrainingCertificate/(:num)/(:any)', 'Applications
 $routes->get('trainings/certificate/(:any)', 'Account::viewTrainingCertificate/$1');
 $routes->get('files/training/(:any)', 'Files::training/$1');
 $routes->get('files/document/(:any)', 'Files::document/$1');
+$routes->delete('account/deleteEducation/(:num)', 'Account::deleteEducation/$1');
+$routes->post('account/updateFamily', 'Account::updateFamily');
+$routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1');
+$routes->get('account/viewTrainingCertificate/(:any)', 'Account::viewTrainingCertificate/$1');
+$routes->post('account/updateFile', 'Account::updateFile');
+$routes->post('account/deleteFile', 'Account::deleteFile'); // <-- add this
+$routes->get('account/viewFile/(:any)', 'Account::viewFile/$1');
+$routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1', ['filter' => 'csrf']); // optional filter
+$routes->get('file/view-training/(:num)/(:any)', 'File::viewTrainingCertificate/$1/$2');
+$routes->get('file/viewFile/(:any)', 'File::viewFile/$1', ['as' => 'viewFile']);
+$routes->get('file/view-training/(:num)/(:any)', 'File::viewTraining/$1/$2');

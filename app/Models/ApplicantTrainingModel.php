@@ -13,6 +13,7 @@ class ApplicantTrainingModel extends Model
         'user_id',
         'training_category_id',
         'training_name',
+        'training_venue',           
         'date_from',
         'date_to',
         'training_facilitator',

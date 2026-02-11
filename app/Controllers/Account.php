@@ -10,74 +10,87 @@ use App\Models\ApplicantCivilServiceModel;
 use App\Models\ApplicantTrainingModel;
 use App\Models\ApplicantFamModel;
 
-
 class Account extends BaseController
 {
+    
 public function personal()
 {
     $session = session();
     $userId = $session->get('user_id');
 
     // Models
-    $userModel           = new \App\Models\UserModel();
-    $applicantModel      = new \App\Models\ApplicantModel();
-    $educationModel      = new \App\Models\ApplicantEducationModel();
-    $workModel           = new \App\Models\ApplicantWorkExperienceModel();
-    $civilModel          = new \App\Models\ApplicantCivilServiceModel();
-    $trainingModel       = new \App\Models\ApplicantTrainingModel();
+    $userModel             = new \App\Models\UserModel();
+    $applicantModel        = new \App\Models\ApplicantModel();
+    $educationModel        = new \App\Models\ApplicantEducationModel();
+    $workModel             = new \App\Models\ApplicantWorkExperienceModel();
+    $civilModel            = new \App\Models\ApplicantCivilServiceModel();
+    $trainingModel         = new \App\Models\ApplicantTrainingModel();
     $trainingCategoryModel = new \App\Models\TrainingCategoryModel();
-    $fileModel           = new \App\Models\ApplicantDocumentsModel();
-    $familyModel         = new \App\Models\ApplicantFamModel();
+    $fileModel             = new \App\Models\ApplicantDocumentsModel();
+    $familyModel           = new \App\Models\ApplicantFamModel();
+
+    // Load degree tables
+    $degreeModel       = new \App\Models\DegreeModel();
+    $degreeLevelModel  = new \App\Models\DegreeLevelModel();
+    $libDegrees        = $degreeModel->findAll();
+    $libDegreeLevels   = $degreeLevelModel->findAll();
 
     // ----------------- USER & PROFILE -----------------
     $user    = $userModel->find($userId);
     $profile = $applicantModel->where('user_id', $userId)->first();
 
-// ----------------- FAMILY BACKGROUND -----------------
-$familyRecords = $familyModel->where('user_id', $userId)->findAll();
+    if (!$profile) {
+        $profile = [
+            'first_name' => '',
+            'middle_name' => '',
+            'last_name' => '',
+            'suffix' => '',
+            'sex' => '',
+            'date_of_birth' => '',
+            'civil_status' => '',
+            'email' => '',
+            'phone' => '',
+            'citizenship' => '',
+            'residential_address' => '',
+            'permanent_address' => ''
+        ];
+    }
 
-// Default structure (empty strings if no data)
-$familyProfile = [
-    'spouse' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
-    'father' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
-    'mother' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'occupation'=>'', 'contact_no'=>''],
-];
-
-// Overwrite defaults with actual data if exists
-foreach ($familyRecords as $member) {
-    $relationship = strtolower($member['relationship']); // spouse, father, mother
-
-    if (!isset($familyProfile[$relationship])) continue;
-
-    $familyProfile[$relationship] = [
-        'first_name'  => $member['first_name'] ?? '',
-        'middle_name' => $member['middle_name'] ?? '',
-        'last_name'   => $member['last_name'] ?? '',
-        'extension'   => $member['extension'] ?? '',
-        'occupation'  => $member['occupation'] ?? '',
-        'contact_no'  => $member['contact_no'] ?? '',
+    // ----------------- FAMILY -----------------
+    $familyRecords = $familyModel->where('user_id', $userId)->findAll();
+    $familyProfile = [
+        'spouse' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
+        'father' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'extension'=>'', 'occupation'=>'', 'contact_no'=>''],
+        'mother' => ['first_name'=>'', 'middle_name'=>'', 'last_name'=>'', 'occupation'=>'', 'contact_no'=>''],
     ];
-}
+    foreach ($familyRecords as $member) {
+        $relationship = strtolower($member['relationship']);
+        if (!isset($familyProfile[$relationship])) continue;
+        $familyProfile[$relationship] = [
+            'first_name'  => $member['first_name'] ?? '',
+            'middle_name' => $member['middle_name'] ?? '',
+            'last_name'   => $member['last_name'] ?? '',
+            'extension'   => $member['extension'] ?? '',
+            'occupation'  => $member['occupation'] ?? '',
+            'contact_no'  => $member['contact_no'] ?? '',
+        ];
+    }
+
     // ----------------- EDUCATION -----------------
     $educationRecords = $educationModel->where('user_id', $userId)->findAll();
-    $levels = ['Elementary','Secondary','Vocational/Trade','College','Graduate Studies'];
     $finalEducation = [];
 
-    foreach ($levels as $level) {
-        $edu = null;
+    foreach($libDegreeLevels as $levelObj) {
+        $levelId = $levelObj['id_degree_level'];
 
-        foreach ($educationRecords as $record) {
-            if ($record['level'] === $level) {
-                $edu = $record;
-                break;
-            }
-        }
+        $levelRecords = array_filter($educationRecords, fn($r) => $r['degree_level_id'] == $levelId);
 
-        if (!$edu) {
-            $edu = [
+        if(empty($levelRecords)){
+            $levelRecords[] = [
                 'id' => null,
                 'user_id' => $userId,
-                'level' => $level,
+                'degree_level_id' => $levelId,
+                'degree_id' => null,
                 'school_name' => '-',
                 'degree_course' => '-',
                 'period_from' => '-',
@@ -88,7 +101,9 @@ foreach ($familyRecords as $member) {
             ];
         }
 
-        $finalEducation[] = $edu;
+        foreach($levelRecords as $edu){
+            $finalEducation[] = $edu;
+        }
     }
 
     // ----------------- WORK EXPERIENCE -----------------
@@ -112,17 +127,20 @@ foreach ($familyRecords as $member) {
 
     foreach ($civilRecords as &$civil) {
         $civil['date_of_exam'] = (!empty($civil['date_of_exam']) && $civil['date_of_exam'] !== '0000-00-00')
-            ? date('d/m/Y', strtotime($civil['date_of_exam']))
-            : '-';
+            ? date('F j, Y', strtotime($civil['date_of_exam']))
+            : 'N/A';
 
-        $civil['license_valid_until'] = (!empty($civil['license_valid_until']) && $civil['license_valid_until'] !== '0000-00-00')
-            ? date('d/m/Y', strtotime($civil['license_valid_until']))
-            : '-';
+        $civil['license_valid_until'] =
+            (!empty($civil['license_valid_until'])
+            && $civil['license_valid_until'] !== '0000-00-00'
+            && strtotime($civil['license_valid_until']) !== false)
+                ? date('F j, Y', strtotime($civil['license_valid_until']))
+                : 'N/A';
 
-        $civil['eligibility'] = $civil['eligibility'] ?? '-';
-        $civil['rating'] = $civil['rating'] ?? '-';
-        $civil['place_of_exam'] = $civil['place_of_exam'] ?? '-';
-        $civil['license_no'] = $civil['license_no'] ?? '-';
+        $civil['eligibility'] = $civil['eligibility'] ?: 'N/A';
+        $civil['rating'] = $civil['rating'] ?: 'N/A';
+        $civil['place_of_exam'] = $civil['place_of_exam'] ?: 'N/A';
+        $civil['license_no'] = $civil['license_no'] ?: 'N/A';
     }
     unset($civil);
 
@@ -140,26 +158,79 @@ foreach ($familyRecords as $member) {
         ->orderBy('added_date','DESC')
         ->findAll();
 
-    // ----------------- FILES -----------------
-    $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
-        'resume' => '',
-        'tor' => '',
-        'diploma' => '',
-        'certificate' => '',
-        'uploaded_at' => '',
-    ];
+    $totalDurationSeconds = 0; // To accumulate all training durations
 
-    // ----------------- RETURN VIEW -----------------
+    foreach ($trainingRecords as &$training) {
+        $training['training_name']          = $training['training_name'] ?: 'N/A';
+        $training['training_category_name'] = $training['training_category_name'] ?: 'N/A';
+        $training['training_venue']         = $training['training_venue'] ?: 'N/A';
+        $training['training_facilitator']   = $training['training_facilitator'] ?: 'N/A';
+        $training['training_hours']         = $training['training_hours'] ?: 'N/A';
+        $training['training_sponsor']       = $training['training_sponsor'] ?: 'N/A';
+        $training['training_remarks']       = $training['training_remarks'] ?: 'N/A';
+        $training['certificate_file']       = $training['certificate_file'] ?: '';
+
+        // Format dates
+        $training['date_from_formatted'] = (!empty($training['date_from']) && $training['date_from'] !== '0000-00-00')
+            ? date('F j, Y', strtotime($training['date_from']))
+            : 'N/A';
+        $training['date_to_formatted'] = (!empty($training['date_to']) && $training['date_to'] !== '0000-00-00')
+            ? date('F j, Y', strtotime($training['date_to']))
+            : 'N/A';
+
+        // ----------------- Calculate Training Duration -----------------
+        if(!empty($training['date_from']) && !empty($training['date_to']) && $training['date_from'] !== '0000-00-00' && $training['date_to'] !== '0000-00-00') {
+            $from = new \DateTime($training['date_from']);
+            $to   = new \DateTime($training['date_to']);
+            $diff = $from->diff($to);
+
+            $training['training_duration'] = 
+                ($diff->y > 0 ? $diff->y . ' yr ' : '') .
+                ($diff->m > 0 ? $diff->m . ' mo ' : '') .
+                ($diff->d > 0 ? $diff->d . ' days' : '');
+
+            // Add to total duration (in seconds)
+            $totalDurationSeconds += ($to->getTimestamp() - $from->getTimestamp());
+        } else {
+            $training['training_duration'] = '-';
+        }
+    }
+    unset($training);
+
+    // Convert total duration in seconds to years, months, days
+    $totalDuration = '';
+    if($totalDurationSeconds > 0) {
+        $base = new \DateTime('@0');
+        $end  = new \DateTime('@' . $totalDurationSeconds);
+        $diff = $base->diff($end);
+        $totalDuration = 
+            ($diff->y > 0 ? $diff->y . ' yr ' : '') .
+            ($diff->m > 0 ? $diff->m . ' mo ' : '') .
+            ($diff->d > 0 ? $diff->d . ' days' : '');
+    }
+// ----------------- FILES -----------------
+$fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
+    'pds'                => '',
+    'performance_rating' => '',
+    'resume'             => '',
+    'tor'                => '',
+    'diploma'            => '',
+    'uploaded_at'        => '',
+];
+
     return view('account/personal', [
-        'user'              => $user,
-        'profile'           => $profile,
-        'familyProfile'     => $familyProfile,
-        'educationRecords'  => $finalEducation,
-        'workRecords'       => $workRecords,
-        'civilRecords'      => $civilRecords,
-        'trainingRecords'   => $trainingRecords,
-        'trainingCategories'=> $trainingCategories,
-        'fileRecords'       => $fileRecords,
+        'user'               => $user,
+        'profile'            => $profile,
+        'familyProfile'      => $familyProfile,
+        'educationRecords'   => $finalEducation,
+        'workRecords'        => $workRecords,
+        'civilRecords'       => $civilRecords,
+        'trainingRecords'    => $trainingRecords,
+        'trainingCategories' => $trainingCategories,
+        'totalTrainingDuration' => $totalDuration, // pass total duration to view
+        'fileRecords'        => $fileRecords,
+        'libDegrees'         => $libDegrees,
+        'libDegreeLevels'    => $libDegreeLevels,
     ]);
 }
 
@@ -170,8 +241,6 @@ public function update()
 
     $userModel = new \App\Models\UserModel();
     $applicantModel = new \App\Models\ApplicantModel();
-    $applicantFamModel = new \App\Models\ApplicantFamModel();
-    $jobApplicationModel = new \App\Models\JobApplicationModel();
 
     // --- Update user table ---
     $userData = [
@@ -190,7 +259,7 @@ public function update()
         'last_name'           => $this->request->getPost('last_name') ?? '',
         'suffix'              => $this->request->getPost('suffix') ?? '',
         'sex'                 => $this->request->getPost('sex') ?? '',
-        'date_of_birth'       => $this->request->getPost('date_of_birth') ?? '',
+        'date_of_birth'       => $this->request->getPost('dob') ?? '',
         'civil_status'        => $this->request->getPost('civil_status') ?? '',
         'email'               => $this->request->getPost('email') ?? '',
         'phone'               => $this->request->getPost('phone') ?? '',
@@ -205,84 +274,73 @@ public function update()
     } else {
         $profileData['user_id'] = $userId;
         $applicantModel->insert($profileData);
-        $profile['id'] = $applicantModel->getInsertID();
-    }
-
-    // --- Update applicant family info with validation ---
-    $familyMembers = ['Spouse', 'Father', 'Mother'];
-
-    foreach ($familyMembers as $relation) {
-
-        $firstName  = $this->request->getPost(strtolower($relation).'_first_name') ?? '';
-        $middleName = $this->request->getPost(strtolower($relation).'_middle_name') ?? '';
-        $lastName   = $this->request->getPost(strtolower($relation).'_last_name') ?? '';
-        $extension  = $this->request->getPost(strtolower($relation).'_extension') ?? '';
-        $occupation = $this->request->getPost(strtolower($relation).'_occupation') ?? '';
-        $contactNo  = $this->request->getPost(strtolower($relation).'_contact_no') ?? '';
-
-        // --- Validation ---
-        if (!empty($contactNo) && !preg_match('/^\d{11}$/', $contactNo)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => "$relation Contact No. must be exactly 11 digits."
-            ]);
-        }
-
-        // --- Prepare data ---
-        $famData = [
-            'user_id'     => $userId,
-            'relationship'=> $relation,
-            'first_name'  => $firstName,
-            'middle_name' => $middleName,
-            'last_name'   => $lastName,
-            'extension'   => $extension,
-            'occupation'  => $occupation,
-            'contact_no'  => $contactNo
-        ];
-
-        // --- Insert or Update ---
-        $existing = $applicantFamModel
-            ->where('user_id', $userId)
-            ->where('relationship', $relation)
-            ->first();
-
-        if ($existing) {
-            $applicantFamModel->update($existing['id'], $famData);
-        } else {
-            $applicantFamModel->insert($famData);
-        }
-    }
-
-    // --- Update submitted job applications ---
-    $submittedApps = $jobApplicationModel
-        ->where('user_id', $userId)
-        ->where('application_status', 'Submitted. For Evaluation')
-        ->findAll();
-
-    foreach ($submittedApps as $app) {
-        $jobApplicationModel->update($app['id_job_application'], [
-            'first_name'          => $profileData['first_name'],
-            'middle_name'         => $profileData['middle_name'],
-            'last_name'           => $profileData['last_name'],
-            'suffix'              => $profileData['suffix'],
-            'sex'                 => $profileData['sex'],
-            'date_of_birth'       => $profileData['date_of_birth'],
-            'civil_status'        => $profileData['civil_status'],
-            'email'               => $profileData['email'],
-            'phone'               => $profileData['phone'],
-            'citizenship'         => $profileData['citizenship'],
-            'residential_address' => $profileData['residential_address'],
-            'permanent_address'   => $profileData['permanent_address'],
-        ]);
     }
 
     return $this->response->setJSON([
         'success' => true,
-        'message' => 'Profile and Family Background updated successfully!'
+        'message' => 'Personal Information updated successfully!'
     ]);
 }
 
+public function updateFamily()
+{
+    $session = session();
+    $userId = $session->get('user_id');
 
+    $applicantFamModel = new ApplicantFamModel();
+    $familyMembers = ['Spouse', 'Father', 'Mother'];
+
+    try {
+        foreach ($familyMembers as $relation) {
+            $key = strtolower($relation);
+
+            // --- Gather data from POST, default to blank ---
+            $data = [
+                'user_id'     => $userId,
+                'relationship'=> $relation,
+                'first_name'  => $this->request->getPost($key.'_first_name') ?? '',
+                'middle_name' => $this->request->getPost($key.'_middle_name') ?? '',
+                'last_name'   => $this->request->getPost($key.'_last_name') ?? '',
+                'extension'   => $this->request->getPost($key.'_extension') ?? '',
+                'occupation'  => $this->request->getPost($key.'_occupation') ?? '',
+                'contact_no'  => $this->request->getPost($key.'_contact_no') ?? '',
+            ];
+
+            // --- Validation for contact number ---
+            if (!empty($data['contact_no']) && !preg_match('/^\d{11}$/', $data['contact_no'])) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => "$relation Contact No. must be exactly 11 digits."
+                ]);
+            }
+
+            // --- Check if record exists ---
+            $existing = $applicantFamModel
+                ->where('user_id', $userId)
+                ->where('relationship', $relation)
+                ->first();
+
+            if ($existing) {
+                // --- Update existing record ---
+                $applicantFamModel->update($existing['id'], $data);
+            } else {
+                // --- Insert new record ---
+                $applicantFamModel->insert($data);
+            }
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Family background updated successfully.'
+        ]);
+
+    } catch (\Exception $e) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+}
 public function updatePhoto()
 {
     $session = session();
@@ -360,54 +418,98 @@ public function updatePhoto()
 
         return redirect()->to('/dashboard')->with('success', 'Password updated successfully!');
     }
-
+    
 public function updateEducation()
 {
-    if(!$this->request->isAJAX()) {
+    if (!$this->request->isAJAX()) {
         return redirect()->to('account/personal');
     }
 
-    $education = $this->request->getPost('education');
+    // Parse JSON
+    $education = $this->request->getJSON(true); // associative array
 
-    if(empty($education)) {
-        return $this->response->setJSON(['success' => false, 'message' => 'No data received.']);
+    if (empty($education['education'] ?? [])) {
+        return $this->response->setJSON([
+            'success' => false, 
+            'message' => 'No data received.'
+        ]);
     }
 
+    $educationRecords = $education['education'];
     $userId = session()->get('user_id');
     $educationModel = new \App\Models\ApplicantEducationModel();
 
-    $levels = ['Elementary','Secondary','Vocational/Trade','College','Graduate Studies'];
+    $processedIds = [];
 
-    foreach($levels as $index => $level){
-        $eduData = $education[$index] ?? [];
-
+    foreach ($educationRecords as $eduData) {
         $data = [
             'user_id' => $userId,
-            'school_name' => isset($eduData['school_name']) ? $eduData['school_name'] : null,
-            'degree_course' => isset($eduData['degree_course']) ? $eduData['degree_course'] : null,
-            'period_from' => isset($eduData['period_from']) ? $eduData['period_from'] : null,
-            'period_to' => isset($eduData['period_to']) ? $eduData['period_to'] : null,
-            'highest_level_units' => isset($eduData['highest_level_units']) ? $eduData['highest_level_units'] : null,
-            'year_graduated' => isset($eduData['year_graduated']) ? $eduData['year_graduated'] : null,
-            'awards' => isset($eduData['awards']) ? $eduData['awards'] : null
+            'degree_level_id' => $eduData['degree_level_id'] ?? null,
+            'degree_id' => $eduData['degree_id'] ?? null,
+            'school_name' => $eduData['school_name'] ?? null,
+            'degree_course' => $eduData['degree_course'] ?? ($eduData['degree_id'] ? $this->getDegreeName($eduData['degree_id']) : null),
+            'period_from' => $eduData['period_from'] ?? null,
+            'period_to' => $eduData['period_to'] ?? null,
+            'highest_level_units' => $eduData['highest_level_units'] ?? null,
+            'year_graduated' => $eduData['year_graduated'] ?? null,
+            'awards' => $eduData['awards'] ?? null
         ];
 
-        $existing = $educationModel->where('user_id', $userId)
-                                   ->where('level', $level)
-                                   ->first();
-
-        if($existing){
-            $educationModel->update($existing['id'], $data);
+        // If ID exists, update; else insert new
+        if (!empty($eduData['id'])) {
+            $educationModel->update($eduData['id'], $data);
+            $processedIds[] = $eduData['id'];
         } else {
-            $data['level'] = $level;
-            $educationModel->insert($data);
+            $insertId = $educationModel->insert($data);
+            $processedIds[] = $insertId;
         }
     }
 
+    // Return processed IDs so JS can dynamically update the table
     return $this->response->setJSON([
         'success' => true,
-        'message' => 'Educational Background updated successfully!'
+        'message' => 'Educational Background updated successfully!',
+        'processedIds' => $processedIds
     ]);
+}
+
+public function deleteEducation($id = null)
+{
+    if (!$id) {
+        return $this->response->setJSON([
+            'success' => false, 
+            'message' => 'Invalid ID'
+        ]);
+    }
+
+    $model = new \App\Models\ApplicantEducationModel();
+
+    try {
+        if ($model->delete($id)) {
+            return $this->response->setJSON([
+                'success' => true, 
+                'message' => 'Education record deleted', 
+                'id' => $id
+            ]);
+        } else {
+            return $this->response->setJSON([
+                'success' => false, 
+                'message' => 'Failed to delete record'
+            ]);
+        }
+    } catch (\Exception $e) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
+    }
+}
+
+private function getDegreeName($degreeId)
+{
+    $degreeModel = new \App\Models\DegreeModel();
+    $degree = $degreeModel->find($degreeId);
+    return $degree['degree_name'] ?? null;
 }
 
 public function updateWorkExperience()
@@ -463,6 +565,7 @@ public function updateWorkExperience()
         ]);
     }
 }
+
 public function deleteWorkExperience($id = null)
 {
     if (!$this->request->isAJAX()) {
@@ -493,6 +596,7 @@ public function deleteWorkExperience($id = null)
         'message' => 'Unable to delete record.'
     ]);
 }
+
 public function updateCivilService()
 {
     if (!$this->request->isAJAX()) {
@@ -503,15 +607,42 @@ public function updateCivilService()
     $civilModel = new \App\Models\ApplicantCivilServiceModel();
 
     $id = $this->request->getPost('id'); // null if adding new
+
+    // Handle file upload
+    $certificateFile = $this->request->getFile('certificate');
+    $certificateName = null;
+    if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMoved()) {
+        $certificateName = $userId . '_' . time() . '_' . $certificateFile->getRandomName();
+        $certificateFile->move(WRITEPATH . 'uploads/civil_service', $certificateName);
+    }
+
+    // Required fields: default to 'N/A' if empty
+    $eligibility = $this->request->getPost('eligibility') ?: 'N/A';
+    $rating = $this->request->getPost('rating') ?: 'N/A';
+    $date_of_exam = $this->request->getPost('date_of_exam') ?: null; // date, keep null if empty
+    $place_of_exam = $this->request->getPost('place_of_exam') ?: 'N/A';
+    $license_no = $this->request->getPost('license_no') ?: 'N/A';
+
+    // Optional field: license_valid_until
+    $license_valid_until = $this->request->getPost('license_valid_until');
+    if (empty($license_valid_until)) {
+        $license_valid_until = null; // will save as NULL in DB
+    }
+
     $data = [
         'user_id' => $userId,
-        'eligibility' => $this->request->getPost('eligibility') ?: null,
-        'rating' => $this->request->getPost('rating') ?: null,
-        'date_of_exam' => $this->request->getPost('date_of_exam') ?: null,
-        'place_of_exam' => $this->request->getPost('place_of_exam') ?: null,
-        'license_no' => $this->request->getPost('license_no') ?: null,
-        'license_valid_until' => $this->request->getPost('license_valid_until') ?: null,
+        'eligibility' => $eligibility,
+        'rating' => $rating,
+        'date_of_exam' => $date_of_exam,
+        'place_of_exam' => $place_of_exam,
+        'license_no' => $license_no,
+        'license_valid_until' => $license_valid_until,
     ];
+
+    // Add certificate if uploaded
+    if ($certificateName) {
+        $data['certificate'] = $certificateName;
+    }
 
     if ($id) {
         $existing = $civilModel->where('id', $id)->where('user_id', $userId)->first();
@@ -566,113 +697,112 @@ public function deleteCivilService($id = null)
     ]);
 }
 
-public function updateFiles()
+public function viewCivilCertificate($filename)
 {
-    $session = session();
-    $userId = $session->get('user_id');
+    $userId = session()->get('user_id'); // optional: restrict access per user
+    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
-    $fileModel = new \App\Models\ApplicantDocumentsModel();
-
-    // Check if user already has a record
-    $uploaded = $fileModel->where('user_id', $userId)->first();
-
-    $data = [];
-
-    helper('filesystem');
-
-    // Handle file uploads
-    foreach(['resume','tor','diploma','certificate'] as $field){
-        $file = $this->request->getFile($field);
-
-        if($file && $file->isValid() && !$file->hasMoved()){
-            $newName = $file->getRandomName();
-            $file->move(FCPATH.'uploads', $newName);
-            $data[$field] = $newName;
-        } elseif ($uploaded && isset($uploaded[$field])) {
-            // Keep old file if no new upload
-            $data[$field] = $uploaded[$field];
-        }
+    if (!file_exists($filePath)) {
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found');
     }
 
-    $data['uploaded_at'] = date('Y-m-d H:i:s');
+    // Determine mime type
+    $mime = mime_content_type($filePath);
 
-    if($uploaded){
-        $fileModel->update($uploaded['id'], $data);
-    } else {
-        $data['user_id'] = $userId;
-        $fileModel->insert($data);
+    return $this->response->setHeader('Content-Type', $mime)
+                          ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                          ->setBody(file_get_contents($filePath));
+}
+
+public function trainings()
+{
+    $db = \Config\Database::connect();
+    $builder = $db->table('applicant_trainings');
+    $builder->select('applicant_trainings.*, lib_training_category.training_category_name');
+    $builder->join(
+        'lib_training_category',
+        'lib_training_category.id_training_category = applicant_trainings.training_category_id',
+        'left'
+    );
+    $builder->where('applicant_trainings.user_id', session()->get('user_id'));
+    $trainingRecords = $builder->get()->getResultArray();
+
+    $categoryBuilder = $db->table('lib_training_category');
+    $trainingCategories = $categoryBuilder->get()->getResultArray();
+
+    return view('account/trainings', compact('trainingRecords', 'trainingCategories'));
+}
+public function viewTrainingCertificate($filename)
+{
+    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
+
+    if (!file_exists($filePath)) {
+        return $this->response->setJSON([
+            'status'  => 'error',
+            'message' => 'File not found or already deleted.'
+        ])->setStatusCode(200);
+    }
+
+    $mime = mime_content_type($filePath);
+
+    return $this->response
+        ->setHeader('Content-Type', $mime)
+        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+        ->setBody(file_get_contents($filePath));
+}
+
+public function addApplicantTraining()
+{
+    if (!$this->request->isAJAX()) {
+        return $this->response->setJSON(['success'=>false,'message'=>'Invalid request.']);
+    }
+
+    $userId = session()->get('user_id');
+    $fileName = null;
+
+    $file = $this->request->getFile('training_certificate_file');
+
+    // Ensure 'uploads/trainings' folder exists
+    $uploadPath = FCPATH . 'writable/uploads/trainings/';
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+    }
+
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+        $fileName = $file->getRandomName();
+        $file->move($uploadPath, $fileName);
+    }
+
+    $data = [
+        'user_id' => $userId,
+        'training_name' => $this->request->getPost('training_name'),
+        'training_category_id' => $this->request->getPost('training_category_id'),
+        'training_venue' => $this->request->getPost('training_venue'),
+        'date_from' => $this->request->getPost('date_from'),
+        'date_to' => $this->request->getPost('date_to'),
+        'training_facilitator' => $this->request->getPost('training_facilitator'),
+        'training_hours' => $this->request->getPost('training_hours'),
+        'training_sponsor' => $this->request->getPost('training_sponsor'),
+        'training_remarks' => $this->request->getPost('training_remarks'),
+        'certificate_file' => $fileName,
+        'added_date' => date('Y-m-d H:i:s')
+    ];
+
+    $trainingModel = new ApplicantTrainingModel();
+
+    if (!$trainingModel->insert($data)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Insert failed',
+            'errors' => $trainingModel->errors()
+        ]);
     }
 
     return $this->response->setJSON([
-        'status' => 'success',
-        'message' => 'Documents updated successfully!'
+        'success' => true,
+        'message' => 'Training saved successfully!'
     ]);
 }
-
-  public function trainings()
-    {
-        $db = \Config\Database::connect();
-        $builder = $db->table('applicant_trainings');
-        $builder->select('applicant_trainings.*, lib_training_category.training_category_name');
-        $builder->join(
-            'lib_training_category',
-            'lib_training_category.id_training_category = applicant_trainings.training_category_id',
-            'left'
-        );
-        $builder->where('applicant_trainings.user_id', session()->get('user_id'));
-        $trainingRecords = $builder->get()->getResultArray();
-
-        $categoryBuilder = $db->table('lib_training_category');
-        $trainingCategories = $categoryBuilder->get()->getResultArray();
-
-        return view('account/trainings', compact('trainingRecords', 'trainingCategories'));
-    }
-
-    public function addApplicantTraining()
-    {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setJSON(['success'=>false,'message'=>'Invalid request.']);
-        }
-
-        $userId = session()->get('user_id');
-        $fileName = null;
-
-        $file = $this->request->getFile('training_certificate_file');
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            $fileName = $file->getRandomName();
-            $file->move(FCPATH . 'uploads', $fileName);
-        }
-
-       $data = [
-    'user_id' => $userId,
-    'training_name' => $this->request->getPost('training_name'),
-    'training_category_id' => $this->request->getPost('training_category_id'),
-    'date_from' => $this->request->getPost('date_from'),       // fix here
-    'date_to' => $this->request->getPost('date_to'),           // fix here
-    'training_facilitator' => $this->request->getPost('training_facilitator'),
-    'training_hours' => $this->request->getPost('training_hours'),
-    'training_sponsor' => $this->request->getPost('training_sponsor'),
-    'training_remarks' => $this->request->getPost('training_remarks'),
-    'certificate_file' => $fileName,
-    'added_date' => date('Y-m-d H:i:s')
-];
-
-
-        $trainingModel = new ApplicantTrainingModel();
-
-        if (!$trainingModel->insert($data)) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Insert failed',
-                'errors' => $trainingModel->errors()
-            ]);
-        }
-
-        return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Training saved successfully!'
-        ]);
-    }
 
 public function updateTraining()
 {
@@ -693,17 +823,25 @@ public function updateTraining()
     // Handle file upload
     $fileName = $training['certificate_file'];
     $file = $this->request->getFile('training_certificate_file');
+
+    // Ensure 'uploads/trainings' folder exists
+    $uploadPath = FCPATH . 'writable/uploads/trainings/';
+    if (!is_dir($uploadPath)) {
+        mkdir($uploadPath, 0777, true);
+    }
+
     if ($file && $file->isValid() && !$file->hasMoved()) {
         $fileName = $file->getRandomName();
-        $file->move(FCPATH . 'uploads', $fileName);
+        $file->move($uploadPath, $fileName);
     }
 
     // Update data
     $data = [
         'training_name' => $this->request->getPost('training_name'),
         'training_category_id' => $this->request->getPost('training_category_id'),
-        'date_from' => $this->request->getPost('date_from'), // <-- fixed
-        'date_to' => $this->request->getPost('date_to'),     // <-- fixed
+        'training_venue' => $this->request->getPost('training_venue'),
+        'date_from' => $this->request->getPost('date_from'),
+        'date_to' => $this->request->getPost('date_to'),
         'training_facilitator' => $this->request->getPost('training_facilitator'),
         'training_hours' => $this->request->getPost('training_hours'),
         'training_sponsor' => $this->request->getPost('training_sponsor'),
@@ -718,6 +856,8 @@ public function updateTraining()
         'message' => 'Training updated successfully!'
     ]);
 }
+
+
     public function deleteTraining($id)
     {
         $trainingModel = new ApplicantTrainingModel();
@@ -733,4 +873,126 @@ public function updateTraining()
             ]);
         }
     }
+
+public function viewFile($filename)
+{
+    $path = WRITEPATH . 'uploads/files/' . $filename;
+
+    if (!file_exists($path)) {
+        return $this->response->setJSON([
+            'status'  => 'error',
+            'message' => 'File not found or already deleted.'
+        ])->setStatusCode(200);
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', mime_content_type($path))
+        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+        ->setBody(file_get_contents($path));
+}
+public function updateFile()
+{
+    $session = session();
+    $userId = $session->get('user_id');
+
+    $fileModel = new \App\Models\ApplicantDocumentsModel();
+
+    $field = $this->request->getPost('file_field'); // e.g., 'pds', 'performance_rating', 'resume', 'tor', 'diploma'
+    $allowedFields = ['pds','performance_rating','resume','tor','diploma'];
+
+    if (!$field || !in_array($field, $allowedFields)) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid file field.'
+        ]);
+    }
+
+    $file = $this->request->getFile('file');
+    if (!$file || !$file->isValid() || $file->hasMoved()) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'No valid file uploaded.'
+        ]);
+    }
+
+    helper('filesystem');
+
+    $newName = $file->getRandomName();
+    $uploadPath = WRITEPATH.'uploads/files';
+
+    if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
+
+    $file->move($uploadPath, $newName);
+
+    $uploaded = $fileModel->where('user_id', $userId)->first();
+
+    // Philippine time
+    $manilaTime = new \DateTime('now', new \DateTimeZone('Asia/Manila'));
+
+    $data = [
+        $field => $newName,
+        'uploaded_at' => $manilaTime->format('Y-m-d H:i:s'),
+        'updated_at'  => $manilaTime->format('Y-m-d H:i:s')
+    ];
+
+    if ($uploaded) {
+        $fileModel->update($uploaded['id'], $data);
+    } else {
+        $data['user_id'] = $userId;
+        $data['created_at'] = $manilaTime->format('Y-m-d H:i:s');
+        $fileModel->insert($data);
+    }
+
+    return $this->response->setJSON([
+        'status' => 'success',
+        'message' => ucfirst(str_replace('_',' ',$field)).' updated successfully!',
+        'file_name' => $newName,
+        'file_url'  => base_url('writable/uploads/files/'.$newName)
+    ]);
+}
+
+public function deleteFile()
+{
+    $session = session();
+    $userId = $session->get('user_id');
+
+    $fileField = $this->request->getPost('file_field');
+
+    // Allow all your uploaded file fields
+    $allowedFields = ['pds', 'performance_rating', 'resume', 'tor', 'diploma', 'certificate'];
+    if (!$fileField || !in_array($fileField, $allowedFields)) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid file field.'
+        ]);
+    }
+
+    $fileModel = new \App\Models\ApplicantDocumentsModel();
+    $uploaded = $fileModel->where('user_id', $userId)->first();
+
+    if (!$uploaded || empty($uploaded[$fileField])) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'No file to delete.'
+        ]);
+    }
+
+    // Delete file from server
+    $filePath = FCPATH . 'uploads/' . $uploaded[$fileField];
+    if (is_file($filePath)) {
+        unlink($filePath);
+    }
+
+    // Update DB
+    $fileModel->update($uploaded['id'], [
+        $fileField => null,
+        'updated_at' => date('Y-m-d H:i:s')
+    ]);
+
+    return $this->response->setJSON([
+        'status' => 'success',
+        'message' => ucfirst($fileField).' deleted successfully!'
+    ]);
+}
+
 }

@@ -14,7 +14,8 @@ class ApplicationDocumentsModel extends Model
         'resume',
         'tor',
         'diploma',
-        'certificate',
+        'pds',
+        'performance_rating',
         'uploaded_at'
     ];
 

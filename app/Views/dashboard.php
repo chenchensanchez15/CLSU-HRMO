@@ -186,11 +186,13 @@ window.onclick = function(event) {
             <i class="fas fa-eye mr-1"></i> View
         </a>
 
-        <a href="#"
-           class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
-           data-url="<?= base_url('applications/edit/' . $app['id_job_application']) ?>">
-            <i class="fas fa-pencil-alt mr-1"></i> Edit
-        </a>
+<a href="javascript:void(0)"
+   class="bg-yellow-400 hover:bg-yellow-500 text-black text-xs font-medium px-2 py-1 rounded flex items-center edit-btn"
+   data-id="<?= $app['id_job_application'] ?>"
+   data-url="<?= base_url('applications/getFiles/' . $app['id_job_application']) ?>">
+    <i class="fas fa-pencil-alt mr-1"></i> Edit
+</a>
+
 
         <a href="#"
             class="bg-red-500 hover:bg-red-600 text-white text-xs font-medium px-2 py-1 rounded flex items-center withdraw-btn"
@@ -552,77 +554,6 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <script>
-function confirmAction(actionType, url) {
-    let title = '', text = '', icon = 'warning';
-    if(actionType === 'edit') {
-        title = 'Edit Application?';
-        text = 'Are you sure you want to edit this application?';
-        icon = 'question';
-    } else if(actionType === 'withdraw') {
-        title = 'Withdraw Application?';
-        text = 'Are you sure you want to withdraw this application?';
-        icon = 'warning';
-    }
-
-    Swal.fire({
-        title: title,
-        text: text,
-        icon: icon,
-        showCancelButton: true,
-        confirmButtonColor: '#0B6B3A',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'Cancel'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.href = url;
-        }
-    });
-}
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Edit button handler
-    document.querySelectorAll('a.edit-btn').forEach(btn => {
-        btn.addEventListener('click', function(e){
-            e.preventDefault();
-            const row = this.closest('tr');
-            const statusCell = row.querySelector('td:nth-child(6) span');
-            const statusText = statusCell.textContent.trim();
-
-            if(statusText === 'Submitted'){
-                // Editable - show confirmation modal
-         Swal.fire({
-    title: 'Edit Application?',
-    text: 'Are you sure you want to edit this application?',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonColor: '#0B6B3A',
-    cancelButtonColor: '#d33',
-    confirmButtonText: 'Yes, edit it!'
-}).then((result) => {
-    if(result.isConfirmed){
-        // Redirect to edit page
-        window.location.href = this.dataset.url;
-    }
-});
-
-            } else {
-                // Not editable - show info modal
-                Swal.fire({
-                    title: 'Cannot Edit',
-                    text: `You cannot edit this application right now.`,
-                    icon: 'info',
-                    confirmButtonColor: '#0B6B3A'
-                });
-            }
-        });
-    });
-});
-</script>
-
-<script>
 document.addEventListener('DOMContentLoaded', function () {
 
     document.querySelectorAll('a.withdraw-btn').forEach(btn => {
@@ -698,73 +629,182 @@ document.addEventListener('DOMContentLoaded', function () {
 
 });
 </script>
+<!-- ================= EDIT FILES MODAL ================= -->
+<div id="editFilesModal"
+     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50
+            opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+
+    <div id="editFilesModalBox"
+         class="bg-white rounded-xl w-11/12 max-w-4xl p-4
+                transform scale-95 opacity-0 transition-all duration-300">
+
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="text-sm font-bold text-clsuGreen">
+                Edit File Attachments
+            </h3>
+            <button onclick="closeEditModal()" class="text-gray-500 text-lg">✕</button>
+        </div>
+
+        <form id="editFilesForm"
+              method="POST"
+              enctype="multipart/form-data"
+              class="text-xs">
+
+            <input type="hidden" name="job_application_id" id="editAppId">
+
+            <div class="overflow-x-auto">
+                <table class="table-auto w-full border-collapse">
+                    <tbody id="existingFiles">
+
+                        <!-- JS injects rows here -->
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <button type="button"
+                        onclick="closeEditModal()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700
+                               px-4 py-1 rounded text-xs font-semibold transition">
+                    Cancel
+                </button>
+
+                <button type="submit"
+                        class="bg-clsuGreen hover:bg-green-800 text-white
+                               px-4 py-1 rounded text-xs font-semibold transition">
+                    Update Files
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <script>
+function openEditModal() {
+    const modal = document.getElementById('editFilesModal');
+    const box = document.getElementById('editFilesModalBox');
 
-    filterButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            // Remove green from all buttons
-            filterButtons.forEach(b => {
-                b.classList.remove('bg-clsuGreen', 'text-white');
-                b.classList.add('bg-gray-200', 'text-black');
-            });
-            // Make clicked button green
-            btn.classList.add('bg-clsuGreen', 'text-white');
-            btn.classList.remove('bg-gray-200', 'text-black');
-        });
-    });
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100');
+
+    setTimeout(() => {
+        box.classList.remove('scale-95', 'opacity-0');
+        box.classList.add('scale-100', 'opacity-100');
+    }, 50);
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editFilesModal');
+    const box = document.getElementById('editFilesModalBox');
+
+    box.classList.remove('scale-100', 'opacity-100');
+    box.classList.add('scale-95', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+    }, 200);
+}
 </script>
+
+
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const rows = Array.from(document.querySelectorAll('table tbody tr')); // all table rows
-    const perPage = 5;
-    let currentPage = 1;
 
-    function renderApplications() {
-        const totalPages = Math.ceil(rows.length / perPage);
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
 
-        // Hide all rows first
-        rows.forEach(row => row.style.display = 'none');
+            const row = this.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6) span');
+            const statusText = statusCell.textContent.trim();
 
-        // Show rows for current page
-        const start = (currentPage - 1) * perPage;
-        const end = start + perPage;
-        rows.slice(start, end).forEach(row => row.style.display = 'table-row');
+            const appId = this.dataset.id;
+            const fetchUrl = this.dataset.url;
 
-        // Render pagination buttons
-        const pagination = document.getElementById('applicationsPagination');
-        pagination.innerHTML = '';
-        pagination.className = 'flex justify-end mt-4 gap-2';
+            // ❌ Not editable
+            if (statusText !== 'Submitted') {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Cannot Edit',
+                    text: 'You cannot edit this application right now!',
+                    confirmButtonColor: '#0B6B3A'
+                });
+                return;
+            }
 
-        // Prev button
-        const prevBtn = document.createElement('button');
-        prevBtn.textContent = 'Prev';
-        prevBtn.className = `px-3 py-1 rounded text-sm ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
-        prevBtn.disabled = currentPage === 1;
-        prevBtn.addEventListener('click', () => {
-            if(currentPage > 1){ currentPage--; renderApplications(); }
+            // ✅ Confirm edit
+            Swal.fire({
+                title: 'Edit Application?',
+                text: 'Do you want to edit the attached files for this application?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0B6B3A',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, edit files'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                // Set form action
+                document.getElementById('editAppId').value = appId;
+                document.getElementById('editFilesForm').action =
+                    `<?= base_url('applications/updateFiles/') ?>${appId}`;
+
+                // Fetch existing files
+                fetch(fetchUrl)
+                    .then(res => res.json())
+                    .then(data => {
+let html = '';
+
+function fileRow(label, name, value, accept) {
+    return `
+        <tr>
+            <td class="px-2 py-1 border font-semibold w-1/4">${label}</td>
+            <td class="px-2 py-1 border w-3/4">
+                ${value ? `
+                    <p class="text-green-700 mb-1">
+                        Uploaded:
+                        <a href="${value}" target="_blank"
+                           class="underline text-blue-600">
+                           View
+                        </a>
+                    </p>
+                ` : ''}
+
+                <input type="file"
+                       name="${name}"
+                       accept="${accept}"
+                       class="px-2 py-1 w-full text-xs border rounded">
+            </td>
+        </tr>
+    `;
+}
+
+html += fileRow('Resume (PDF)', 'resume', data.resume, '.pdf');
+html += fileRow('Transcript of Records (TOR)', 'tor', data.tor, '.pdf');
+html += fileRow('Diploma', 'diploma', data.diploma, '.pdf');
+html += fileRow('Other Certificates (Optional)', 'certificate', data.certificate, '.pdf,.jpg,.png');
+
+document.getElementById('existingFiles').innerHTML = html;
+
+
+                        document.getElementById('existingFiles').innerHTML = html;
+                        openEditModal();
+                    })
+                    .catch(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Failed to load application files.',
+                            confirmButtonColor: '#0B6B3A'
+                        });
+                    });
+            });
         });
-        pagination.appendChild(prevBtn);
+    });
 
-        // Page number button (just one, current)
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = currentPage;
-        pageBtn.className = 'px-3 py-1 rounded bg-clsuGreen text-white text-sm';
-        pagination.appendChild(pageBtn);
-
-        // Next button
-        const nextBtn = document.createElement('button');
-        nextBtn.textContent = 'Next';
-        nextBtn.className = `px-3 py-1 rounded text-sm ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`;
-        nextBtn.disabled = currentPage === totalPages;
-        nextBtn.addEventListener('click', () => {
-            if(currentPage < totalPages){ currentPage++; renderApplications(); }
-        });
-        pagination.appendChild(nextBtn);
-    }
-
-    // Initialize pagination
-    renderApplications();
 });
 </script>
 

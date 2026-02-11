@@ -15,8 +15,9 @@ class ApplicantCivilServiceModel extends Model
         'date_of_exam',
         'place_of_exam',
         'license_no',
-        'license_valid_until'
+        'license_valid_until',
+        'certificate' 
     ];
 
-    protected $useTimestamps = true; // automatically handle created_at and updated_at
+    protected $useTimestamps = true;
 }

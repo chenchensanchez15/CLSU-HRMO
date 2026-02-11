@@ -10,7 +10,8 @@ class ApplicantEducationModel extends Model
     protected $primaryKey = 'id';
     protected $allowedFields = [
         'user_id',
-        'level',
+        'degree_level_id',   // <-- added
+        'degree_id',         // <-- added
         'school_name',
         'degree_course', 
         'period_from',
