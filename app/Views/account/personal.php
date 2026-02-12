@@ -1666,6 +1666,7 @@ function openModal(row = null) {
         </form>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const table = document.getElementById('table-civil');
@@ -1687,11 +1688,68 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(certViewer);
     const viewerFrame = document.getElementById('viewerFrame');
-    function openCertViewer(fileName){
-        if(!fileName) return;
-        viewerFrame.src = '<?= base_url("account/viewCivilCertificate/") ?>' + encodeURIComponent(fileName);
-        certViewer.classList.remove('hidden');
+    
+function openCertViewer(fileName) {
+    if (!fileName || fileName.trim() === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No uploaded file for this document.',
+            confirmButtonColor: '#0B6B3A',
+            showConfirmButton: false, // hide OK button
+            timer: 2000 // auto close after 2 seconds
+        });
+        return;
     }
+
+    // Show loading alert first
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Please wait while the certificate loads.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+
+            // 2-second delay before fetching
+            setTimeout(() => {
+                fetch('<?= base_url("account/viewCivilCertificate/") ?>' + encodeURIComponent(fileName), {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // 404 → parse JSON to get message
+                        return response.json().then(data => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No uploaded file for this document.',
+                                confirmButtonColor: '#0B6B3A',
+                                showConfirmButton: false,
+                                timer: 2000
+                            });
+                            throw new Error('File not available');
+                        });
+                    }
+                    return response.blob(); // File exists
+                })
+                .then(blob => {
+                    const url = URL.createObjectURL(blob);
+                    viewerFrame.src = url;
+                    certViewer.classList.remove('hidden');
+                    Swal.close(); // close loading alert
+                })
+                .catch(err => {
+                    console.warn(err);
+                });
+            }, 500); // 2-second delay
+        }
+    });
+}
+
+
     function closeCertViewer(){
         viewerFrame.src = '';
         certViewer.classList.add('hidden');
@@ -1877,6 +1935,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // Validate Date of Examination - must not be future date
+        const examDate = new Date(editForm.date_of_exam.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Reset time portion for accurate comparison
+        
+        if (examDate > today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date',
+                text: 'Date of Examination cannot be in the future.'
+            });
+            editForm.date_of_exam.focus();
+            return;
+        }
+
         if(isAddMode && !certificateInput.value){
             Swal.fire({icon:'warning',title:'Required Field',text:'Please upload a certificate.'});
             certificateInput.focus();
@@ -1922,8 +1995,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Training Name</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Category</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Venue</th>
-                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">From</th>
-                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">To</th>
+                        <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">From - To</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Facilitator</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Sponsor</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Hours</th>
@@ -1944,8 +2016,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             <td class="px-3 py-2 border-b text-gray-800 font-medium" data-key="training_name"><?= esc($training['training_name']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-700" data-key="training_category_id"><?= esc($training['training_category_name']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-700" data-key="training_venue"><?= esc($training['training_venue']) ?></td>
-                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_from"><?= esc($training['date_from_formatted']) ?></td>
-                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_to"><?= esc($training['date_to_formatted']) ?></td>
+                            <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="date_range">
+                                <?= esc($training['date_from_formatted'] ?? 'N/A') ?> - <?= esc($training['date_to_formatted'] ?? 'N/A') ?>
+                            </td>
                             <td class="px-3 py-2 border-b text-gray-700" data-key="training_facilitator"><?= esc($training['training_facilitator']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-700" data-key="training_sponsor"><?= esc($training['training_sponsor']) ?></td>
                             <td class="px-3 py-2 border-b text-gray-700 text-center" data-key="training_hours"><?= esc($training['training_hours']) ?></td>
@@ -1988,13 +2061,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         <!-- Total Duration Row -->
                         <tr class="bg-gray-50 font-semibold">
-                            <td class="px-3 py-2 border-b text-right text-gray-700" colspan="10">Total Duration:</td>
+                            <td class="px-3 py-2 border-b text-right text-gray-700" colspan="9">Total Duration:</td>
                             <td class="px-3 py-2 border-b text-center text-clsuGreen font-bold" colspan="2"><?= esc($totalTrainingDuration ?? '-') ?></td>
                         </tr>
 
                     <?php else: ?>
                         <tr>
-                            <td class="px-3 py-4 text-center text-gray-500 italic" colspan="12">
+                            <td class="px-3 py-4 text-center text-gray-500 italic" colspan="11">
                                 No trainings found for this applicant.
                             </td>
                         </tr>
@@ -2251,11 +2324,60 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        if(viewBtn){
-            const fileName = viewBtn.dataset.file;
-            certificateFrame.src = '<?= base_url("account/viewTrainingCertificate/") ?>' + encodeURIComponent(fileName);
-            certificateModal.classList.remove('hidden');
+if(viewBtn){
+    const fileName = viewBtn.dataset.file;
+    if(!fileName || fileName.trim() === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No uploaded file for this document.',
+            timer: 1500,
+            showConfirmButton: false
+        });
+        return;
+    }
+
+    // Show loading
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Please wait while the certificate loads.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+
+            // Simulate 2-second loading
+            setTimeout(() => {
+                fetch('<?= base_url("account/viewTrainingCertificate/") ?>' + encodeURIComponent(fileName))
+                    .then(res => {
+                        if (!res.ok) throw res;
+                        return res.blob();
+                    })
+                    .then(blob => {
+                        Swal.close(); // Close loading
+                        const url = URL.createObjectURL(blob);
+                        certificateFrame.src = url;
+                        certificateModal.classList.remove('hidden');
+                    })
+                    .catch(async err => {
+                        Swal.close(); // Close loading
+                        let msg = 'No uploaded file for this document.';
+                        if (err.json) {
+                            const data = await err.json();
+                            msg = data.message || msg;
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: msg,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    });
+            }, 1000); // 2 seconds
         }
+    });
+}
+
     });
 
     // ===== Certificate Modal =====
@@ -2272,10 +2394,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const dateFrom = new Date(editForm.date_from.value);
         const dateTo = new Date(editForm.date_to.value);
-        const today = new Date(); today.setHours(0,0,0,0);
+        const today = new Date(); 
+        today.setHours(0, 0, 0, 0); // Reset time portion for accurate comparison
 
-        if(dateFrom > today || dateTo < dateFrom){
-            Swal.fire('Invalid Date','Check the date range!','error');
+        // Validate dates
+        if (dateFrom > today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date',
+                text: 'Check the date range!'
+            });
+            editForm.date_from.focus();
+            return;
+        }
+
+        if (dateTo > today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date',
+                text: 'Check the date range!.'
+            });
+            editForm.date_to.focus();
+            return;
+        }
+
+        if (dateFrom > dateTo) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Date Range',
+                text: 'Check the date range!.'
+            });
+            editForm.date_from.focus();
             return;
         }
 
@@ -2550,51 +2699,67 @@ document.addEventListener('DOMContentLoaded', () => {
 
  const viewBtn = e.target.closest('.viewFileBtn');
 if (viewBtn) {
-    const filename = viewBtn.dataset.file;
-    if (!filename) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No file selected',
-            showConfirmButton: false,
-            timer: 1500
-        });
-        return;
-    }
-
-    try {
-        const res = await fetch(`<?= base_url('account/viewFile/') ?>${filename}`);
-
-        // If JSON returned → file missing or error
-        if (res.headers.get('content-type')?.includes('application/json')) {
-            const data = await res.json();
+    (async () => {
+        const filename = viewBtn.dataset.file;
+        if (!filename) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'File not found or already deleted.',
+                text: 'No file selected',
                 showConfirmButton: false,
                 timer: 1500
             });
             return;
         }
 
-        // File exists → show in modal
-        iframe.src = `<?= base_url('account/viewFile/') ?>${filename}`;
-        modal.classList.remove('hidden');
-
-    } catch (err) {
+        // Show loading modal
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Unable to open file.',
-            showConfirmButton: false,
-            timer: 1500
+            title: 'Loading...',
+            text: 'Please wait while the file loads.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
         });
-        console.error(err);
-    }
 
-    return;
+        try {
+            // Wait 2 seconds before fetching (simulate loading)
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const res = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`);
+
+            // If JSON returned → file missing or error
+            const contentType = res.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                const data = await res.json();
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'File not found or already deleted.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return;
+            }
+
+            // File exists → show in modal
+            Swal.close();
+            iframe.src = `<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`;
+            modal.classList.remove('hidden');
+
+        } catch (err) {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to open file.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            console.error(err);
+        }
+    })();
 }
+
 
 
         // ===== EDIT FILE =====

@@ -131,13 +131,40 @@ window.onclick = function(event) {
 <div class="right w-full flex-1 space-y-6">
 
 <div class="w-full bg-white shadow rounded-lg p-5 text-gray-700 text-sm">
-<div class="flex justify-between items-center mb-2">
-    <h1 class="text-2xl font-bold text-clsuGreen">Application Details</h1>
-    <div class="flex gap-2">
-        <a href="<?= site_url('dashboard') ?>" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm font-medium">
-            ✕
+<!-- ROW 1: Status with Back Button on Right -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex justify-between items-center">
+
+        <!-- LEFT: Status Info -->
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-yellow-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" 
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" 
+                    clip-rule="evenodd">
+                </path>
+            </svg>
+            <div>
+                <h3 class="text-sm font-semibold text-yellow-800 mb-1">
+                    Application Status
+                </h3>
+                <p class="text-sm font-bold text-yellow-700">
+                    <?= esc($app['application_status'] ?? '-') ?>
+                </p>
+            </div>
+        </div>
+
+        <!-- RIGHT: Back Button -->
+        <a href="<?= site_url('dashboard') ?>"
+           class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 text-sm font-medium transition">
+            Back
         </a>
+
     </div>
+</div>
+
+<div class="flex justify-between items-center mb-2">
+    
+    <h1 class="text-2xl font-bold text-clsuGreen">Application Details</h1>
 </div>
         <?php 
             function renderRow($label, $value) {
@@ -150,11 +177,6 @@ window.onclick = function(event) {
 <div class="w-full bg-transparent p-0 text-gray-700 text-sm">
 <!-- JOB DETAILS -->
 <div class="mb-5">
-    <!-- ROW 1: Status (Bigger and Highlighted) -->
-    <div class="mb-3">
-        <p class="text-sm font-bold text-clsuGreen"><?= 'STATUS : ' . esc($app['application_status'] ?? '-') ?></p>
-    </div>
-    
     <!-- ROW 2: Position, Office, Department -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
         <div>
@@ -193,6 +215,9 @@ window.onclick = function(event) {
         </div>
     </div>
 </div>
+
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -266,6 +291,8 @@ window.onclick = function(event) {
     </div>
 </div>
 
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -278,9 +305,16 @@ window.onclick = function(event) {
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
         <div>
             <p class="text-xs font-bold text-gray-700 mb-1">ARE YOU CLSU EMPLOYEE?</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?></p>
-            <?php if (!empty($app['personal']['clsu_employee_specify']) && $app['personal']['is_clsu_employee'] === 'Yes'): ?>
-                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></p>
+            <?php if ($app['personal']['is_clsu_employee'] === 'Yes'): ?>
+                <p class="text-xs text-gray-800">Yes</p>
+                <?php if (!empty($app['personal']['clsu_employee_type'])): ?>
+                    <p class="text-xs text-gray-600">Type: <?= esc($app['personal']['clsu_employee_type']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($app['personal']['clsu_employee_specify'])): ?>
+                    <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></p>
+                <?php endif; ?>
+            <?php else: ?>
+                <p class="text-xs text-gray-800">No</p>
             <?php endif; ?>
         </div>
         <div>
@@ -300,9 +334,16 @@ window.onclick = function(event) {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
             <p class="text-xs font-bold text-gray-700 mb-1">PERSON WITH DISABILITY</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_pwd'] ?? 'No') ?></p>
-            <?php if (!empty($app['personal']['pwd_specify']) && $app['personal']['is_pwd'] === 'Yes'): ?>
-                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></p>
+            <?php if ($app['personal']['is_pwd'] === 'Yes'): ?>
+                <p class="text-xs text-gray-800">Yes</p>
+                <?php if (!empty($app['personal']['pwd_type'])): ?>
+                    <p class="text-xs text-gray-600">Type: <?= esc($app['personal']['pwd_type']) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($app['personal']['pwd_specify'])): ?>
+                    <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></p>
+                <?php endif; ?>
+            <?php else: ?>
+                <p class="text-xs text-gray-800">No</p>
             <?php endif; ?>
         </div>
         <div>
@@ -311,6 +352,9 @@ window.onclick = function(event) {
         </div>
     </div>
 </div>
+
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -352,7 +396,7 @@ window.onclick = function(event) {
                 }
                 ?>
                 <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                    <div><p class="text-xs font-bold text-gray-800"><?= !empty($edu['level']) && $edu['level'] !== '-' ? esc($edu['level']) : '-' ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= !empty($edu['level']) && $edu['level'] !== '-' ? esc($edu['level']) : '' ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= esc($edu['school_name']) ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= $degreeCourseDisplay ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p></div>
@@ -363,13 +407,18 @@ window.onclick = function(event) {
             <?php endif;
         endforeach; ?>
         
-    <?php else: ?>
-        <div class="text-center py-4">
-            <p class="text-gray-500 text-sm">No education records found.</p>
-        </div>
-    <?php endif; ?>
+   <?php else: ?>
+    <div class="bg-gray-50 rounded p-2">
+        <p class="text-xs text-gray-600">
+            No educational background records found.
+        </p>
+    </div>
+<?php endif; ?>
+
 </div>
 
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -392,7 +441,7 @@ window.onclick = function(event) {
         <!-- Data Rows -->
         <?php foreach ($app['work'] as $work): ?>
             <div class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                <div><p class="text-xs font-bold text-clsuGreen"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></p></div>
                 <div><p class="text-xs text-gray-800"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></p></div>
                 <div><p class="text-xs text-gray-800">
                     <?php 
@@ -406,12 +455,17 @@ window.onclick = function(event) {
             </div>
         <?php endforeach; ?>
         
-    <?php else: ?>
-        <div class="text-center py-4">
-            <p class="text-gray-500 text-sm">No work experience records found.</p>
-        </div>
-    <?php endif; ?>
+   <?php else: ?>
+    <div class="bg-gray-50 rounded p-2">
+        <p class="text-xs text-gray-600">
+            No civil work experience records found.
+        </p>
+    </div>
+<?php endif; ?>
+
 </div>
+
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -435,7 +489,7 @@ window.onclick = function(event) {
         <!-- Data Rows -->
         <?php foreach ($app['civil'] as $cs): ?>
             <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                <div><p class="text-xs font-bold text-clsuGreen"><?= esc($cs['eligibility'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($cs['eligibility'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800"><?= esc($cs['rating'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800">
                     <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
@@ -463,13 +517,18 @@ window.onclick = function(event) {
             </div>
         <?php endforeach; ?>
         
-    <?php else: ?>
-        <div class="text-center py-4">
-            <p class="text-gray-500 text-sm">No civil service eligibility records found.</p>
-        </div>
-    <?php endif; ?>
+   <?php else: ?>
+    <div class="bg-gray-50 rounded p-2">
+        <p class="text-xs text-gray-600">
+            No civil service eligibility records found.
+        </p>
+    </div>
+<?php endif; ?>
+
 </div>
 
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-3"></div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
@@ -495,7 +554,7 @@ window.onclick = function(event) {
         <!-- Data Rows -->
         <?php foreach ($trainings as $tr): ?>
             <div class="grid grid-cols-1 md:grid-cols-8 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                <div><p class="text-xs font-bold text-clsuGreen"><?= esc($tr['training_name'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_name'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800"><?= esc($tr['training_category_name'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800">
                     <?php 
@@ -526,15 +585,18 @@ window.onclick = function(event) {
             </div>
         <?php endforeach; ?>
         
-    <?php else: ?>
-        <div class="text-center py-4">
-            <p class="text-gray-500 text-sm">No training records found.</p>
-        </div>
-    <?php endif; ?>
+ <?php else: ?>
+    <div class="bg-gray-50 rounded p-2">
+        <p class="text-xs text-gray-600">
+            No trainings records found.
+        </p>
+    </div>
+<?php endif; ?>
+
 </div>
 
 <!-- Green Divider Line -->
-<div class="border-t-2 border-clsuGreen my-8"></div>
+<div class="border-t-2 border-clsuGreen my-3"></div>
 
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
@@ -548,10 +610,10 @@ window.onclick = function(event) {
     // List of document fields in the database
     $docs = [
         'pds' => 'Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
-        'performance_rating' => 'Performance Rating in the present position for the last rating period',
-        'resume' => 'Resume',
-        'tor' => 'Transcript of Records (TOR)',
-        'diploma' => 'Diploma'
+        'performance_rating' => 'Latest Performance Rating in the Present Position (Most Recent Rating Period)',
+        'resume' => 'Updated Resume / Curriculum Vitae',
+        'tor' => 'Official Transcript of Records (TOR) Issued by the School',
+        'diploma' => 'Copy of Diploma or Proof of Graduation'
     ];
 
     $hasDocuments = false;
@@ -566,8 +628,8 @@ window.onclick = function(event) {
     <?php if ($hasDocuments): ?>
         <!-- Labels Row (shown only once at the top) -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
-            <div><p class="text-xs font-bold text-gray-700">DOCUMENT TYPE</p></div>
-            <div><p class="text-xs font-bold text-gray-700">ACTION</p></div>
+            <div><p class="text-xs font-bold text-gray-700">DOCUMENT</p></div>
+            <div><p class="text-xs font-bold text-gray-700">UPLOADS</p></div>
         </div>
         
         <!-- Data Rows -->
@@ -577,13 +639,13 @@ window.onclick = function(event) {
         ?>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 p-2 bg-gray-50 rounded">
                 <div>
-                    <p class="text-xs font-bold text-clsuGreen"><?= ucfirst(str_replace('_', ' ', $key)) ?></p>
+                    <p class="text-xs text-gray-800"><?= ucfirst(str_replace('_', ' ', $key)) ?></p>
                     <p class="text-xs text-gray-600 mt-1"><?= esc($label) ?></p>
                 </div>
                 <div>
                     <button type="button" 
                             class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
-                            data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
+                            data-file="<?= site_url('file/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -596,15 +658,15 @@ window.onclick = function(event) {
             endif;
         endforeach; ?>
         
-    <?php else: ?>
-        <div class="text-center py-4">
-            <p class="text-gray-500 text-sm">No documents uploaded.</p>
-        </div>
-    <?php endif; ?>
-</div>
+ <?php else: ?>
+    <div class="bg-gray-50 rounded p-2">
+        <p class="text-xs text-gray-600">
+            No documents records found.
+        </p>
+    </div>
+<?php endif; ?>
 
-<!-- Green Divider Line -->
-<div class="border-t-2 border-clsuGreen my-8"></div>
+</div>
 
 <!-- Edit Prompt Section - Yellow/Orange Style -->
 <?php if (($app['application_status'] ?? '') === 'Submitted'): ?>
@@ -661,181 +723,135 @@ window.onclick = function(event) {
     <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
         <iframe id="document-frame" class="flex-1 w-full h-full border-none"></iframe>
     </div>
-</div>
-
-<!-- Edit Files Modal -->
+</div><!-- Edit Files Modal (Compact Full Version) -->
 <div id="editFilesModal"
-     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50
+     class="fixed inset-0 flex items-center justify-center bg-black/50
             opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+
     <div id="editFilesModalBox"
-         class="bg-white rounded-xl w-11/12 max-w-4xl p-4
+         class="bg-white rounded-lg w-11/12 max-w-xl p-2
                 transform scale-95 opacity-0 transition-all duration-300">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold text-clsuGreen">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-2">
+            <h3 class="text-sm font-semibold text-clsuGreen">
                 Edit File Attachments
             </h3>
-            <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 text-lg">✕</button>
+            <button onclick="closeEditModal()"
+                    class="text-gray-500 hover:text-gray-700 text-base">✕</button>
         </div>
 
-        <div class="mb-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
-            <strong>PS:</strong> Upload PDF files only, not exceeding 5 MB.
+        <!-- Notice -->
+        <div class="mb-2 p-1.5 bg-blue-50 rounded text-[11px] text-blue-800">
+            <strong>Note:</strong> PDF only. Max 5 MB.
         </div>
 
         <form id="editFilesForm"
               method="POST"
               enctype="multipart/form-data"
-              class="space-y-3">
+              class="space-y-2 text-xs">
+
             <input type="hidden" name="job_application_id" id="editAppId">
 
-            <div class="border border-gray-200 rounded-lg overflow-hidden">
-                <table class="w-full border-collapse text-sm">
+            <div class="border border-gray-200 rounded-md overflow-hidden">
+                <table class="w-full border-collapse text-[11px]">
                     <thead class="bg-gray-100">
                         <tr>
-                            <th class="px-3 py-2 border text-left font-medium">Files</th>
-                            <th class="px-3 py-2 border text-left font-medium">Uploads</th>
-                            <th class="px-3 py-2 border text-left font-medium">Actions</th>
+                            <th class="px-2 py-1 border text-left font-medium">Files</th>
+                            <th class="px-2 py-1 border text-left font-medium">Upload</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- PDS Row -->
+
+                        <!-- 1. PDS -->
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-3 py-2 border">
-                                <div class="font-medium">1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)</div>
-                                <div id="pds-view-link" class="mt-1"></div>
+                            <td class="px-2 py-1 border">
+                                <div class="font-medium">1. Personal Data Sheet (PDS)</div>
+                                <div id="pds-view-link" class="mt-0.5"></div>
                             </td>
-                            <td class="px-3 py-2 border">
-                                <div id="pds-current" class="text-gray-600 text-sm">No file uploaded</div>
-                            </td>
-                            <td class="px-3 py-2 border">
-                                <input type="file" 
-                                       name="pds" 
-                                       accept=".pdf" 
-                                       class="hidden" 
-                                       id="pds-upload"
-                                       data-max-size="5242880">
-                                <label for="pds-upload" 
-                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
-                                    Choose File
-                                </label>
-                                <div id="pds-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            <td class="px-2 py-1 border">
+                                <input type="file" name="pds" accept=".pdf"
+                                       id="pds-upload" data-max-size="5242880"
+                                       class="text-[11px]">
                             </td>
                         </tr>
 
-                        <!-- Performance Rating Row -->
+                        <!-- 2. Performance Rating -->
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-3 py-2 border">
-                                <div class="font-medium">2. Performance rating in the present position for the last rating period</div>
-                                <div id="performance-rating-view-link" class="mt-1"></div>
+                            <td class="px-2 py-1 border">
+                                <div class="font-medium">2. Performance Rating</div>
+                                <div id="performance-rating-view-link" class="mt-0.5"></div>
                             </td>
-                            <td class="px-3 py-2 border">
-                                <div id="performance-rating-current" class="text-gray-600 text-sm">No file uploaded</div>
-                            </td>
-                            <td class="px-3 py-2 border">
-                                <input type="file" 
-                                       name="performance_rating" 
-                                       accept=".pdf" 
-                                       class="hidden" 
-                                       id="performance-rating-upload"
-                                       data-max-size="5242880">
-                                <label for="performance-rating-upload" 
-                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
-                                    Choose File
-                                </label>
-                                <div id="performance-rating-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            <td class="px-2 py-1 border">
+                                <input type="file" name="performance_rating" accept=".pdf"
+                                       id="performance-rating-upload" data-max-size="5242880"
+                                       class="text-[11px]">
                             </td>
                         </tr>
 
-                        <!-- Resume Row -->
+                        <!-- 3. Resume -->
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-3 py-2 border">
+                            <td class="px-2 py-1 border">
                                 <div class="font-medium">3. Resume</div>
-                                <div id="resume-view-link" class="mt-1"></div>
+                                <div id="resume-view-link" class="mt-0.5"></div>
                             </td>
-                            <td class="px-3 py-2 border">
-                                <div id="resume-current" class="text-gray-600 text-sm">No file uploaded</div>
-                            </td>
-                            <td class="px-3 py-2 border">
-                                <input type="file" 
-                                       name="resume" 
-                                       accept=".pdf" 
-                                       class="hidden" 
-                                       id="resume-upload"
-                                       data-max-size="5242880">
-                                <label for="resume-upload" 
-                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
-                                    Choose File
-                                </label>
-                                <div id="resume-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            <td class="px-2 py-1 border">
+                                <input type="file" name="resume" accept=".pdf"
+                                       id="resume-upload" data-max-size="5242880"
+                                       class="text-[11px]">
                             </td>
                         </tr>
 
-                        <!-- TOR Row -->
+                        <!-- 4. TOR -->
                         <tr class="border-b hover:bg-gray-50">
-                            <td class="px-3 py-2 border">
+                            <td class="px-2 py-1 border">
                                 <div class="font-medium">4. Transcript of Records</div>
-                                <div id="tor-view-link" class="mt-1"></div>
+                                <div id="tor-view-link" class="mt-0.5"></div>
                             </td>
-                            <td class="px-3 py-2 border">
-                                <div id="tor-current" class="text-gray-600 text-sm">No file uploaded</div>
-                            </td>
-                            <td class="px-3 py-2 border">
-                                <input type="file" 
-                                       name="tor" 
-                                       accept=".pdf" 
-                                       class="hidden" 
-                                       id="tor-upload"
-                                       data-max-size="5242880">
-                                <label for="tor-upload" 
-                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
-                                    Choose File
-                                </label>
-                                <div id="tor-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            <td class="px-2 py-1 border">
+                                <input type="file" name="tor" accept=".pdf"
+                                       id="tor-upload" data-max-size="5242880"
+                                       class="text-[11px]">
                             </td>
                         </tr>
 
-                        <!-- Diploma Row -->
+                        <!-- 5. Diploma -->
                         <tr class="hover:bg-gray-50">
-                            <td class="px-3 py-2 border">
+                            <td class="px-2 py-1 border">
                                 <div class="font-medium">5. Diploma</div>
-                                <div id="diploma-view-link" class="mt-1"></div>
+                                <div id="diploma-view-link" class="mt-0.5"></div>
                             </td>
-                            <td class="px-3 py-2 border">
-                                <div id="diploma-current" class="text-gray-600 text-sm">No file uploaded</div>
-                            </td>
-                            <td class="px-3 py-2 border">
-                                <input type="file" 
-                                       name="diploma" 
-                                       accept=".pdf" 
-                                       class="hidden" 
-                                       id="diploma-upload"
-                                       data-max-size="5242880">
-                                <label for="diploma-upload" 
-                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
-                                    Choose File
-                                </label>
-                                <div id="diploma-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            <td class="px-2 py-1 border">
+                                <input type="file" name="diploma" accept=".pdf"
+                                       id="diploma-upload" data-max-size="5242880"
+                                       class="text-[11px]">
                             </td>
                         </tr>
+
                     </tbody>
                 </table>
             </div>
 
-            <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+            <!-- Footer -->
+            <div class="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-200">
                 <button type="button"
                         onclick="closeEditModal()"
                         class="bg-gray-200 hover:bg-gray-300 text-gray-700
-                               px-4 py-2 rounded text-sm font-medium transition-colors">
+                               px-2 py-1 rounded text-[11px] font-medium transition">
                     Cancel
                 </button>
+
                 <button type="submit"
                         class="bg-clsuGreen hover:bg-green-800 text-white
-                               px-4 py-2 rounded text-sm font-medium transition-colors">
-                    Update Files
+                               px-2 py-1 rounded text-[11px] font-medium transition">
+                    Update
                 </button>
             </div>
+
         </form>
     </div>
 </div>
+
 
 <div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
@@ -979,131 +995,173 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    // Civil Service Certificate Modal
+document.addEventListener('DOMContentLoaded', () => {
+    // Modals
     const certModal = document.getElementById('certificate-modal');
     const certIframe = document.getElementById('certificate-frame');
-    
-    // Training Certificate Modal
+
     const trainingModal = document.getElementById('training-certificate-modal');
     const trainingIframe = document.getElementById('training-certificate-frame');
-    
-    // Documents Modal
+
     const documentModal = document.getElementById('document-modal');
     const documentIframe = document.getElementById('document-frame');
 
-    // Handle clicks on view buttons
-    document.addEventListener('click', async function(e) {
+    // Handle all view buttons
+    document.addEventListener('click', async (e) => {
         const civilBtn = e.target.closest('.view-certificate-btn');
         const trainingBtn = e.target.closest('.view-training-certificate-btn');
         const documentBtn = e.target.closest('.view-document-btn');
-        
-        if (civilBtn || trainingBtn || documentBtn) {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            const fileUrl = (civilBtn || trainingBtn || documentBtn).dataset.file;
-            const isTraining = !!trainingBtn;
-            const isDocument = !!documentBtn;
-            
-            if (!fileUrl) {
+
+        if (!civilBtn && !trainingBtn && !documentBtn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const btn = civilBtn || trainingBtn || documentBtn;
+        const fileUrl = btn.dataset.file?.trim();
+
+        if (!fileUrl) {
+            let message = "No uploaded file available.";
+            if (civilBtn) message = "No uploaded files for this civil service eligibility.";
+            else if (trainingBtn) message = "No uploaded files for this training certificate.";
+            else if (documentBtn) message = "No uploaded files for this document.";
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'No File Available',
+                text: message,
+                showConfirmButton: false,
+                timer: 1500
+            });
+            return;
+        }
+
+        // Show loading with 2-second simulated delay
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait while the file loads.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            // Wait 2 seconds to simulate loading
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const res = await fetch(fileUrl);
+            const contentType = res.headers.get('content-type') || '';
+
+            // If JSON returned → file missing or deleted
+            if (contentType.includes('application/json')) {
+                const data = await res.json();
+                Swal.close();
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'No file selected',
+                    text: data.message || 'File not found or already deleted.',
                     showConfirmButton: false,
                     timer: 1500
                 });
                 return;
             }
 
-            try {
-                // Check if file exists first
-                const res = await fetch(fileUrl);
-                
-                // If JSON returned → file missing or error
-                if (res.headers.get('content-type')?.includes('application/json')) {
-                    const data = await res.json();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'File not found or already deleted.',
-                        showConfirmButton: false,
-                        timer: 1500
-                    });
-                    return;
-                }
-                 
-                // File exists → show in appropriate modal
-                if (isTraining) {
-                    trainingIframe.src = fileUrl;
-                    trainingModal.classList.remove('hidden');
-                } else if (isDocument) {
-                    documentIframe.src = fileUrl;
-                    documentModal.classList.remove('hidden');
-                } else {
-                    certIframe.src = fileUrl;
-                    certModal.classList.remove('hidden');
-                }
-                
-            } catch (err) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Unable to open file.',
-                    showConfirmButton: false,
-                    timer: 1500
-                });
-                console.error(err);
+            // File exists → show modal
+            Swal.close();
+            if (trainingBtn) {
+                trainingIframe.src = fileUrl;
+                trainingModal.classList.remove('hidden');
+            } else if (documentBtn) {
+                documentIframe.src = fileUrl;
+                documentModal.classList.remove('hidden');
+            } else if (civilBtn) {
+                certIframe.src = fileUrl;
+                certModal.classList.remove('hidden');
             }
+
+        } catch (err) {
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to open file.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+            console.error(err);
         }
     });
 
-    // Close civil service modal when clicking outside
-    certModal.addEventListener('click', function(e) {
-        if (e.target === certModal) {
-            certIframe.src = '';
-            certModal.classList.add('hidden');
-        }
+    // Close modals when clicking outside
+    [certModal, trainingModal, documentModal].forEach(modal => {
+        const iframe = modal.querySelector('iframe');
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                iframe.src = '';
+                modal.classList.add('hidden');
+            }
+        });
     });
 
-    // Close training modal when clicking outside
-    trainingModal.addEventListener('click', function(e) {
-        if (e.target === trainingModal) {
-            trainingIframe.src = '';
-            trainingModal.classList.add('hidden');
-        }
-    });
-
-    // Close documents modal when clicking outside
-    documentModal.addEventListener('click', function(e) {
-        if (e.target === documentModal) {
-            documentIframe.src = '';
-            documentModal.classList.add('hidden');
-        }
-    });
-
-    // Close with Escape key
-    document.addEventListener('keydown', function(e) {
+    // Close modals with Escape
+    document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (!certModal.classList.contains('hidden')) {
-                certIframe.src = '';
-                certModal.classList.add('hidden');
-            }
-            if (!trainingModal.classList.contains('hidden')) {
-                trainingIframe.src = '';
-                trainingModal.classList.add('hidden');
-            }
-            if (!documentModal.classList.contains('hidden')) {
-                documentIframe.src = '';
-                documentModal.classList.add('hidden');
-            }
+            [certModal, trainingModal, documentModal].forEach(modal => {
+                const iframe = modal.querySelector('iframe');
+                if (!modal.classList.contains('hidden')) {
+                    iframe.src = '';
+                    modal.classList.add('hidden');
+                }
+            });
         }
     });
+});
+</script>
+<script>
+document.getElementById('editFilesForm').addEventListener('submit', function(e) {
+    e.preventDefault();
 
+    const form = this;
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: data.message,
+                confirmButtonColor: '#0B6B3A'
+            }).then(() => {
+                window.location.reload();
+            });
+
+        } else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message,
+                confirmButtonColor: '#0B6B3A'
+            });
+
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Something went wrong.',
+            confirmButtonColor: '#0B6B3A'
+        });
+    });
 });
 </script>
 

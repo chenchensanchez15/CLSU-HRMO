@@ -619,22 +619,35 @@ public function deleteCivilService($id = null)
         'message' => 'Unable to delete record.'
     ]);
 }
-
-public function viewCivilCertificate($filename)
+public function viewCivilCertificate($filename = null)
 {
-    $userId = session()->get('user_id'); // optional: restrict access per user
-    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
-
-    if (!file_exists($filePath)) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('File not found');
+    if (!$filename) {
+        // JSON response if no filename provided
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status' => 'error',
+                                  'message' => 'No uploaded file for this documen.!'
+                              ]);
     }
 
-    // Determine mime type
-    $mime = mime_content_type($filePath);
+    $filename = urldecode($filename);
+    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename; // adjust path if needed
 
-    return $this->response->setHeader('Content-Type', $mime)
-                          ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                          ->setBody(file_get_contents($filePath));
+    if (!file_exists($filePath)) {
+        // JSON response if file doesn't exist
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status' => 'error',
+                                  'message' => 'No uploaded file for this document.'
+                              ]);
+    }
+
+    // Stream file inline (PDF)
+    return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setBody(file_get_contents($filePath));
 }
 
 public function trainings()
@@ -655,24 +668,35 @@ public function trainings()
 
     return view('account/trainings', compact('trainingRecords', 'trainingCategories'));
 }
-public function viewTrainingCertificate($filename)
+public function viewTrainingCertificate($filename = null)
 {
-    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
-
-    if (!file_exists($filePath)) {
-        return $this->response->setJSON([
-            'status'  => 'error',
-            'message' => 'File not found or already deleted.'
-        ])->setStatusCode(200);
+    if (!$filename) {
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status' => 'error',
+                                  'message' => 'No uploaded file for this document.'
+                              ]);
     }
 
-    $mime = mime_content_type($filePath);
+    $filename = urldecode($filename);
+    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename; // adjust path if needed
 
+    if (!file_exists($filePath)) {
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status' => 'error',
+                                  'message' => 'No uploaded file for this document.'
+                              ]);
+    }
+
+    // Stream file inline (PDF example)
     return $this->response
-        ->setHeader('Content-Type', $mime)
-        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
-        ->setBody(file_get_contents($filePath));
+                ->setHeader('Content-Type', mime_content_type($filePath))
+                ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setBody(file_get_contents($filePath));
 }
+
 
 public function addApplicantTraining()
 {
@@ -804,7 +828,7 @@ public function viewFile($filename)
     if (!file_exists($path)) {
         return $this->response->setJSON([
             'status'  => 'error',
-            'message' => 'File not found or already deleted.'
+            'message' => 'No uploaded file for this document.'
         ])->setStatusCode(200);
     }
 

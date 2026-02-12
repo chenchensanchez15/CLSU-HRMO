@@ -25,11 +25,13 @@ class ApplicationPersonalModel extends Model
         'permanent_address',
         'photo',
         'is_clsu_employee',
+        'clsu_employee_type',
         'clsu_employee_specify',
         'religion',
         'is_indigenous',
         'indigenous_specify',
         'is_pwd',
+        'pwd_type',
         'pwd_specify',
         'is_solo_parent'
     ];

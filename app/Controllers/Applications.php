@@ -1227,21 +1227,6 @@ public function viewPhoto($user_id)
                           ->setBody(file_get_contents($filePath));
 }
 
- public function viewTrainingCertificate($id, $filename)
-    {
-        $filename = basename($filename); // sanitize
-        $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
-
-        if (!file_exists($filePath)) {
-            throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Certificate not found.');
-        }
-
-        return $this->response
-                    ->setHeader('Content-Type', 'application/pdf')
-                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                    ->setBody(file_get_contents($filePath));
-    }
-
 public function updateFiles()
 {
     $application_id = $this->request->getPost('job_application_id');
@@ -1343,7 +1328,7 @@ public function viewCivilCertificate($filename = null)
     $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
     if (!file_exists($filePath)) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("File not found: $filename");
+        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("No uploaded file for this document");
     }
 
     // Determine mime type
@@ -1353,6 +1338,27 @@ public function viewCivilCertificate($filename = null)
     return $this->response
         ->setHeader('Content-Type', $mime)
         ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+        ->setBody(file_get_contents($filePath));
+}
+
+
+public function viewTrainingCertificate($id, $filename)
+{
+    $filename = basename($filename);
+    $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
+
+    if (!file_exists($filePath)) {
+        return $this->response
+            ->setStatusCode(404)
+            ->setJSON([
+                'status'  => 'error',
+                'message' => 'No uploaded file for this document.'
+            ]);
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
         ->setBody(file_get_contents($filePath));
 }
 

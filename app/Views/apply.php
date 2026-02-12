@@ -670,13 +670,82 @@ document.addEventListener('DOMContentLoaded', function () {
     const certModal = document.getElementById('certificate-modal');
     const iframe = document.getElementById('certificate-frame');
 
-    function openCertificate(file) {
-        if (!file || file.trim() === '') {
-            Swal.fire({icon:'error',title:'File not found',text:'No certificate file is available.'});
+    // ---------------- VIEW CERTIFICATE ----------------
+    async function openCertificate(fileUrl) {
+
+        if (!fileUrl || fileUrl.trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No uploaded file for this document.',
+                showConfirmButton: false,
+                timer: 1500
+            });
             return;
         }
-        iframe.src = file;
-        certModal.classList.remove('hidden');
+
+        // Show loading
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait while the file loads.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+
+            // 2 seconds delay
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const response = await fetch(fileUrl);
+
+            // If 404 or error response
+            if (!response.ok) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No uploaded file for this document.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return;
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+
+            // If JSON returned (backend error)
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'No uploaded file for this document.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return;
+            }
+
+            // File exists → open modal
+            Swal.close();
+            iframe.src = fileUrl;
+            certModal.classList.remove('hidden');
+
+        } catch (error) {
+
+            Swal.close();
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No uploaded file for this document.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+
+            console.error(error);
+        }
     }
 
     function closeCertificate() {
@@ -684,39 +753,63 @@ document.addEventListener('DOMContentLoaded', function () {
         certModal.classList.add('hidden');
     }
 
-    function attachViewCertificate(button) {
+    document.querySelectorAll('.view-certificate-btn').forEach(button => {
         button.addEventListener('click', function (e) {
             e.preventDefault();
             e.stopPropagation();
-            openCertificate(this.getAttribute('data-file'));
+            openCertificate(this.dataset.file);
         });
-    }
+    });
 
     certModal.addEventListener('click', function (e) {
         if (e.target === certModal) closeCertificate();
     });
 
-    function attachDeleteEvent(button) {
+    // ---------------- DELETE RECORD ----------------
+    document.querySelectorAll('.remove-cs-row').forEach(button => {
+
         button.addEventListener('click', function () {
+
             const row = this.closest('tr');
+            const recordName = row.children[1]?.textContent.trim() || 'This record';
+
             Swal.fire({
-                title:'Are you sure?',
-                text:'This will remove the record from the table!',
-                icon:'warning',
-                showCancelButton:true
-            }).then(result=>{
-                if(result.isConfirmed){
+                title: 'Are you sure?',
+                text: 'This will remove the record from the table!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it.',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6b7280'
+            }).then(result => {
+
+                if (result.isConfirmed) {
+
                     row.remove();
-                    if(csTableBody.querySelectorAll('tr').length===0){
-                        csTableBody.innerHTML=`<tr><td class="px-2 py-1 border text-center" colspan="8">No civil service record added.</td></tr>`;
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Deleted!',
+                        text: `${recordName} has been deleted.`,
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
+
+                    if (csTableBody.querySelectorAll('tr').length === 0) {
+                        csTableBody.innerHTML = `
+                            <tr>
+                                <td class="px-2 py-1 border text-center" colspan="8">
+                                    No civil service record added.
+                                </td>
+                            </tr>`;
                     }
                 }
             });
-        });
-    }
 
-    document.querySelectorAll('.remove-cs-row').forEach(attachDeleteEvent);
-    document.querySelectorAll('.view-certificate-btn').forEach(attachViewCertificate);
+        });
+
+    });
 
 });
 </script>
@@ -845,8 +938,6 @@ $trainings = $db->table('applicant_trainings at')
         <iframe id="certificateFrame" src="" class="w-full h-full border-none"></iframe>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
@@ -865,6 +956,65 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function openTrainingCertificate(fileUrl) {
+
+        try {
+
+            // 🚫 If no file → error immediately
+            if (!fileUrl || fileUrl.trim() === '' || fileUrl === '#') {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No uploaded file for this document.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+            }
+
+            // ✅ Unified loading
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while the file loads.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const response = await fetch(fileUrl);
+
+            if (!response.ok) {
+                throw new Error('No uploaded file for this document.');
+            }
+
+            const contentType = response.headers.get('content-type') || '';
+
+            if (contentType.includes('application/json')) {
+                const data = await response.json();
+                throw new Error(data.message || 'No uploaded file for this document.');
+            }
+
+            Swal.close();
+
+            frame.src = fileUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+        } catch (error) {
+
+            Swal.close();
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message || 'No uploaded file for this document.',
+                showConfirmButton: false,
+                timer: 1500
+            });
+        }
+    }
+
     tbody.addEventListener('click', function(e) {
 
         const viewBtn = e.target.closest('.viewCertificateBtn');
@@ -873,13 +1023,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (viewBtn) {
             e.preventDefault();
             e.stopPropagation();
-            frame.src = viewBtn.dataset.file;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            openTrainingCertificate(viewBtn.dataset.file);
             return;
         }
-
         if (deleteBtn) {
+
             const row = deleteBtn.closest('tr');
             const trainingName = row.children[1].textContent.trim();
 
@@ -889,10 +1037,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonText: 'Yes, delete it!',
-                cancelButtonText: 'Cancel'
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6b7280'
             }).then(result => {
+
                 if (result.isConfirmed) {
+
                     row.remove();
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Deleted!',
@@ -900,13 +1053,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         timer: 1200,
                         showConfirmButton: false
                     });
+
                     checkEmptyTable();
                 }
             });
         }
 
     });
-
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             frame.src = '';
@@ -918,12 +1071,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
 <?php
 $user_id = session()->get('user_id');
 
-/*
- | Fetch USER documents (source of truth)
- */
 $documents = $db->table('applicant_documents')
     ->where('user_id', $user_id)
     ->get()
@@ -1063,22 +1214,78 @@ document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('fileModal');
     const frame = document.getElementById('fileFrame');
 
+    let isOpening = false; // prevent double click / duplicate Swal
+
     // Open file preview
     document.addEventListener('click', function(e) {
         const viewBtn = e.target.closest('.viewFileBtn');
+        if (!viewBtn) return;
 
-        if (viewBtn) {
-            e.preventDefault();
-            e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-            const file = viewBtn.dataset.file;
+        if (isOpening) return;
+        isOpening = true;
 
-            if (!file) return;
+        const file = viewBtn.dataset.file;
 
-            frame.src = file;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+        // Show loading first
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait while the file loads.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        setTimeout(async () => {
+            try {
+
+                // If no file in button
+                if (!file) {
+                    throw new Error('No uploaded files for this document.');
+                }
+
+                const response = await fetch(file);
+
+                // If backend returned error (404)
+                if (!response.ok) {
+                    let message = 'No uploaded files for this document.';
+                    try {
+                        const data = await response.json();
+                        message = data.message || message;
+                    } catch {}
+                    throw new Error(message);
+                }
+
+                // If backend returned JSON error
+                const contentType = response.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    const data = await response.json();
+                    throw new Error(data.message || 'No uploaded files for this document.');
+                }
+
+                // ✅ File exists
+                Swal.close();
+                frame.src = file;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            } finally {
+                isOpening = false;
+            }
+
+        }, 2000); // 2 seconds loading
     });
 
     // Close modal when clicking outside iframe
@@ -1092,6 +1299,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
 
 
 <script>
@@ -1218,7 +1426,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         Swal.fire({
                             icon: 'success',
                             title: 'Application Submitted Successfully!',
-                            html: '<div class="text-left"><p class="mb-2"><strong>Your application has been successfully processed.</strong></p><p class="text-sm text-gray-600">• Personal information saved to database</p><p class="text-sm text-gray-600">• Application details recorded</p><p class="text-sm text-gray-600">• Documents uploaded successfully</p></div>',
+                            html: '<div class="text-left"><p class="mb-2"><strong>Your application has been successfully processed.</strong></div>',
                             timer: 3000,
                             showConfirmButton: false
                         }).then(() => {

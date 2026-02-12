@@ -37,6 +37,7 @@ $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
 
 // Documents & Files
 $routes->get('applications/viewDocument/(:num)/(:segment)', 'Applications::viewDocument/$1/$2');
+$routes->get('file/viewDocument/(:num)/(:segment)', 'File::viewDocument/$1/$2');
 $routes->get('applications/viewPhoto/(:num)', 'Applications::viewPhoto/$1');
 $routes->get('applications/viewResume/(:num)', 'Applications::viewResume/$1');
 $routes->get('applications/viewCivilCertificate/(:any)', 'Applications::viewCivilCertificate/$1');
@@ -77,3 +78,5 @@ $routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertifica
 $routes->get('file/view-training/(:num)/(:any)', 'File::viewTrainingCertificate/$1/$2');
 $routes->get('file/viewFile/(:any)', 'File::viewFile/$1', ['as' => 'viewFile']);
 $routes->get('file/view-training/(:num)/(:any)', 'File::viewTraining/$1/$2');
+$routes->post('applications/updateFiles', 'Applications::updateFiles');
+$routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
