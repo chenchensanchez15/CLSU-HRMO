@@ -16,7 +16,7 @@ class File extends Controller
             // Return JSON error
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'No uploaded files for this document.'
+                'message' => 'No training certificate has been uploaded for this record.'
             ])->setStatusCode(404);
         }
 
@@ -32,7 +32,7 @@ class File extends Controller
         if (!$filename) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'No uploaded files for this document.'
+                'message' => 'No file has been uploaded for this document.'
             ])->setStatusCode(404);
         }
 
@@ -42,7 +42,7 @@ class File extends Controller
         if (!file_exists($filePath)) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'No uploaded files for this document.'
+                'message' => 'No file has been uploaded for this document.'
             ])->setStatusCode(404);
         }
 
@@ -64,7 +64,7 @@ class File extends Controller
         if (!$record || empty($record[$docType])) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'No uploaded files for this document.'
+                'message' => 'No file has been uploaded for this document.'
             ])->setStatusCode(404);
         }
 
@@ -74,7 +74,7 @@ class File extends Controller
         if (!file_exists($filePath)) {
             return $this->response->setJSON([
                 'status' => 'error',
-                'message' => 'No uploaded files for this document.'
+                'message' => 'No file has been uploaded for this document.'
             ])->setStatusCode(404);
         }
 

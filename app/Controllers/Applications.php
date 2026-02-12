@@ -143,11 +143,13 @@ public function submit($id = null)
         'residential_address' => $residentialAddress ?: '-',
         'permanent_address' => $permanentAddress ?: '-',
         'is_clsu_employee' => $this->request->getPost('is_clsu_employee') ?? 'No',
+        'clsu_employee_type' => $this->request->getPost('clsu_employee_type') ?? null,
         'clsu_employee_specify' => $this->request->getPost('clsu_employee_specify') ?? null,
         'religion' => $this->request->getPost('religion') ?? null,
         'is_indigenous' => $this->request->getPost('is_indigenous') ?? 'No',
         'indigenous_specify' => $this->request->getPost('indigenous_specify') ?? null,
         'is_pwd' => $this->request->getPost('is_pwd') ?? 'No',
+        'pwd_type' => $this->request->getPost('pwd_type') ?? null,
         'pwd_specify' => $this->request->getPost('pwd_specify') ?? null,
         'is_solo_parent' => $this->request->getPost('is_solo_parent') ?? 'No',
         'created_at' => date('Y-m-d H:i:s'),
@@ -210,51 +212,27 @@ public function submit($id = null)
 // =========================
 // INSERT INTO application_civil_service
 // =========================
-// Get civil service data from form submission
-$eligibilities = $this->request->getPost('eligibility') ?? [];
-$ratings = $this->request->getPost('rating') ?? [];
-$exam_dates = $this->request->getPost('date_of_exam') ?? [];
-$exam_places = $this->request->getPost('place_of_exam') ?? [];
-$license_nos = $this->request->getPost('license_no') ?? [];
-$valid_until_dates = $this->request->getPost('license_valid_until') ?? [];
+// Get civil service records from applicant_civil_service, excluding deleted ones
+$user_id = session()->get('user_id');
 
-// Process only the civil service records that were submitted in the form
-$totalCivilRecords = count($eligibilities);
-for ($i = 0; $i < $totalCivilRecords; $i++) {
-    // Skip if eligibility is empty (deleted rows won't be submitted)
-    if (empty(trim($eligibilities[$i]))) {
-        continue;
-    }
-    
-    // Get the corresponding record from applicant_civil_service table
-    $user_id = session()->get('user_id');
-    $cs_record = $db->table('applicant_civil_service')
-                   ->where('user_id', $user_id)
-                   ->where('eligibility', $eligibilities[$i])
-                   ->where('rating', $ratings[$i])
-                   ->orderBy('date_of_exam', 'DESC')
-                   ->get()
-                   ->getRowArray();
-    
-    if (!$cs_record) {
-        continue; // Skip if record not found
-    }
-    
-    $cs = $cs_record;
-    // Copy certificate file if it exists
-    $certificateName = null;
-    if (!empty($cs['certificate'])) {
-        $sourcePath = WRITEPATH . 'uploads/civil_service/' . $cs['certificate'];
-        if (file_exists($sourcePath)) {
-            $certificateName = $cs['certificate'];
-            // Copy file to application-specific location
-            $destinationPath = WRITEPATH . 'uploads/civil_service/' . $certificateName;
-            if (!file_exists($destinationPath)) {
-                copy($sourcePath, $destinationPath);
-            }
-        }
-    }
+// Get deleted record IDs from form submission
+$deletedIds = $this->request->getPost('deleted_civil_service') ?? [];
 
+$civilQuery = $db->table('applicant_civil_service')
+                 ->where('user_id', $user_id)
+                 ->orderBy('date_of_exam', 'DESC');
+
+// Exclude deleted records if any
+if (!empty($deletedIds)) {
+    $civilQuery->whereNotIn('id', $deletedIds);
+}
+
+$civilServiceRecords = $civilQuery->get()->getResultArray();
+
+foreach ($civilServiceRecords as $cs) {
+    // Copy all data exactly as-is (like trainings)
+    $certificateName = $cs['certificate'] ?? null;
+    
     // Insert into application_civil_service table
     $db->table('application_civil_service')->insert([
         'job_application_id' => $application_id,
@@ -827,6 +805,7 @@ $personalData = [
 
     // Additional Personal Details
     'is_clsu_employee'       => $this->request->getPost('is_clsu_employee') ?: 'No',
+    'clsu_employee_type'     => $this->request->getPost('clsu_employee_type') ?: null,
     'clsu_employee_specify'  => ($this->request->getPost('is_clsu_employee') === 'Yes') ? $this->request->getPost('clsu_employee_specify') ?: '-' : null,
     'religion'               => $this->request->getPost('religion') ?: '-',
 
@@ -834,6 +813,7 @@ $personalData = [
     'indigenous_specify'     => ($this->request->getPost('is_indigenous') === 'Yes') ? $this->request->getPost('indigenous_specify') ?: '-' : null,
 
     'is_pwd'                 => $this->request->getPost('is_pwd') ?: 'No',
+    'pwd_type'               => $this->request->getPost('pwd_type') ?: null,
     'pwd_specify'            => ($this->request->getPost('is_pwd') === 'Yes') ? $this->request->getPost('pwd_specify') ?: '-' : null,
 
     'is_solo_parent'         => $this->request->getPost('is_solo_parent') ?: 'No',
@@ -918,11 +898,20 @@ $db->table('application_personal')
 // Update Civil Service Records
 // -------------------
 $user_id = session()->get('user_id');
-$civilServices = $db->table('applicant_civil_service')
-                   ->where('user_id', $user_id)
-                   ->orderBy('date_of_exam', 'DESC')
-                   ->get()
-                   ->getResultArray();
+
+// Get deleted record IDs from form submission
+$deletedIds = $this->request->getPost('deleted_civil_service') ?? [];
+
+$civilQuery = $db->table('applicant_civil_service')
+                 ->where('user_id', $user_id)
+                 ->orderBy('date_of_exam', 'DESC');
+
+// Exclude deleted records if any
+if (!empty($deletedIds)) {
+    $civilQuery->whereNotIn('id', $deletedIds);
+}
+
+$civilServices = $civilQuery->get()->getResultArray();
 
 $civilTable = $db->table('application_civil_service');
 
@@ -930,20 +919,9 @@ $civilTable = $db->table('application_civil_service');
 $civilTable->where('job_application_id', $job_application_id)->delete();
 
 foreach ($civilServices as $cs) {
-    // Copy certificate file if it exists
-    $certificateName = null;
-    if (!empty($cs['certificate'])) {
-        $sourcePath = WRITEPATH . 'uploads/civil_service/' . $cs['certificate'];
-        if (file_exists($sourcePath)) {
-            $certificateName = $cs['certificate'];
-            // Copy file to application-specific location
-            $destinationPath = WRITEPATH . 'uploads/civil_service/' . $certificateName;
-            if (!file_exists($destinationPath)) {
-                copy($sourcePath, $destinationPath);
-            }
-        }
-    }
-
+    // Copy all data exactly as-is (like trainings)
+    $certificateName = $cs['certificate'] ?? null;
+    
     // Insert into application_civil_service table
     $civilTable->insert([
         'job_application_id' => $job_application_id,
@@ -1317,30 +1295,40 @@ public function getFiles($id)
 
 public function viewCivilCertificate($filename = null)
 {
+    // If no filename provided, return JSON (frontend will show warning)
     if (!$filename) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status'  => 'warning',
+                                  'message' => 'No civil service certificate has been uploaded for this record.'
+                              ]);
     }
 
     // Decode filename from URL
     $filename = urldecode($filename);
 
-    // Adjust path to match your actual folder
+    // Path to your civil service files
     $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
+    // If file doesn't exist, return JSON warning
     if (!file_exists($filePath)) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound("No uploaded file for this document");
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status'  => 'warning',
+                                  'message' => 'No civil service certificate has been uploaded for this record.'
+                              ]);
     }
 
     // Determine mime type
     $mime = mime_content_type($filePath);
 
-    // Stream file inline (don't force download)
+    // Stream file inline (PDF, etc.)
     return $this->response
-        ->setHeader('Content-Type', $mime)
-        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
-        ->setBody(file_get_contents($filePath));
-}
-
+                ->setHeader('Content-Type', $mime)
+                ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setBody(file_get_contents($filePath));
+} 
 
 public function viewTrainingCertificate($id, $filename)
 {
@@ -1351,8 +1339,8 @@ public function viewTrainingCertificate($id, $filename)
         return $this->response
             ->setStatusCode(404)
             ->setJSON([
-                'status'  => 'error',
-                'message' => 'No uploaded file for this document.'
+                'status'  => 'warning',
+                'message' => 'No training certificate has been uploaded for this record.'
             ]);
     }
 

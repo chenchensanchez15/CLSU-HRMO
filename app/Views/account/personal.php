@@ -172,56 +172,64 @@ window.onclick = function(event) {
 <!-- Flat Compact Layout -->
 <div class="space-y-3">
   
-  <!-- Full Name Display -->
-  <div>
-    <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-      <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-      </svg>
-     Personal Details
-    </h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">First Name</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['first_name'] ?? 'N/A') ?></p>
-      </div>
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Middle Name</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['middle_name'] ?? 'N/A') ?></p>
-      </div>
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Last Name</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['last_name'] ?? 'N/A') ?></p>
-      </div>
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Suffix</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['suffix'] ?? 'N/A') ?></p>
-      </div>
-    </div>
-  </div>
+<!-- Personal Details (Balanced Grid Layout) -->
+<div class="pb-2 border-b border-gray-200">
 
-  <!-- Personal Details -->
-  <div class="pb-2 border-b border-gray-200">
+  <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
+    <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+    </svg>
+    Personal Details
+  </h3>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Sex</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['sex'] ?? 'N/A') ?></p>
-      </div>
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Date of Birth</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5">
-          <?= isset($profile['date_of_birth']) && $profile['date_of_birth'] != '' 
-              ? date('F j, Y', strtotime($profile['date_of_birth'])) 
-              : 'N/A' ?>
-        </p>
-      </div>
-      <div>
-        <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Civil Status</p>
-        <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['civil_status'] ?? 'N/A') ?></p>
-      </div>
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
+
+    <!-- Full Name -->
+    <div>
+      <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Full Name</p>
+      <p class="text-xs font-medium text-gray-800 mt-0.5">
+        <?php
+          $fullName = trim(
+            ($profile['first_name'] ?? '') . ' ' .
+            ($profile['middle_name'] ?? '') . ' ' .
+            ($profile['last_name'] ?? '') . ' ' .
+            ($profile['suffix'] ?? '')
+          );
+          echo $fullName !== '' ? esc($fullName) : 'N/A';
+        ?>
+      </p>
     </div>
+
+    <!-- Sex -->
+    <div>
+      <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Sex</p>
+      <p class="text-xs font-medium text-gray-800 mt-0.5">
+        <?= esc($profile['sex'] ?? 'N/A') ?>
+      </p>
+    </div>
+
+    <!-- Date of Birth -->
+    <div>
+      <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Date of Birth</p>
+      <p class="text-xs font-medium text-gray-800 mt-0.5">
+        <?= isset($profile['date_of_birth']) && $profile['date_of_birth'] != ''
+            ? date('F j, Y', strtotime($profile['date_of_birth']))
+            : 'N/A' ?>
+      </p>
+    </div>
+
+    <!-- Civil Status -->
+    <div>
+      <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Civil Status</p>
+      <p class="text-xs font-medium text-gray-800 mt-0.5">
+        <?= esc($profile['civil_status'] ?? 'N/A') ?>
+      </p>
+    </div>
+
   </div>
+</div>
+
 
   <!-- Contact Information -->
   <div class="pb-2 border-b border-gray-200">
@@ -1692,12 +1700,11 @@ document.addEventListener('DOMContentLoaded', () => {
 function openCertViewer(fileName) {
     if (!fileName || fileName.trim() === '') {
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No uploaded file for this document.',
-            confirmButtonColor: '#0B6B3A',
-            showConfirmButton: false, // hide OK button
-            timer: 2000 // auto close after 2 seconds
+            icon: 'warning',
+            title: 'No Certificate Available',
+            text: 'No civil service certificate has been uploaded for this record.',
+            showConfirmButton: false,
+            timer: 1500
         });
         return;
     }
@@ -1710,7 +1717,7 @@ function openCertViewer(fileName) {
         didOpen: () => {
             Swal.showLoading();
 
-            // 2-second delay before fetching
+            // Slight delay before fetching
             setTimeout(() => {
                 fetch('<?= base_url("account/viewCivilCertificate/") ?>' + encodeURIComponent(fileName), {
                     method: 'GET',
@@ -1718,20 +1725,20 @@ function openCertViewer(fileName) {
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        // 404 → parse JSON to get message
-                        return response.json().then(data => {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: data.message || 'No uploaded file for this document.',
-                                confirmButtonColor: '#0B6B3A',
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                            throw new Error('File not available');
+                .then(async response => {
+                    // Check if JSON returned → file missing or deleted
+                    const contentType = response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        const data = await response.json();
+                        Swal.close();
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Certificate Available',
+                            text: data.message || 'No civil service certificate has been uploaded for this record.',
+                            showConfirmButton: false,
+                            timer: 1500
                         });
+                        throw new Error('File not available');
                     }
                     return response.blob(); // File exists
                 })
@@ -1744,12 +1751,10 @@ function openCertViewer(fileName) {
                 .catch(err => {
                     console.warn(err);
                 });
-            }, 500); // 2-second delay
+            }, 500); // delay
         }
     });
 }
-
-
     function closeCertViewer(){
         viewerFrame.src = '';
         certViewer.classList.add('hidden');
@@ -2166,6 +2171,7 @@ function openCertViewer(fileName) {
         <iframe id="certificateFrame" src="" class="flex-1 w-full h-full border-none"></iframe>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const table = document.getElementById('table-training');
@@ -2323,21 +2329,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         }
-
-if(viewBtn){
+if (viewBtn) {
     const fileName = viewBtn.dataset.file;
-    if(!fileName || fileName.trim() === '') {
+
+    // No file → show warning instead of error
+    if (!fileName || fileName.trim() === '') {
         Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'No uploaded file for this document.',
-            timer: 1500,
-            showConfirmButton: false
+            icon: 'warning',
+            title: 'No Certificate Available',
+            text: 'No training certificate has been uploaded for this record.',
+            showConfirmButton: false,
+            timer: 1500
         });
         return;
     }
 
-    // Show loading
+    // Show loading alert
     Swal.fire({
         title: 'Loading...',
         text: 'Please wait while the certificate loads.',
@@ -2345,35 +2352,37 @@ if(viewBtn){
         didOpen: () => {
             Swal.showLoading();
 
-            // Simulate 2-second loading
             setTimeout(() => {
                 fetch('<?= base_url("account/viewTrainingCertificate/") ?>' + encodeURIComponent(fileName))
-                    .then(res => {
-                        if (!res.ok) throw res;
-                        return res.blob();
+                    .then(async res => {
+                        const contentType = res.headers.get('content-type') || '';
+
+                        // If JSON returned → file missing
+                        if (contentType.includes('application/json')) {
+                            const data = await res.json();
+                            Swal.close();
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'No Certificate Available',
+                                text: data.message || 'No training certificate has been uploaded for this record.',
+                                showConfirmButton: false,
+                                timer: 1500
+                            });
+                            throw new Error('File not available');
+                        }
+
+                        return res.blob(); // File exists
                     })
                     .then(blob => {
-                        Swal.close(); // Close loading
                         const url = URL.createObjectURL(blob);
                         certificateFrame.src = url;
                         certificateModal.classList.remove('hidden');
+                        Swal.close(); // close loading
                     })
-                    .catch(async err => {
-                        Swal.close(); // Close loading
-                        let msg = 'No uploaded file for this document.';
-                        if (err.json) {
-                            const data = await err.json();
-                            msg = data.message || msg;
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: msg,
-                            timer: 1500,
-                            showConfirmButton: false
-                        });
+                    .catch(err => {
+                        console.warn(err);
                     });
-            }, 1000); // 2 seconds
+            }, 500); // delay before fetch
         }
     });
 }
@@ -2698,21 +2707,23 @@ document.addEventListener('DOMContentLoaded', () => {
     table.addEventListener('click', async (e) => {
 
  const viewBtn = e.target.closest('.viewFileBtn');
-if (viewBtn) {
+ if (viewBtn) {
     (async () => {
         const filename = viewBtn.dataset.file;
-        if (!filename) {
+
+        // No file → show warning instead of error
+        if (!filename || filename.trim() === '') {
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No file selected',
+                icon: 'warning',
+                title: 'No File Available',
+                text: 'No file has been uploaded for this document.',
                 showConfirmButton: false,
                 timer: 1500
             });
             return;
         }
 
-        // Show loading modal
+        // Show loading alert
         Swal.fire({
             title: 'Loading...',
             text: 'Please wait while the file loads.',
@@ -2721,20 +2732,20 @@ if (viewBtn) {
         });
 
         try {
-            // Wait 2 seconds before fetching (simulate loading)
+            // Simulate a small delay for loading effect
             await new Promise(resolve => setTimeout(resolve, 500));
 
             const res = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`);
-
-            // If JSON returned → file missing or error
             const contentType = res.headers.get('content-type') || '';
+
+            // JSON returned → file missing
             if (contentType.includes('application/json')) {
                 const data = await res.json();
                 Swal.close();
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'File not found or already deleted.',
+                    icon: 'warning',
+                    title: 'No File Available',
+                    text: data.message || 'No file has been uploaded for this document.',
                     showConfirmButton: false,
                     timer: 1500
                 });
@@ -2749,9 +2760,9 @@ if (viewBtn) {
         } catch (err) {
             Swal.close();
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to open file.',
+                icon: 'warning',
+                title: 'Unable to Open File',
+                text: 'The file could not be loaded.',
                 showConfirmButton: false,
                 timer: 1500
             });

@@ -65,7 +65,7 @@ window.onclick = function(event) {
         <div class="flex items-center gap-4">
             <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
-                <span class="text-xl font-bold">CLSU Online Job Application</span>
+                <a href="<?= site_url('dashboard') ?>" class="text-xl font-bold no-underline hover:no-underline" style="text-decoration: none;">CLSU Online Job Application</a>
             </div>
         </div>
         <div class="flex items-center gap-12">
@@ -226,66 +226,57 @@ window.onclick = function(event) {
         <h2 class="text-sm font-bold text-clsuGreen">Personal Information</h2>
     </div>
     
-    <!-- ROW 1: Name Information (4 items in one line) -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">FIRST NAME</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['first_name'] ?? '-') ?></p>
+    <!-- ROW 1: Full Name + Personal Details + Citizenship + Phone (7 items) -->
+    <div class="flex flex-wrap gap-0 mb-4">
+        <!-- FULL NAME -->
+        <div class="flex-1 min-w-[120px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">FULL NAME</p>
+            <p class="text-xs text-gray-800">
+                <?= esc(($app['personal']['first_name'] ?? '') . ' ' . ($app['personal']['middle_name'] ?? '') . ' ' . ($app['personal']['last_name'] ?? '') . ($app['personal']['extension'] ? ' ' . $app['personal']['extension'] : '')) ?: '-' ?>
+            </p>
         </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">MIDDLE NAME</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['middle_name'] ?? '-') ?></p>
-        </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">LAST NAME</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['last_name'] ?? '-') ?></p>
-        </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">SUFFIX</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['extension'] ?? '-') ?></p>
-        </div>
-    </div>
-    
-    <!-- ROW 2: Personal Details + Citizenship (4 items) -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">SEX</p>
+        <!-- SEX -->
+        <div class="flex-1 min-w-[80px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">SEX</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['sex'] ?? '-') ?></p>
         </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">DATE OF BIRTH</p>
+        <!-- DATE OF BIRTH -->
+        <div class="flex-1 min-w-[120px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">DATE OF BIRTH</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></p>
         </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">CIVIL STATUS</p>
+        <!-- CIVIL STATUS -->
+        <div class="flex-1 min-w-[100px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">CIVIL STATUS</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['civil_status'] ?? '-') ?></p>
         </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">CITIZENSHIP</p>
+        <!-- CITIZENSHIP -->
+        <div class="flex-1 min-w-[100px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">CITIZENSHIP</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['citizenship'] ?? '-') ?></p>
         </div>
-    </div>
-    
-    <!-- ROW 3: Contact Information (2 items) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">EMAIL</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['email'] ?? '-') ?></p>
-        </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">PHONE NUMBER</p>
+        <!-- PHONE -->
+        <div class="flex-1 min-w-[120px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">PHONE</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['phone'] ?? '-') ?></p>
         </div>
     </div>
     
-    <!-- ROW 4: Address Information (2 items) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">RESIDENTIAL ADDRESS</p>
+    <!-- ROW 2: Contact + Address Information (3 items in single row) -->
+    <div class="flex flex-wrap gap-0">
+        <!-- EMAIL -->
+        <div class="flex-1 min-w-[150px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">EMAIL</p>
+            <p class="text-xs text-gray-800 break-words"><?= esc($app['personal']['email'] ?? '-') ?></p>
+        </div>
+        <!-- RESIDENTIAL ADDRESS -->
+        <div class="flex-1 min-w-[200px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">RESIDENTIAL ADDRESS</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['residential_address'] ?? '-') ?></p>
         </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">PERMANENT ADDRESS</p>
+        <!-- PERMANENT ADDRESS -->
+        <div class="flex-1 min-w-[200px]">
+            <p class="text-xs font-bold text-gray-700 mb-0.5">PERMANENT ADDRESS</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['permanent_address'] ?? '-') ?></p>
         </div>
     </div>
@@ -568,19 +559,15 @@ window.onclick = function(event) {
                 <div><p class="text-xs text-gray-800"><?= esc($tr['training_sponsor'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800"><?= esc($tr['training_remarks'] ?? '-') ?></p></div>
                 <div>
-                    <?php if (!empty($tr['certificate_file'])): ?>
-                        <button type="button" 
-                                class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
-                                data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                            </svg>
-                            View Certificate
-                        </button>
-                    <?php else: ?>
-                        <span class="text-gray-500 text-xs">-</span>
-                    <?php endif; ?>
+                    <button type="button" 
+                            class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                            data-file="<?= !empty($tr['certificate_file']) ? site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) : '' ?>">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        View Certificate
+                    </button>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -723,7 +710,9 @@ window.onclick = function(event) {
     <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
         <iframe id="document-frame" class="flex-1 w-full h-full border-none"></iframe>
     </div>
-</div><!-- Edit Files Modal (Compact Full Version) -->
+</div>
+
+<!-- Edit Files Modal (Compact Full Version) -->
 <div id="editFilesModal"
      class="fixed inset-0 flex items-center justify-center bg-black/50
             opacity-0 pointer-events-none transition-opacity duration-300 z-50">
@@ -996,7 +985,6 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // Modals
@@ -1023,23 +1011,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btn = civilBtn || trainingBtn || documentBtn;
         const fileUrl = btn.dataset.file?.trim();
 
-        if (!fileUrl) {
-            let message = "No uploaded file available.";
-            if (civilBtn) message = "No uploaded files for this civil service eligibility.";
-            else if (trainingBtn) message = "No uploaded files for this training certificate.";
-            else if (documentBtn) message = "No uploaded files for this document.";
-
-            Swal.fire({
-                icon: 'warning',
-                title: 'No File Available',
-                text: message,
-                showConfirmButton: false,
-                timer: 1500
-            });
-            return;
-        }
-
-        // Show loading with 2-second simulated delay
+        // Show loading first
         Swal.fire({
             title: 'Loading...',
             text: 'Please wait while the file loads.',
@@ -1048,20 +1020,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         try {
-            // Wait 2 seconds to simulate loading
+            // Short delay to simulate loading
             await new Promise(resolve => setTimeout(resolve, 500));
+
+            // If no file URL, still show loading briefly then show warning
+            if (!fileUrl) {
+                Swal.close();
+
+                let title = 'No File Available';
+                let message = 'No file has been uploaded for this document.';
+
+                // Specific message for training certificates
+                if (trainingBtn) {
+                    message = 'No training certificate has been uploaded for this record.';
+                } else if (civilBtn) {
+                    message = 'No civil service certificate has been uploaded for this record.';
+                }
+
+                Swal.fire({
+                    icon: 'warning',
+                    title: title,
+                    text: message,
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                return;
+            }
 
             const res = await fetch(fileUrl);
             const contentType = res.headers.get('content-type') || '';
 
-            // If JSON returned → file missing or deleted
+            // If JSON returned → file missing
             if (contentType.includes('application/json')) {
                 const data = await res.json();
                 Swal.close();
+
+                let title = 'No File Available';
+                let message = 'No file has been uploaded for this document.';
+
+                if (trainingBtn) {
+                    message = 'No training certificate has been uploaded for this record.';
+                } else if (civilBtn) {
+                    message = 'No civil service certificate has been uploaded for this record.';
+                }
+
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'File not found or already deleted.',
+                    icon: 'warning',
+                    title: title,
+                    text: data.message || message,
                     showConfirmButton: false,
                     timer: 1500
                 });
@@ -1083,10 +1089,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (err) {
             Swal.close();
+
+            let title = 'No File Available';
+            let message = 'No file has been uploaded for this document.';
+
+            if (trainingBtn) {
+                message = 'No training certificate has been uploaded for this record.';
+            } else if (civilBtn) {
+                message = 'No civil service certificate has been uploaded for this record.';
+            }
+
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Unable to open file.',
+                icon: 'warning',
+                title: title,
+                text: message,
                 showConfirmButton: false,
                 timer: 1500
             });
@@ -1119,6 +1135,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+
+
 <script>
 document.getElementById('editFilesForm').addEventListener('submit', function(e) {
     e.preventDefault();

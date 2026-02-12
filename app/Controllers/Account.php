@@ -619,36 +619,38 @@ public function deleteCivilService($id = null)
         'message' => 'Unable to delete record.'
     ]);
 }
+
 public function viewCivilCertificate($filename = null)
 {
+    // No filename provided
     if (!$filename) {
-        // JSON response if no filename provided
         return $this->response->setStatusCode(404)
                               ->setJSON([
-                                  'status' => 'error',
-                                  'message' => 'No uploaded file for this documen.!'
+                                  'status' => 'warning',
+                                  'message' => 'No civil service certificate has been uploaded for this record.'
                               ]);
     }
 
     $filename = urldecode($filename);
-    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename; // adjust path if needed
+    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
+    // File does not exist
     if (!file_exists($filePath)) {
-        // JSON response if file doesn't exist
         return $this->response->setStatusCode(404)
                               ->setJSON([
-                                  'status' => 'error',
-                                  'message' => 'No uploaded file for this document.'
+                                  'status' => 'warning',
+                                  'message' => 'No civil service certificate has been uploaded for this record.'
                               ]);
     }
 
-    // Stream file inline (PDF)
+    // File exists → stream PDF inline
     return $this->response
                 ->setHeader('Content-Type', 'application/pdf')
-                ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
                 ->setHeader('Accept-Ranges', 'bytes')
                 ->setBody(file_get_contents($filePath));
 }
+
 
 public function trainings()
 {
@@ -673,30 +675,28 @@ public function viewTrainingCertificate($filename = null)
     if (!$filename) {
         return $this->response->setStatusCode(404)
                               ->setJSON([
-                                  'status' => 'error',
-                                  'message' => 'No uploaded file for this document.'
+                                  'status' => 'warning',
+                                  'message' => 'No training certificate has been uploaded for this record.'
                               ]);
     }
 
     $filename = urldecode($filename);
-    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename; // adjust path if needed
+    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
 
     if (!file_exists($filePath)) {
         return $this->response->setStatusCode(404)
                               ->setJSON([
-                                  'status' => 'error',
-                                  'message' => 'No uploaded file for this document.'
+                                  'status' => 'warning',
+                                  'message' => 'No training certificate has been uploaded for this record.'
                               ]);
     }
 
-    // Stream file inline (PDF example)
     return $this->response
                 ->setHeader('Content-Type', mime_content_type($filePath))
-                ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
                 ->setHeader('Accept-Ranges', 'bytes')
                 ->setBody(file_get_contents($filePath));
 }
-
 
 public function addApplicantTraining()
 {
@@ -820,15 +820,14 @@ public function updateTraining()
             ]);
         }
     }
-
 public function viewFile($filename)
 {
     $path = WRITEPATH . 'uploads/files/' . $filename;
 
     if (!file_exists($path)) {
         return $this->response->setJSON([
-            'status'  => 'error',
-            'message' => 'No uploaded file for this document.'
+            'status'  => 'warning',
+            'message' => 'No file has been uploaded for this document.'
         ])->setStatusCode(200);
     }
 
@@ -837,6 +836,7 @@ public function viewFile($filename)
         ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
         ->setBody(file_get_contents($path));
 }
+
 public function updateFile()
 {
     $session = session();

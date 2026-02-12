@@ -27,7 +27,7 @@
     <div class="flex items-center gap-3">
         <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
         <div class="flex flex-col leading-tight">
-            <span class="text-xl font-bold">CLSU Online Job Application</span>
+            <a href="<?= site_url('dashboard') ?>" class="text-xl font-bold no-underline hover:no-underline" style="text-decoration: none;">CLSU Online Job Application</a>
         </div>
     </div>
 </header>
@@ -90,96 +90,87 @@
             <!-- CLSU Employee -->
             <div class="relative">
                 <label class="block text-xs font-medium text-clsuGreen mb-1">Are you CLSU Employee?</label>
-                <div class="flex gap-1">
-                    <select name="is_clsu_employee"
-                            id="clsu_employee_select"
-                            required
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
-                            onchange="handleClsuMainSelection(this)">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <select name="is_clsu_employee_detail"
-                            id="clsu_employee_detail"
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
-                            onchange="handleClsuDetailSelection(this)">
-                        <option value="">Select Type</option>
-                        <option value="Permanent">Permanent</option>
-                        <option value="Temporary">Temporary</option>
-                        <option value="COS/JO">COS/JO</option>
-                    </select>
-                </div>
+                <select name="is_clsu_employee"
+                        id="clsu_employee_select"
+                        required
+                        class="w-full text-xs px-2 py-1 border border-clsuGreen rounded"
+                        onchange="handleClsuMainSelection(this)">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <select name="clsu_employee_type"
+                        id="clsu_employee_detail"
+                        required
+                        class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
+                        onchange="handleClsuDetailSelection(this)">
+                    <option value="">Select employment type</option>
+                    <option value="Permanent">Permanent</option>
+                    <option value="Temporary">Temporary</option>
+                    <option value="COS/JO">COS/JO</option>
+                </select>
                 <input type="text"
                        id="clsu_specify"
                        name="clsu_employee_specify"
-                       placeholder="Specify"
+                       placeholder="Specify position"
                        class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
-                <input type="hidden" name="clsu_employee_value" id="clsu_employee_hidden">
+                <input type="hidden" name="is_clsu_employee" id="clsu_employee_hidden">
             </div>
             
             <!-- Person with Disability -->
             <div class="relative">
                 <label class="block text-xs font-medium text-clsuGreen mb-1">Person with Disability</label>
-                <div class="flex gap-1">
-                    <select name="is_pwd"
-                            id="pwd_select"
-                            required
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
-                            onchange="handlePwdMainSelection(this)">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <select name="is_pwd_detail"
-                            id="pwd_detail"
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
-                            onchange="handlePwdDetailSelection(this)">
-                        <option value="">Select Type</option>
-                        <option value="Visual Impairment">Visual Impairment</option>
-                        <option value="Hearing Impairment">Hearing Impairment</option>
-                        <option value="Mobility Impairment">Mobility Impairment</option>
-                        <option value="Cognitive Disability">Cognitive Disability</option>
-                        <option value="Mental Health Condition">Mental Health Condition</option>
-                    </select>
-                </div>
+                <select name="is_pwd"
+                        id="pwd_select"
+                        required
+                        class="w-full text-xs px-2 py-1 border border-clsuGreen rounded"
+                        onchange="handlePwdMainSelection(this)">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
+                <select name="pwd_type"
+                        id="pwd_detail"
+                        required
+                        class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
+                        onchange="handlePwdDetailSelection(this)">
+                    <option value="">Select disability type</option>
+                    <option value="visual impairment">Visual Impairment</option>
+                    <option value="hearing loss">Hearing Loss</option>
+                    <option value="orthopedic disability">Orthopedic Disability</option>
+                    <option value="learning disability">Learning Disability</option>
+                    <option value="psychosocial disability">Psychosocial Disability</option>
+                    <option value="chronic illness">Chronic Illness</option>
+                    <option value="mental disability">Mental Disability</option>
+                    <option value="others">Others</option>
+                </select>
                 <input type="text"
                        id="pwd_specify"
                        name="pwd_specify"
-                       placeholder="Specify"
+                       placeholder="Specify disability"
                        class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
-                <input type="hidden" name="pwd_value" id="pwd_hidden">
+                <input type="hidden" name="pwd_type" id="pwd_type_hidden">
+                <input type="hidden" name="is_pwd" id="pwd_hidden">
             </div>
             
             <!-- Indigenous Person -->
             <div class="relative">
                 <label class="block text-xs font-medium text-clsuGreen mb-1">Indigenous Person</label>
-                <div class="flex gap-1">
-                    <select name="is_indigenous"
-                            id="indigenous_select"
-                            required
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded"
-                            onchange="handleIndigenousMainSelection(this)">
-                        <option value="">Select</option>
-                        <option value="Yes">Yes</option>
-                        <option value="No">No</option>
-                    </select>
-                    <select name="is_indigenous_detail"
-                            id="indigenous_detail"
-                            class="flex-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden"
-                            onchange="handleIndigenousDetailSelection(this)">
-                        <option value="">Select Type</option>
-                        <option value="Lumad">Lumad</option>
-                        <option value="Indigenous Cultural Community">Indigenous Cultural Community</option>
-                        <option value="Ethnic Minority">Ethnic Minority</option>
-                    </select>
-                </div>
+                <select name="is_indigenous"
+                        id="indigenous_select"
+                        required
+                        class="w-full text-xs px-2 py-1 border border-clsuGreen rounded"
+                        onchange="handleIndigenousMainSelection(this)">
+                    <option value="">Select</option>
+                    <option value="Yes">Yes</option>
+                    <option value="No">No</option>
+                </select>
                 <input type="text"
                        id="indigenous_specify"
                        name="indigenous_specify"
-                       placeholder="Specify"
+                       placeholder="Specify indigenous group"
                        class="w-full mt-1 text-xs px-2 py-1 border border-clsuGreen rounded hidden">
-                <input type="hidden" name="indigenous_value" id="indigenous_hidden">
+                <input type="hidden" name="is_indigenous" id="indigenous_hidden">
             </div>
         </div>
         
@@ -190,7 +181,7 @@
                 <label class="block text-xs font-medium text-clsuGreen mb-1">Religion</label>
                 <input type="text"
                        name="religion"
-                       placeholder="Enter Religion"
+                       placeholder="Please enter your religion"
                        required
                        class="w-full text-xs px-2 py-1 border border-clsuGreen rounded">
             </div>
@@ -213,10 +204,6 @@
             Next
         </button>
     </div>
-
-    <!-- Script for two-dropdown cascading -->
- 
-
 </div>
 
 <!-- Step 2: Family Background -->
@@ -236,92 +223,90 @@
     </div>
 
 
-    <!-- Personal Information Details (Compact Format) -->
+    <!-- Personal Information Details (2-Row Format) -->
     <div class="space-y-3 text-xs">
-        <!-- Name Information -->
-        <div class="pb-2 border-b border-gray-200">
-            <h3 class="text-xs font-semibold text-gray-700 mb-1.5 flex items-center">
-                <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-                Personal Information
-            </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">First Name</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['first_name'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Middle Name</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['middle_name'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Last Name</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['last_name'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Suffix</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['suffix'] ?? '-') ?></p>
-                </div>
-            </div>
-        </div>
+        <h3 class="text-xs font-semibold text-gray-700 mb-2 flex items-center">
+            <svg class="w-3.5 h-3.5 mr-1 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            Personal Information
+        </h3>
+        
+<!-- ROW 1 -->
+<div class="grid grid-cols-6 gap-4 mb-3 text-sm">
 
-        <!-- Personal Details -->
-        <div class="pb-2 border-b border-gray-200">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Sex</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['sex'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Date of Birth</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5">
-                        <?= !empty($profile['date_of_birth']) ? date('F j, Y', strtotime($profile['date_of_birth'])) : '-' ?>
-                    </p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Civil Status</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['civil_status'] ?? '-') ?></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Contact Information -->
-        <div class="pb-2 border-b border-gray-200">
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5 break-words"><?= esc($profile['email'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Phone</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['phone'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Citizenship</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['citizenship'] ?? '-') ?></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Address Information -->
-        <div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Residential Address</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['residential_address'] ?? '-') ?></p>
-                </div>
-                <div>
-                    <p class="text-[9px] font-medium text-gray-500 uppercase tracking-wide">Permanent Address</p>
-                    <p class="text-xs font-medium text-gray-800 mt-0.5"><?= esc($profile['permanent_address'] ?? '-') ?></p>
-                </div>
-            </div>
-        </div>
+    <!-- FULL NAME -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Full Name</p>
+        <p class="font-medium text-gray-800">
+            <?= esc(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ?? '') . ' ' . ($profile['last_name'] ?? '') . ($profile['suffix'] ? ' ' . $profile['suffix'] : '')) ?: '-' ?>
+        </p>
     </div>
 
+    <!-- SEX -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Sex</p>
+        <p class="font-medium text-gray-800"><?= esc($profile['sex'] ?? '-') ?></p>
+    </div>
 
+    <!-- DATE OF BIRTH -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Date of Birth</p>
+        <p class="font-medium text-gray-800">
+            <?= !empty($profile['date_of_birth']) ? date('F j, Y', strtotime($profile['date_of_birth'])) : '-' ?>
+        </p>
+    </div>
+
+    <!-- CIVIL STATUS -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Civil Status</p>
+        <p class="font-medium text-gray-800"><?= esc($profile['civil_status'] ?? '-') ?></p>
+    </div>
+
+    <!-- PHONE -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Phone</p>
+        <p class="font-medium text-gray-800"><?= esc($profile['phone'] ?? '-') ?></p>
+    </div>
+
+    <!-- CITIZENSHIP -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Citizenship</p>
+        <p class="font-medium text-gray-800"><?= esc($profile['citizenship'] ?? '-') ?></p>
+    </div>
+
+</div>
+
+
+<!-- ROW 2 -->
+<div class="grid grid-cols-3 gap-4 pb-2 border-b border-gray-200 text-sm">
+
+    <!-- EMAIL -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Email</p>
+        <p class="font-medium text-gray-800 break-words">
+            <?= esc($profile['email'] ?? '-') ?>
+        </p>
+    </div>
+
+    <!-- RESIDENTIAL ADDRESS -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Residential Address</p>
+        <p class="font-medium text-gray-800">
+            <?= esc($profile['residential_address'] ?? '-') ?>
+        </p>
+    </div>
+
+    <!-- PERMANENT ADDRESS -->
+    <div>
+        <p class="text-[10px] font-semibold text-gray-600">Permanent Address</p>
+        <p class="font-medium text-gray-800">
+            <?= esc($profile['permanent_address'] ?? '-') ?>
+        </p>
+    </div>
+
+</div>
+</div>
     <!-- Navigation Buttons -->
     <div class="text-right mt-4">
         <button type="button" onclick="prevStep(2)" class="bg-gray-400 text-white px-4 py-2 rounded text-sm font-semibold hover:bg-gray-500">
@@ -629,6 +614,7 @@ $civil_services = $db->table('applicant_civil_service')
                                 </button>
                             </td>
                             <!-- Hidden inputs for form submission -->
+                            <input type="hidden" name="civil_service_ids[]" value="<?= esc($cs['id'] ?? '') ?>">
                             <input type="hidden" name="eligibility[]" value="<?= esc($cs['eligibility'] ?? '-') ?>">
                             <input type="hidden" name="rating[]" value="<?= esc($cs['rating'] ?? '-') ?>">
                             <input type="hidden" name="place_of_exam[]" value="<?= esc($cs['place_of_exam'] ?? '-') ?>">
@@ -673,55 +659,42 @@ document.addEventListener('DOMContentLoaded', function () {
     // ---------------- VIEW CERTIFICATE ----------------
     async function openCertificate(fileUrl) {
 
-        if (!fileUrl || fileUrl.trim() === '') {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No uploaded file for this document.',
-                showConfirmButton: false,
-                timer: 1500
-            });
-            return;
-        }
-
-        // Show loading
+        // Show loading first
         Swal.fire({
             title: 'Loading...',
-            text: 'Please wait while the file loads.',
+            text: 'Please wait while the certificate loads.',
             allowOutsideClick: false,
             didOpen: () => Swal.showLoading()
         });
 
         try {
-
-            // 2 seconds delay
+            // Short delay to simulate loading
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            const response = await fetch(fileUrl);
-
-            // If 404 or error response
-            if (!response.ok) {
+            // If no file URL
+            if (!fileUrl || fileUrl.trim() === '') {
                 Swal.close();
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No uploaded file for this document.',
+                    icon: 'warning',
+                    title: 'No Certificate Available',
+                    text: 'No civil service certificate has been uploaded for this record.',
                     showConfirmButton: false,
                     timer: 1500
                 });
                 return;
             }
 
+            const response = await fetch(fileUrl);
             const contentType = response.headers.get('content-type') || '';
 
-            // If JSON returned (backend error)
+            // If JSON returned → file missing or error
             if (contentType.includes('application/json')) {
                 const data = await response.json();
                 Swal.close();
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'No uploaded file for this document.',
+                    icon: 'warning',
+                    title: 'No Certificate Available',
+                    text: data.message || 'No civil service certificate has been uploaded for this record.',
                     showConfirmButton: false,
                     timer: 1500
                 });
@@ -734,16 +707,14 @@ document.addEventListener('DOMContentLoaded', function () {
             certModal.classList.remove('hidden');
 
         } catch (error) {
-
             Swal.close();
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No uploaded file for this document.',
+                icon: 'warning',
+                title: 'No Certificate Available',
+                text: 'No civil service certificate has been uploaded for this record.',
                 showConfirmButton: false,
                 timer: 1500
             });
-
             console.error(error);
         }
     }
@@ -785,13 +756,22 @@ document.addEventListener('DOMContentLoaded', function () {
             }).then(result => {
 
                 if (result.isConfirmed) {
+                    // Add hidden input to track deleted record
+                    const civilServiceId = row.querySelector('input[name="civil_service_ids[]"]')?.value;
+                    if (civilServiceId) {
+                        const deletedInput = document.createElement('input');
+                        deletedInput.type = 'hidden';
+                        deletedInput.name = 'deleted_civil_service[]';
+                        deletedInput.value = civilServiceId;
+                        document.querySelector('form').appendChild(deletedInput);
+                    }
 
                     row.remove();
 
                     Swal.fire({
                         icon: 'success',
                         title: 'Deleted!',
-                        text: `${recordName} has been deleted.`,
+                        text: `This civil service record has been deleted.`,
                         timer: 1200,
                         showConfirmButton: false
                     });
@@ -958,60 +938,67 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function openTrainingCertificate(fileUrl) {
 
-        try {
+        // Show loading first
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Please wait while the certificate loads.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-            // 🚫 If no file → error immediately
+        try {
+            // Short delay to simulate loading
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // If no file URL
             if (!fileUrl || fileUrl.trim() === '' || fileUrl === '#') {
+                Swal.close();
                 return Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'No uploaded file for this document.',
+                    icon: 'warning',
+                    title: 'No Certificate Available',
+                    text: 'No training certificate has been uploaded for this record.',
                     showConfirmButton: false,
                     timer: 1500
                 });
             }
 
-            // ✅ Unified loading
-            Swal.fire({
-                title: 'Loading...',
-                text: 'Please wait while the file loads.',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => Swal.showLoading()
-            });
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             const response = await fetch(fileUrl);
-
-            if (!response.ok) {
-                throw new Error('No uploaded file for this document.');
-            }
-
             const contentType = response.headers.get('content-type') || '';
 
+            // If JSON returned → file missing or error
             if (contentType.includes('application/json')) {
                 const data = await response.json();
-                throw new Error(data.message || 'No uploaded file for this document.');
+                Swal.close();
+                return Swal.fire({
+                    icon: 'warning',
+                    title: 'No Certificate Available',
+                    text: data.message || 'No training certificate has been uploaded for this record.',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
             }
 
-            Swal.close();
+            if (!response.ok) {
+                throw new Error('No training certificate has been uploaded for this record.');
+            }
 
+            // File exists → open modal
+            Swal.close();
             frame.src = fileUrl;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
 
         } catch (error) {
-
             Swal.close();
-
             Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error.message || 'No uploaded file for this document.',
+                icon: 'warning',
+                title: 'No Certificate Available',
+                text: error.message || 'No training certificate has been uploaded for this record.',
                 showConfirmButton: false,
                 timer: 1500
             });
+            console.error(error);
         }
     }
 
@@ -1026,8 +1013,8 @@ document.addEventListener('DOMContentLoaded', function() {
             openTrainingCertificate(viewBtn.dataset.file);
             return;
         }
-        if (deleteBtn) {
 
+        if (deleteBtn) {
             const row = deleteBtn.closest('tr');
             const trainingName = row.children[1].textContent.trim();
 
@@ -1041,25 +1028,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#6b7280'
             }).then(result => {
-
                 if (result.isConfirmed) {
-
                     row.remove();
-
                     Swal.fire({
                         icon: 'success',
                         title: 'Deleted!',
-                        text: `Training "${trainingName}" has been deleted.`,
+                        text: `This training record has been deleted.`,
                         timer: 1200,
                         showConfirmButton: false
                     });
-
                     checkEmptyTable();
                 }
             });
         }
 
     });
+
     modal.addEventListener('click', function(e) {
         if (e.target === modal) {
             frame.src = '';
@@ -1070,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
+
 
 
 <?php
@@ -1207,8 +1192,7 @@ $documents = $documents ?? [
     <div class="bg-white w-full max-w-6xl h-[90vh] shadow-lg">
         <iframe id="fileFrame" src="" class="w-full h-full" frameborder="0"></iframe>
     </div>
-</div>
-<script>
+</div><script>
 document.addEventListener('DOMContentLoaded', function() {
 
     const modal = document.getElementById('fileModal');
@@ -1235,24 +1219,21 @@ document.addEventListener('DOMContentLoaded', function() {
             text: 'Please wait while the file loads.',
             allowOutsideClick: false,
             allowEscapeKey: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => Swal.showLoading()
         });
 
         setTimeout(async () => {
             try {
-
-                // If no file in button
-                if (!file) {
-                    throw new Error('No uploaded files for this document.');
+                // If no file in button → show friendly warning
+                if (!file || file.trim() === '' || file === '#') {
+                    throw new Error('No training certificate has been uploaded for this record.');
                 }
 
                 const response = await fetch(file);
 
                 // If backend returned error (404)
                 if (!response.ok) {
-                    let message = 'No uploaded files for this document.';
+                    let message = 'No training certificate has been uploaded for this record.';
                     try {
                         const data = await response.json();
                         message = data.message || message;
@@ -1264,10 +1245,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const contentType = response.headers.get('content-type') || '';
                 if (contentType.includes('application/json')) {
                     const data = await response.json();
-                    throw new Error(data.message || 'No uploaded files for this document.');
+                    throw new Error(data.message || 'No training certificate has been uploaded for this record.');
                 }
 
-                // ✅ File exists
+                // ✅ File exists → show modal
                 Swal.close();
                 frame.src = file;
                 modal.classList.remove('hidden');
@@ -1275,8 +1256,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } catch (error) {
                 Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
+                    icon: 'warning', // changed from 'error' to 'warning'
+                    title: 'No Certificate Available',
                     text: error.message,
                     timer: 2000,
                     showConfirmButton: false
@@ -1285,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 isOpening = false;
             }
 
-        }, 2000); // 2 seconds loading
+        }, 500); // loading delay
     });
 
     // Close modal when clicking outside iframe
@@ -1299,8 +1280,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 </script>
-
-
 
 <script>
 // Navigate to next step
@@ -1329,7 +1308,148 @@ function prevStep(currentStep){
     </div>
 </footer>
 <script>
+// Handle CLSU Employee main selection
+function handleClsuMainSelection(selectElement) {
+    const detailSelect = document.getElementById('clsu_employee_detail');
+    const specifyInput = document.getElementById('clsu_specify');
+    const hiddenInput = document.getElementById('clsu_employee_hidden');
+    
+    if (selectElement.value === 'Yes') {
+        detailSelect.classList.remove('hidden');
+        detailSelect.required = true;
+        specifyInput.classList.add('hidden');
+        specifyInput.value = '';
+        hiddenInput.value = 'Yes';
+    } else if (selectElement.value === 'No') {
+        detailSelect.classList.add('hidden');
+        detailSelect.required = false;
+        specifyInput.classList.add('hidden');
+        detailSelect.value = '';
+        specifyInput.value = '';
+        hiddenInput.value = 'No';
+    } else {
+        detailSelect.classList.add('hidden');
+        detailSelect.required = false;
+        specifyInput.classList.add('hidden');
+        detailSelect.value = '';
+        specifyInput.value = '';
+        hiddenInput.value = '';
+    }
+}
+
+// Handle CLSU Employee detail selection
+function handleClsuDetailSelection(selectElement) {
+    console.log('CLSU detail changed to:', selectElement.value);
+    const specifyInput = document.getElementById('clsu_specify');
+    const hiddenInput = document.getElementById('clsu_employee_hidden');
+    const typeHidden = document.getElementById('clsu_employee_type_hidden');
+    
+    console.log('Elements found:', {specifyInput, hiddenInput, typeHidden});
+    
+    if (selectElement.value) {
+        console.log('Value exists, showing specify textbox');
+        if (typeHidden) typeHidden.value = selectElement.value;
+        if (specifyInput) specifyInput.classList.remove('hidden');
+        if (hiddenInput) hiddenInput.value = 'Yes';
+        console.log('Specify textbox should now be visible');
+    } else {
+        console.log('No value, hiding specify textbox');
+        if (specifyInput) {
+            specifyInput.classList.add('hidden');
+            specifyInput.value = '';
+        }
+        if (typeHidden) typeHidden.value = '';
+        if (hiddenInput) hiddenInput.value = 'Yes';
+    }
+}
+
+// Handle PWD main selection
+function handlePwdMainSelection(selectElement) {
+    const detailSelect = document.getElementById('pwd_detail');
+    const specifyInput = document.getElementById('pwd_specify');
+    const hiddenInput = document.getElementById('pwd_hidden');
+    
+    if (selectElement.value === 'Yes') {
+        detailSelect.classList.remove('hidden');
+        detailSelect.required = true;
+        specifyInput.classList.add('hidden');
+        specifyInput.value = '';
+        hiddenInput.value = 'Yes';
+    } else if (selectElement.value === 'No') {
+        detailSelect.classList.add('hidden');
+        detailSelect.required = false;
+        specifyInput.classList.add('hidden');
+        detailSelect.value = '';
+        specifyInput.value = '';
+        hiddenInput.value = 'No';
+    } else {
+        detailSelect.classList.add('hidden');
+        detailSelect.required = false;
+        specifyInput.classList.add('hidden');
+        detailSelect.value = '';
+        specifyInput.value = '';
+        hiddenInput.value = '';
+    }
+}
+
+// Handle PWD detail selection
+function handlePwdDetailSelection(selectElement) {
+    console.log('PWD detail changed to:', selectElement.value);
+    const specifyInput = document.getElementById('pwd_specify');
+    const hiddenInput = document.getElementById('pwd_hidden');
+    const typeHidden = document.getElementById('pwd_type_hidden');
+    
+    if (selectElement.value) {
+        console.log('Showing PWD specify textbox');
+        specifyInput.classList.remove('hidden');
+        if (typeHidden) typeHidden.value = selectElement.value;
+        if (hiddenInput) hiddenInput.value = 'Yes';
+    } else {
+        console.log('Hiding PWD specify textbox');
+        specifyInput.classList.add('hidden');
+        specifyInput.value = '';
+        if (typeHidden) typeHidden.value = '';
+        if (hiddenInput) hiddenInput.value = 'Yes';
+    }
+}
+
+// Handle Indigenous main selection
+function handleIndigenousMainSelection(selectElement) {
+    const specifyInput = document.getElementById('indigenous_specify');
+    const hiddenInput = document.getElementById('indigenous_hidden');
+    
+    if (selectElement.value === 'Yes') {
+        specifyInput.classList.remove('hidden');
+        hiddenInput.value = 'Yes';
+    } else if (selectElement.value === 'No') {
+        specifyInput.classList.add('hidden');
+        specifyInput.value = '';
+        hiddenInput.value = 'No';
+    } else {
+        specifyInput.classList.add('hidden');
+        specifyInput.value = '';
+        hiddenInput.value = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    // Initialize required states for conditional fields
+    const clsuSelect = document.getElementById('clsu_employee_select');
+    const pwdSelect = document.getElementById('pwd_select');
+    
+    if (clsuSelect && clsuSelect.value === 'Yes') {
+        const clsuDetail = document.getElementById('clsu_employee_detail');
+        if (clsuDetail) {
+            clsuDetail.required = true;
+        }
+    }
+    
+    if (pwdSelect && pwdSelect.value === 'Yes') {
+        const pwdDetail = document.getElementById('pwd_detail');
+        if (pwdDetail) {
+            pwdDetail.required = true;
+        }
+    }
 
     // ---------- Navigation Steps ----------
     function nextStep(current){
@@ -1356,6 +1476,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const requiredFields = document.querySelectorAll('#step-' + item.step + ' [required]');
                 let allFilled = true;
                 requiredFields.forEach(field => {
+                    // Skip validation for hidden required fields
+                    if (field.offsetParent === null && field.classList.contains('hidden')) {
+                        return;
+                    }
+                    // Also skip if the field is not visible (display: none)
+                    if (window.getComputedStyle(field).display === 'none') {
+                        return;
+                    }
                     if (!field.value.trim()) {
                         allFilled = false;
                         field.classList.add('border-red-500');
@@ -1364,12 +1492,32 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
                 if (!allFilled) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Incomplete Information',
-                        text: 'Please fill out all required fields before proceeding.'
-                    });
+                    // Show inline error message instead of popup
+                    const errorMessage = document.createElement('div');
+                    errorMessage.id = 'validation-error-' + item.step;
+                    errorMessage.className = 'text-red-600 text-xs mt-2';
+                    errorMessage.textContent = 'Please fill out all required fields before proceeding.';
+                    
+                    // Remove existing error message if present
+                    const existingError = document.getElementById('validation-error-' + item.step);
+                    if (existingError) {
+                        existingError.remove();
+                    }
+                    
+                    // Add error message to the step container
+                    const stepContainer = document.getElementById('step-' + item.step);
+                    if (stepContainer) {
+                        stepContainer.appendChild(errorMessage);
+                        // Scroll to error message
+                        errorMessage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
                     return;
+                } else {
+                    // Remove error message if validation passes
+                    const existingError = document.getElementById('validation-error-' + item.step);
+                    if (existingError) {
+                        existingError.remove();
+                    }
                 }
                 nextStep(item.step);
             });
@@ -1426,7 +1574,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         Swal.fire({
                             icon: 'success',
                             title: 'Application Submitted Successfully!',
-                            html: '<div class="text-left"><p class="mb-2"><strong>Your application has been successfully processed.</strong></div>',
+                            html: '<div class="text-left"><p class="mb-2"><strong></strong></div>',
                             timer: 3000,
                             showConfirmButton: false
                         }).then(() => {
