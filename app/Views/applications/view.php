@@ -149,385 +149,400 @@ window.onclick = function(event) {
         ?>
 <div class="w-full bg-transparent p-0 text-gray-700 text-sm">
 <!-- JOB DETAILS -->
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Position</th>
-        <th class="px-2 py-1 border">Office</th>
-        <th class="px-2 py-1 border">Department</th>
-        <th class="px-2 py-1 border">Monthly Salary</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border"><?= esc($job['position_title'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($job['office'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= esc($job['department'] ?? '-') ?></td>
-        <td class="px-2 py-1 border"><?= isset($job['monthly_salary']) ? 'Php ' . number_format($job['monthly_salary'],2) : 'Php 0.00' ?></td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
-<div class="overflow-x-auto mb-4">
-  <table class="table-auto w-full border-collapse text-xs">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="px-2 py-1 border">Applied At</th>
-        <th class="px-2 py-1 border">Application Deadline</th>
-        <th class="px-2 py-1 border">Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td class="px-2 py-1 border">
-          <?= isset($app['applied_at']) ? date('F j, Y', strtotime($app['applied_at'])) : '-' ?>
-        </td>
-        <td class="px-2 py-1 border">
-            <?= !empty($job['application_deadline']) 
-            ? date('F j, Y', strtotime($job['application_deadline'])) 
-            : '-' ?>
-        </td>
-        <td class="px-2 py-1 border"><?= esc($app['application_status'] ?? '-') ?></td>
-      </tr>
-    </tbody>
-  </table>
+<div class="mb-5">
+    <!-- ROW 1: Status (Bigger and Highlighted) -->
+    <div class="mb-3">
+        <p class="text-sm font-bold text-clsuGreen"><?= 'STATUS : ' . esc($app['application_status'] ?? '-') ?></p>
+    </div>
+    
+    <!-- ROW 2: Position, Office, Department -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">POSITION</p>
+            <p class="text-xs text-gray-800"><?= esc($job['position_title'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">OFFICE</p>
+            <p class="text-xs text-gray-800"><?= esc($job['office'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">DEPARTMENT</p>
+            <p class="text-xs text-gray-800"><?= esc($job['department'] ?? '-') ?></p>
+        </div>
+    </div>
+    
+    <!-- ROW 3: Monthly Salary, Applied At, Application Deadline -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">MONTHLY SALARY</p>
+            <p class="text-xs text-gray-800"><?= isset($job['monthly_salary']) ? 'Php ' . number_format($job['monthly_salary'],2) : 'Php 0.00' ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">APPLIED AT</p>
+            <p class="text-xs text-gray-800">
+                <?= isset($app['applied_at']) ? date('F j, Y', strtotime($app['applied_at'])) : '-' ?>
+            </p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">APPLICATION DEADLINE</p>
+            <p class="text-xs text-gray-800">
+                <?= !empty($job['application_deadline']) 
+                ? date('F j, Y', strtotime($job['application_deadline'])) 
+                : '-' ?>
+            </p>
+        </div>
+    </div>
 </div>
 <div class="mb-8">
     <div class="flex items-center gap-2 mb-4">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
         </svg>
-        <h2 class="text-xl font-bold text-clsuGreen">Personal Information</h2>
+        <h2 class="text-sm font-bold text-clsuGreen">Personal Information</h2>
     </div>
     
-    <!-- Name Information -->
-    <h3 class="text-lg font-semibold text-gray-800 mb-3">Name Information</h3>
-    <div class="overflow-x-auto mb-6">
-        <table class="table-auto w-full border-collapse text-sm">
-            <tbody>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700 w-1/4">First Name</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['first_name'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Middle Name</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['middle_name'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Last Name</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['last_name'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Suffix</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['extension'] ?? '-') ?></td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- ROW 1: Name Information (4 items in one line) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">FIRST NAME</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['first_name'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">MIDDLE NAME</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['middle_name'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">LAST NAME</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['last_name'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">SUFFIX</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['extension'] ?? '-') ?></p>
+        </div>
     </div>
     
-    <!-- Personal Details -->
-    <h3 class="text-lg font-semibold text-gray-800 mb-3">Personal Details</h3>
-    <div class="overflow-x-auto mb-6">
-        <table class="table-auto w-full border-collapse text-sm">
-            <tbody>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700 w-1/4">Sex</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['sex'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Date of Birth</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Civil Status</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['civil_status'] ?? '-') ?></td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- ROW 2: Personal Details + Citizenship (4 items) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">SEX</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['sex'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">DATE OF BIRTH</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['date_of_birth_formatted'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">CIVIL STATUS</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['civil_status'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">CITIZENSHIP</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['citizenship'] ?? '-') ?></p>
+        </div>
     </div>
     
-    <!-- Contact Information -->
-    <h3 class="text-lg font-semibold text-gray-800 mb-3">Contact Information</h3>
-    <div class="overflow-x-auto mb-6">
-        <table class="table-auto w-full border-collapse text-sm">
-            <tbody>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700 w-1/4">Email</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['email'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Phone Number</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['phone'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Citizenship</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['citizenship'] ?? '-') ?></td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- ROW 3: Contact Information (2 items) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-3">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">EMAIL</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['email'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">PHONE NUMBER</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['phone'] ?? '-') ?></p>
+        </div>
     </div>
     
-    <!-- Address Information -->
-    <h3 class="text-lg font-semibold text-gray-800 mb-3">Address Information</h3>
-    <div class="overflow-x-auto">
-        <table class="table-auto w-full border-collapse text-sm">
-            <tbody>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700 w-1/4">Residential Address</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['residential_address'] ?? '-') ?></td>
-                </tr>
-                <tr class="border-b border-gray-200">
-                    <td class="py-2 font-medium text-gray-700">Permanent Address</td>
-                    <td class="py-2 text-gray-800"><?= esc($app['personal']['permanent_address'] ?? '-') ?></td>
-                </tr>
-            </tbody>
-        </table>
+    <!-- ROW 4: Address Information (2 items) -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">RESIDENTIAL ADDRESS</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['residential_address'] ?? '-') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">PERMANENT ADDRESS</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['permanent_address'] ?? '-') ?></p>
+        </div>
     </div>
 </div>
 
 <div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Additional Personal Details</h2>
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Additional Personal Details</h2>
+    </div>
     
-    <div class="space-y-2">
+    <!-- ROW 1: CLSU Employee, Religion, Indigenous Person -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
         <div>
-            <p class="font-medium text-gray-700">Are you CLSU Employee?</p>
-            <p class="ml-4"><?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?></p>
+            <p class="text-xs font-bold text-gray-700 mb-1">ARE YOU CLSU EMPLOYEE?</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_clsu_employee'] ?? 'No') ?></p>
             <?php if (!empty($app['personal']['clsu_employee_specify']) && $app['personal']['is_clsu_employee'] === 'Yes'): ?>
-                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></p>
+                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['clsu_employee_specify']) ?></p>
             <?php endif; ?>
         </div>
         <div>
-            <p class="font-medium text-gray-700">Religion</p>
-            <p class="ml-4"><?= esc($app['personal']['religion'] ?? '-') ?></p>
+            <p class="text-xs font-bold text-gray-700 mb-1">RELIGION</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['religion'] ?? '-') ?></p>
         </div>
         <div>
-            <p class="font-medium text-gray-700">Indigenous Person</p>
-            <p class="ml-4"><?= esc($app['personal']['is_indigenous'] ?? 'No') ?></p>
+            <p class="text-xs font-bold text-gray-700 mb-1">INDIGENOUS PERSON</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_indigenous'] ?? 'No') ?></p>
             <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
-                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></p>
+                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></p>
             <?php endif; ?>
         </div>
+    </div>
+    
+    <!-- ROW 2: Person with Disability, Solo Parent -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
         <div>
-            <p class="font-medium text-gray-700">Person with Disability</p>
-            <p class="ml-4"><?= esc($app['personal']['is_pwd'] ?? 'No') ?></p>
+            <p class="text-xs font-bold text-gray-700 mb-1">PERSON WITH DISABILITY</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_pwd'] ?? 'No') ?></p>
             <?php if (!empty($app['personal']['pwd_specify']) && $app['personal']['is_pwd'] === 'Yes'): ?>
-                <p class="ml-8 text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></p>
+                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['pwd_specify']) ?></p>
             <?php endif; ?>
         </div>
         <div>
-            <p class="font-medium text-gray-700">Solo Parent</p>
-            <p class="ml-4"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></p>
+            <p class="text-xs font-bold text-gray-700 mb-1">SOLO PARENT</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></p>
         </div>
     </div>
 </div>
 <div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Educational Background</h2>
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l1.818-.78v3.957a9.026 9.026 0 00-2.364 1.638z"/>
+            <path d="M15.75 12.5a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 00-1-1h-2z"/>
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Educational Background</h2>
+    </div>
     
     <?php if (!empty($app['education_display'])): ?>
-        <?php 
-        $currentLevel = '';
-        foreach ($app['education_display'] as $edu): 
-            if (!empty($edu['level']) && $edu['level'] !== $currentLevel):
-                $currentLevel = $edu['level'];
-                if ($currentLevel !== '-'): ?>
-                    <h3 class="text-lg font-semibold text-gray-800 mb-3 mt-6"><?= esc($currentLevel) ?></h3>
-                <?php endif;
-            endif;
-            if ($edu['school_name'] !== '-' || $edu['degree_course'] !== '-'): ?>
-                <div class="space-y-2 mb-4 ml-4">
-                    <div>
-                        <p class="font-medium text-gray-700">School Name</p>
-                        <p class="ml-4"><?= esc($edu['school_name']) ?></p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-700">Degree / Course</p>
-                        <p class="ml-4"><?= esc($edu['degree_course']) ?></p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-700">Period</p>
-                        <p class="ml-4"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-700">Year Graduated</p>
-                        <p class="ml-4"><?= esc($edu['year_graduated']) ?></p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-700">Highest Level / Units Earned</p>
-                        <p class="ml-4"><?= esc($edu['highest_level_units']) ?></p>
-                    </div>
-                    <div>
-                        <p class="font-medium text-gray-700">Scholarship / Academic Honors</p>
-                        <p class="ml-4"><?= esc($edu['awards']) ?></p>
-                    </div>
+        <!-- Labels Row (shown only once at the top) -->
+        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-1">
+            <div><p class="text-xs font-bold text-gray-700">LEVEL</p></div>
+            <div><p class="text-xs font-bold text-gray-700">SCHOOL NAME</p></div>
+            <div><p class="text-xs font-bold text-gray-700">DEGREE / COURSE</p></div>
+            <div><p class="text-xs font-bold text-gray-700">PERIOD</p></div>
+            <div><p class="text-xs font-bold text-gray-700">YEAR GRADUATED</p></div>
+            <div><p class="text-xs font-bold text-gray-700">HIGHEST LEVEL / UNITS EARNED</p></div>
+            <div><p class="text-xs font-bold text-gray-700">SCHOLARSHIP / ACADEMIC HONORS</p></div>
+        </div>
+        
+        <!-- Data Rows -->
+        <?php foreach ($app['education_display'] as $edu): 
+            if ($edu['school_name'] !== '-' || $edu['degree_course'] !== '-'): 
+                // Combine degree and course information
+                $degreeCourseDisplay = '';
+                if (!empty($edu['degree_course']) && $edu['degree_course'] !== '-') {
+                    $degreeCourseDisplay = esc($edu['degree_course']);
+                }
+                if (!empty($edu['course']) && $edu['course'] !== '-') {
+                    if (!empty($degreeCourseDisplay)) {
+                        $degreeCourseDisplay .= ' - ' . esc($edu['course']);
+                    } else {
+                        $degreeCourseDisplay = esc($edu['course']);
+                    }
+                }
+                if (empty($degreeCourseDisplay)) {
+                    $degreeCourseDisplay = '-';
+                }
+                ?>
+                <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                    <div><p class="text-xs font-bold text-gray-800"><?= !empty($edu['level']) && $edu['level'] !== '-' ? esc($edu['level']) : '-' ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= esc($edu['school_name']) ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= $degreeCourseDisplay ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= esc($edu['year_graduated']) ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= esc($edu['highest_level_units']) ?></p></div>
+                    <div><p class="text-xs text-gray-800"><?= esc($edu['awards']) ?></p></div>
                 </div>
             <?php endif;
         endforeach; ?>
+        
     <?php else: ?>
         <div class="text-center py-4">
-            <p class="text-gray-500">No education records found.</p>
+            <p class="text-gray-500 text-sm">No education records found.</p>
         </div>
     <?php endif; ?>
 </div>
 
 <div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Work Experience</h2>
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd" />
+            <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Work Experience</h2>
+    </div>
     
     <?php if (!empty($app['work'])): ?>
+        <!-- Labels Row (shown only once at the top) -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-1">
+            <div><p class="text-xs font-bold text-gray-700">POSITION / TITLE</p></div>
+            <div><p class="text-xs font-bold text-gray-700">OFFICE</p></div>
+            <div><p class="text-xs font-bold text-gray-700">INCLUSIVE DATES</p></div>
+            <div><p class="text-xs font-bold text-gray-700">STATUS OF APPOINTMENT</p></div>
+            <div><p class="text-xs font-bold text-gray-700">GOVERNMENT SERVICE</p></div>
+        </div>
+        
+        <!-- Data Rows -->
         <?php foreach ($app['work'] as $work): ?>
-            <div class="space-y-2 mb-6 ml-4">
-                <div>
-                    <p class="font-medium text-gray-700">Position / Title</p>
-                    <p class="ml-4"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-700">Office</p>
-                    <p class="ml-4"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-700">Inclusive Dates</p>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                <div><p class="text-xs font-bold text-clsuGreen"><?= !empty($work['position_title']) ? esc($work['position_title']) : '-' ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= !empty($work['office']) ? esc($work['office']) : '-' ?></p></div>
+                <div><p class="text-xs text-gray-800">
                     <?php 
                       $from = !empty($work['date_from']) ? date('F d, Y', strtotime($work['date_from'])) : '-';
                       $to   = !empty($work['date_to']) ? date('F d, Y', strtotime($work['date_to'])) : '-';
+                      echo $from . ' - ' . $to;
                     ?>
-                    <p class="ml-4"><?= $from ?> - <?= $to ?></p>
-                </div>
+                </p></div>
+                <div><p class="text-xs text-gray-800"><?= !empty($work['status_of_appointment']) ? esc($work['status_of_appointment']) : '-' ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= (isset($work['govt_service']) && strtoupper($work['govt_service']) === 'YES') ? 'Yes' : 'No' ?></p></div>
+            </div>
+        <?php endforeach; ?>
+        
+    <?php else: ?>
+        <div class="text-center py-4">
+            <p class="text-gray-500 text-sm">No work experience records found.</p>
+        </div>
+    <?php endif; ?>
+</div>
+<div class="mb-8">
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Civil Service Eligibility</h2>
+    </div>
+    
+    <?php if (!empty($app['civil'])): ?>
+        <!-- Labels Row (shown only once at the top) -->
+        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-1">
+            <div><p class="text-xs font-bold text-gray-700">ELIGIBILITY</p></div>
+            <div><p class="text-xs font-bold text-gray-700">RATING / EXAM</p></div>
+            <div><p class="text-xs font-bold text-gray-700">DATE OF EXAMINATION</p></div>
+            <div><p class="text-xs font-bold text-gray-700">PLACE OF EXAMINATION</p></div>
+            <div><p class="text-xs font-bold text-gray-700">LICENSE / PRC NO.</p></div>
+            <div><p class="text-xs font-bold text-gray-700">VALID UNTIL</p></div>
+            <div><p class="text-xs font-bold text-gray-700">CERTIFICATE</p></div>
+        </div>
+        
+        <!-- Data Rows -->
+        <?php foreach ($app['civil'] as $cs): ?>
+            <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                <div><p class="text-xs font-bold text-clsuGreen"><?= esc($cs['eligibility'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($cs['rating'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800">
+                    <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
+                </p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($cs['place_of_exam'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($cs['license_no'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800">
+                    <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
+                </p></div>
                 <div>
-                    <p class="font-medium text-gray-700">Status of Appointment</p>
-                    <p class="ml-4"><?= !empty($work['status_of_appointment']) ? esc($work['status_of_appointment']) : '-' ?></p>
-                </div>
-                <div>
-                    <p class="font-medium text-gray-700">Government Service</p>
-                    <p class="ml-4"><?= (isset($work['govt_service']) && strtoupper($work['govt_service']) === 'YES') ? 'Yes' : 'No' ?></p>
+                    <?php if (!empty($cs['certificate'])): ?>
+                        <button type="button" 
+                                class="view-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                                data-file="<?= site_url('applications/viewCivilCertificate/'.$cs['certificate']) ?>">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            View Certificate
+                        </button>
+                    <?php else: ?>
+                        <span class="text-gray-500 text-xs">-</span>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
+        
     <?php else: ?>
         <div class="text-center py-4">
-            <p class="text-gray-500">No work experience records found.</p>
-        </div>
-    <?php endif; ?>
-</div>
-<div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Civil Service Eligibility</h2>
-    
-    <?php if (!empty($app['civil'])): ?>
-        <div class="space-y-4">
-            <?php foreach ($app['civil'] as $cs): ?>
-                <div class="bg-white rounded-lg border border-gray-200 p-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Eligibility</p>
-                            <p class="text-base font-medium text-gray-800"><?= esc($cs['eligibility'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Rating / Exam</p>
-                            <p class="text-base text-gray-800"><?= esc($cs['rating'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Date of Examination</p>
-                            <p class="text-base text-gray-800">
-                                <?= !empty($cs['date_of_exam']) && $cs['date_of_exam'] !== '-' ? date('F d, Y', strtotime($cs['date_of_exam'])) : '-' ?>
-                            </p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Place of Examination</p>
-                            <p class="text-base text-gray-800"><?= esc($cs['place_of_exam'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">License / PRC No.</p>
-                            <p class="text-base text-gray-800"><?= esc($cs['license_no'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Valid Until</p>
-                            <p class="text-base text-gray-800">
-                                <?= !empty($cs['license_valid_until']) && $cs['license_valid_until'] !== '-' ? date('F d, Y', strtotime($cs['license_valid_until'])) : '-' ?>
-                            </p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <p class="text-sm font-medium text-gray-600 mb-1">Certificate</p>
-                            <?php if (!empty($cs['certificate'])): ?>
-                                <button type="button" 
-                                        class="view-certificate-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline">
-                                    View Certificate
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-500">No certificate available</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        </div>
-    <?php else: ?>
-        <div class="text-center py-8">
-            <p class="text-gray-500 text-lg">No civil service records found.</p>
+            <p class="text-gray-500 text-sm">No civil service eligibility records found.</p>
         </div>
     <?php endif; ?>
 </div>
 
 <div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Trainings</h2>
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l1.818-.78v3.957a9.026 9.026 0 00-2.364 1.638z"/>
+            <path d="M15.75 12.5a1 1 0 00-1 1v2a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 00-1-1h-2z"/>
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Trainings</h2>
+    </div>
     
     <?php if (!empty($trainings)): ?>
-        <div class="space-y-4">
-            <?php foreach ($trainings as $tr): ?>
-                <div class="bg-white rounded-lg border border-gray-200 p-5">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Training Name</p>
-                            <p class="text-base font-medium text-gray-800"><?= esc($tr['training_name'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Category</p>
-                            <p class="text-base text-gray-800"><?= esc($tr['training_category_name'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Inclusive Dates</p>
-                            <p class="text-base text-gray-800"><?= $tr['date_from'] ?> - <?= $tr['date_to'] ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Facilitator</p>
-                            <p class="text-base text-gray-800"><?= esc($tr['training_facilitator'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Hours</p>
-                            <p class="text-base text-gray-800"><?= esc($tr['training_hours'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 mb-1">Sponsor</p>
-                            <p class="text-base text-gray-800"><?= esc($tr['training_sponsor'] ?? '-') ?></p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <p class="text-sm font-medium text-gray-600 mb-1">Remarks</p>
-                            <p class="text-base text-gray-800"><?= esc($tr['training_remarks'] ?? '-') ?></p>
-                        </div>
-                        <div class="md:col-span-2">
-                            <p class="text-sm font-medium text-gray-600 mb-1">Certificate</p>
-                            <?php if (!empty($tr['certificate_file'])): ?>
-                                <button type="button" 
-                                        class="view-training-certificate-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline"
-                                        data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
-                                    View Certificate
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-500">No certificate available</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+        <!-- Labels Row (shown only once at the top) -->
+        <div class="grid grid-cols-1 md:grid-cols-8 gap-2 mb-1">
+            <div><p class="text-xs font-bold text-gray-700">TRAINING NAME</p></div>
+            <div><p class="text-xs font-bold text-gray-700">CATEGORY</p></div>
+            <div><p class="text-xs font-bold text-gray-700">INCLUSIVE DATES</p></div>
+            <div><p class="text-xs font-bold text-gray-700">FACILITATOR</p></div>
+            <div><p class="text-xs font-bold text-gray-700">HOURS</p></div>
+            <div><p class="text-xs font-bold text-gray-700">SPONSOR</p></div>
+            <div><p class="text-xs font-bold text-gray-700">REMARKS</p></div>
+            <div><p class="text-xs font-bold text-gray-700">CERTIFICATE</p></div>
         </div>
+        
+        <!-- Data Rows -->
+        <?php foreach ($trainings as $tr): ?>
+            <div class="grid grid-cols-1 md:grid-cols-8 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                <div><p class="text-xs font-bold text-clsuGreen"><?= esc($tr['training_name'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_category_name'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800">
+                    <?php 
+                    $from = !empty($tr['date_from']) ? date('F d, Y', strtotime($tr['date_from'])) : '-';
+                    $to = !empty($tr['date_to']) ? date('F d, Y', strtotime($tr['date_to'])) : '-';
+                    echo $from . ' - ' . $to;
+                    ?>
+                </p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_facilitator'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_hours'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_sponsor'] ?? '-') ?></p></div>
+                <div><p class="text-xs text-gray-800"><?= esc($tr['training_remarks'] ?? '-') ?></p></div>
+                <div>
+                    <?php if (!empty($tr['certificate_file'])): ?>
+                        <button type="button" 
+                                class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                                data-file="<?= site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) ?>">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            View Certificate
+                        </button>
+                    <?php else: ?>
+                        <span class="text-gray-500 text-xs">-</span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+        
     <?php else: ?>
-        <div class="text-center py-8">
-            <p class="text-gray-500 text-lg">No trainings records found.</p>
+        <div class="text-center py-4">
+            <p class="text-gray-500 text-sm">No training records found.</p>
         </div>
     <?php endif; ?>
 </div>
 
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-8"></div>
+
 <div class="mb-8">
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 pb-2 border-b border-clsuGreen">Uploaded Documents</h2>
+    <div class="flex items-center gap-2 mb-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-clsuGreen" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" />
+        </svg>
+        <h2 class="text-sm font-bold text-clsuGreen">Uploaded Documents</h2>
+    </div>
     
     <?php
     // List of document fields in the database
@@ -549,37 +564,70 @@ window.onclick = function(event) {
     ?>
     
     <?php if ($hasDocuments): ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <?php foreach ($docs as $key => $label): 
-                $file = $app['documents'][$key] ?? null;
-            ?>
-                <div class="bg-white rounded-lg border border-gray-200 p-4">
-                    <div class="flex justify-between items-start">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-600 mb-1">Document</p>
-                            <p class="text-base font-medium text-gray-800 mb-2"><?= esc($label) ?></p>
-                        </div>
-                        <div>
-                            <?php if (!empty($file)): ?>
-                                <button type="button" 
-                                        class="view-document-btn text-blue-600 text-sm font-medium hover:text-blue-800 underline"
-                                        data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 text-sm">No file uploaded</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                </div>
-            <?php endforeach; ?>
+        <!-- Labels Row (shown only once at the top) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
+            <div><p class="text-xs font-bold text-gray-700">DOCUMENT TYPE</p></div>
+            <div><p class="text-xs font-bold text-gray-700">ACTION</p></div>
         </div>
+        
+        <!-- Data Rows -->
+        <?php foreach ($docs as $key => $label): 
+            $file = $app['documents'][$key] ?? null;
+            if (!empty($file)):
+        ?>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                <div>
+                    <p class="text-xs font-bold text-clsuGreen"><?= ucfirst(str_replace('_', ' ', $key)) ?></p>
+                    <p class="text-xs text-gray-600 mt-1"><?= esc($label) ?></p>
+                </div>
+                <div>
+                    <button type="button" 
+                            class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                            data-file="<?= site_url('applications/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        View Document
+                    </button>
+                </div>
+            </div>
+        <?php 
+            endif;
+        endforeach; ?>
+        
     <?php else: ?>
-        <div class="text-center py-8">
-            <p class="text-gray-500 text-lg">No documents uploaded.</p>
+        <div class="text-center py-4">
+            <p class="text-gray-500 text-sm">No documents uploaded.</p>
         </div>
     <?php endif; ?>
 </div>
+
+<!-- Green Divider Line -->
+<div class="border-t-2 border-clsuGreen my-8"></div>
+
+<!-- Edit Prompt Section - Yellow/Orange Style -->
+<?php if (($app['application_status'] ?? '') === 'Submitted'): ?>
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-6 rounded">
+    <div class="flex items-start">
+        <svg class="w-4 h-4 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+        <div class="flex-1">
+            <h3 class="text-sm font-semibold text-yellow-800 mb-1">Need to Edit Your Documents?</h3>
+            <p class="text-yellow-700 text-xs mb-2">You can edit your application files now while your application is in Submitted status.</p>
+            <button type="button" 
+                    onclick="openEditModal(<?= esc($app['id_job_application']) ?>)"
+                    class="inline-flex items-center px-3 py-1.5 bg-clsuGreen text-white text-xs font-medium rounded-lg hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Documents Now
+            </button>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 </div>
 </div>
 </div>
@@ -615,12 +663,322 @@ window.onclick = function(event) {
     </div>
 </div>
 
+<!-- Edit Files Modal -->
+<div id="editFilesModal"
+     class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50
+            opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+    <div id="editFilesModalBox"
+         class="bg-white rounded-xl w-11/12 max-w-4xl p-4
+                transform scale-95 opacity-0 transition-all duration-300">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-clsuGreen">
+                Edit File Attachments
+            </h3>
+            <button onclick="closeEditModal()" class="text-gray-500 hover:text-gray-700 text-lg">✕</button>
+        </div>
+
+        <div class="mb-3 p-3 bg-blue-50 rounded text-sm text-blue-800">
+            <strong>PS:</strong> Upload PDF files only, not exceeding 5 MB.
+        </div>
+
+        <form id="editFilesForm"
+              method="POST"
+              enctype="multipart/form-data"
+              class="space-y-3">
+            <input type="hidden" name="job_application_id" id="editAppId">
+
+            <div class="border border-gray-200 rounded-lg overflow-hidden">
+                <table class="w-full border-collapse text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-3 py-2 border text-left font-medium">Files</th>
+                            <th class="px-3 py-2 border text-left font-medium">Uploads</th>
+                            <th class="px-3 py-2 border text-left font-medium">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- PDS Row -->
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-3 py-2 border">
+                                <div class="font-medium">1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)</div>
+                                <div id="pds-view-link" class="mt-1"></div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <div id="pds-current" class="text-gray-600 text-sm">No file uploaded</div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <input type="file" 
+                                       name="pds" 
+                                       accept=".pdf" 
+                                       class="hidden" 
+                                       id="pds-upload"
+                                       data-max-size="5242880">
+                                <label for="pds-upload" 
+                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
+                                    Choose File
+                                </label>
+                                <div id="pds-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            </td>
+                        </tr>
+
+                        <!-- Performance Rating Row -->
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-3 py-2 border">
+                                <div class="font-medium">2. Performance rating in the present position for the last rating period</div>
+                                <div id="performance-rating-view-link" class="mt-1"></div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <div id="performance-rating-current" class="text-gray-600 text-sm">No file uploaded</div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <input type="file" 
+                                       name="performance_rating" 
+                                       accept=".pdf" 
+                                       class="hidden" 
+                                       id="performance-rating-upload"
+                                       data-max-size="5242880">
+                                <label for="performance-rating-upload" 
+                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
+                                    Choose File
+                                </label>
+                                <div id="performance-rating-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            </td>
+                        </tr>
+
+                        <!-- Resume Row -->
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-3 py-2 border">
+                                <div class="font-medium">3. Resume</div>
+                                <div id="resume-view-link" class="mt-1"></div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <div id="resume-current" class="text-gray-600 text-sm">No file uploaded</div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <input type="file" 
+                                       name="resume" 
+                                       accept=".pdf" 
+                                       class="hidden" 
+                                       id="resume-upload"
+                                       data-max-size="5242880">
+                                <label for="resume-upload" 
+                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
+                                    Choose File
+                                </label>
+                                <div id="resume-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            </td>
+                        </tr>
+
+                        <!-- TOR Row -->
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-3 py-2 border">
+                                <div class="font-medium">4. Transcript of Records</div>
+                                <div id="tor-view-link" class="mt-1"></div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <div id="tor-current" class="text-gray-600 text-sm">No file uploaded</div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <input type="file" 
+                                       name="tor" 
+                                       accept=".pdf" 
+                                       class="hidden" 
+                                       id="tor-upload"
+                                       data-max-size="5242880">
+                                <label for="tor-upload" 
+                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
+                                    Choose File
+                                </label>
+                                <div id="tor-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            </td>
+                        </tr>
+
+                        <!-- Diploma Row -->
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 py-2 border">
+                                <div class="font-medium">5. Diploma</div>
+                                <div id="diploma-view-link" class="mt-1"></div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <div id="diploma-current" class="text-gray-600 text-sm">No file uploaded</div>
+                            </td>
+                            <td class="px-3 py-2 border">
+                                <input type="file" 
+                                       name="diploma" 
+                                       accept=".pdf" 
+                                       class="hidden" 
+                                       id="diploma-upload"
+                                       data-max-size="5242880">
+                                <label for="diploma-upload" 
+                                       class="inline-block bg-clsuGreen text-white px-3 py-1 rounded text-sm cursor-pointer hover:bg-green-800 transition-colors">
+                                    Choose File
+                                </label>
+                                <div id="diploma-filename" class="text-xs text-gray-500 mt-1">No file chosen</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-200">
+                <button type="button"
+                        onclick="closeEditModal()"
+                        class="bg-gray-200 hover:bg-gray-300 text-gray-700
+                               px-4 py-2 rounded text-sm font-medium transition-colors">
+                    Cancel
+                </button>
+                <button type="submit"
+                        class="bg-clsuGreen hover:bg-green-800 text-white
+                               px-4 py-2 rounded text-sm font-medium transition-colors">
+                    Update Files
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
         <button onclick="closeModal()" class="float-right text-gray-500 text-xl">✕</button>
         <div id="modalContent"></div>
     </div>
 </div>
+
+<script>
+// Edit Modal Functions
+function openEditModal(applicationId) {
+    const modal = document.getElementById('editFilesModal');
+    const box = document.getElementById('editFilesModalBox');
+    
+    // Set form action
+    document.getElementById('editAppId').value = applicationId;
+    document.getElementById('editFilesForm').action = '<?= base_url('applications/updateFiles') ?>';
+    
+    // Reset file inputs and filenames
+    document.querySelectorAll('input[type="file"]').forEach(input => {
+        input.value = '';
+    });
+    document.querySelectorAll('[id$="-filename"]').forEach(el => {
+        el.textContent = 'No file chosen';
+    });
+    document.querySelectorAll('[id$="-view-link"]').forEach(el => {
+        el.innerHTML = '';
+    });
+    document.querySelectorAll('[id$="-current"]').forEach(el => {
+        el.textContent = 'No file uploaded';
+        el.className = 'text-gray-600 text-sm';
+    });
+    
+    // Fetch existing files
+    fetch('<?= base_url('applications/getFiles/') ?>' + applicationId)
+        .then(res => res.json())
+        .then(data => {
+            // Populate current files and view links
+            if (data.pds) {
+                const fileName = data.pds.split('/').pop();
+                document.getElementById('pds-current').textContent = fileName;
+                document.getElementById('pds-current').className = 'text-green-700 text-sm';
+                document.getElementById('pds-view-link').innerHTML = 
+                    `<a href="${data.pds}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            }
+            if (data.performance_rating) {
+                const fileName = data.performance_rating.split('/').pop();
+                document.getElementById('performance-rating-current').textContent = fileName;
+                document.getElementById('performance-rating-current').className = 'text-green-700 text-sm';
+                document.getElementById('performance-rating-view-link').innerHTML = 
+                    `<a href="${data.performance_rating}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            }
+            if (data.resume) {
+                const fileName = data.resume.split('/').pop();
+                document.getElementById('resume-current').textContent = fileName;
+                document.getElementById('resume-current').className = 'text-green-700 text-sm';
+                document.getElementById('resume-view-link').innerHTML = 
+                    `<a href="${data.resume}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            }
+            if (data.tor) {
+                const fileName = data.tor.split('/').pop();
+                document.getElementById('tor-current').textContent = fileName;
+                document.getElementById('tor-current').className = 'text-green-700 text-sm';
+                document.getElementById('tor-view-link').innerHTML = 
+                    `<a href="${data.tor}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            }
+            if (data.diploma) {
+                const fileName = data.diploma.split('/').pop();
+                document.getElementById('diploma-current').textContent = fileName;
+                document.getElementById('diploma-current').className = 'text-green-700 text-sm';
+                document.getElementById('diploma-view-link').innerHTML = 
+                    `<a href="${data.diploma}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            }
+            
+            // Open modal with animation
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                box.classList.remove('scale-95', 'opacity-0');
+                box.classList.add('scale-100', 'opacity-100');
+            }, 50);
+        })
+        .catch(err => {
+            console.error('Error fetching files:', err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to load application files.',
+                confirmButtonColor: '#0B6B3A'
+            });
+        });
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editFilesModal');
+    const box = document.getElementById('editFilesModalBox');
+    
+    box.classList.remove('scale-100', 'opacity-100');
+    box.classList.add('scale-95', 'opacity-0');
+    
+    setTimeout(() => {
+        modal.classList.add('opacity-0', 'pointer-events-none');
+        modal.classList.remove('opacity-100');
+    }, 200);
+}
+
+// Handle file input changes
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'file') {
+        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        const fileId = e.target.id.replace('-upload', '');
+        document.getElementById(fileId + '-filename').textContent = fileName;
+        
+        // File size validation
+        if (e.target.files[0] && e.target.files[0].size > 5242880) { // 5MB
+            Swal.fire({
+                icon: 'warning',
+                title: 'File Too Large',
+                text: 'File size must not exceed 5 MB.',
+                confirmButtonColor: '#0B6B3A'
+            });
+            e.target.value = '';
+            document.getElementById(fileId + '-filename').textContent = 'No file chosen';
+        }
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('editFilesModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEditModal();
+    }
+});
+
+// Close with Escape key
+document.addEventListener('keydown', function(e) {
+    const modal = document.getElementById('editFilesModal');
+    if (e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
+        closeEditModal();
+    }
+});
+</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {

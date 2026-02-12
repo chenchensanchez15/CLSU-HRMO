@@ -504,6 +504,7 @@ public function view($application_id = null)
                     'level' => $index === 0 ? $levelName : '', // Show level name only on first row
                     'school_name' => !empty($edu['school_name']) && strtoupper($edu['school_name']) !== 'N/A' ? $edu['school_name'] : '-',
                     'degree_course' => !empty($edu['degree_name']) ? $edu['degree_name'] : (!empty($edu['degree_course']) && strtoupper($edu['degree_course']) !== 'N/A' ? $edu['degree_course'] : '-'),
+                    'course' => !empty($edu['course']) && strtoupper($edu['course']) !== 'N/A' ? $edu['course'] : '-',
                     'period_from' => !empty($edu['period_from']) && strtoupper($edu['period_from']) !== 'N/A' ? $edu['period_from'] : '-',
                     'period_to' => !empty($edu['period_to']) && strtoupper($edu['period_to']) !== 'N/A' ? $edu['period_to'] : '-',
                     'highest_level_units' => !empty($edu['highest_level_units']) && strtoupper($edu['highest_level_units']) !== 'N/A' ? $edu['highest_level_units'] : '-',
@@ -1241,19 +1242,91 @@ public function viewPhoto($user_id)
                     ->setBody(file_get_contents($filePath));
     }
 
+public function updateFiles()
+{
+    $application_id = $this->request->getPost('job_application_id');
+    
+    if (!$application_id) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Application ID is required.'
+        ]);
+    }
+    
+    $db = \Config\Database::connect();
+    $uploadPath = WRITEPATH . 'uploads/files/';
+    
+    // Get existing documents
+    $existingDocs = $db->table('application_documents')
+        ->where('job_application_id', $application_id)
+        ->get()
+        ->getRowArray() ?? [];
+    
+    $docData = [];
+    $currentDate = date('Y-m-d H:i:s');
+    
+    // Handle file uploads for each document type
+    $files = ['pds', 'performance_rating', 'resume', 'tor', 'diploma'];
+    
+    foreach ($files as $fileInput) {
+        $file = $this->request->getFile($fileInput);
+        $oldFile = $existingDocs[$fileInput] ?? null;
+        
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            // Upload new file
+            $newName = time() . '_' . $file->getRandomName();
+            $file->move($uploadPath, $newName);
+            $docData[$fileInput] = $newName;
+        } elseif (!empty($oldFile)) {
+            // Keep existing file
+            $docData[$fileInput] = $oldFile;
+        } else {
+            // No file
+            $docData[$fileInput] = null;
+        }
+    }
+    
+    $docData['updated_at'] = $currentDate;
+    $docData['uploaded_at'] = $currentDate;
+    
+    // Update or insert document record
+    if ($existingDocs) {
+        $db->table('application_documents')
+            ->where('job_application_id', $application_id)
+            ->update($docData);
+    } else {
+        $docData['job_application_id'] = $application_id;
+        $docData['created_at'] = $currentDate;
+        $db->table('application_documents')->insert($docData);
+    }
+    
+    return $this->response->setJSON([
+        'success' => true,
+        'message' => 'Files updated successfully!'
+    ]);
+}
+
 public function getFiles($id)
 {
     $model = new \App\Models\ApplicantDocumentsModel();
     $files = $model->where('job_application_id', $id)->first();
-
+    
     if (!$files) {
-        return $this->response->setJSON([]);
+        return $this->response->setJSON([
+            'pds' => null,
+            'performance_rating' => null,
+            'resume' => null,
+            'tor' => null,
+            'diploma' => null
+        ]);
     }
-
+    
     return $this->response->setJSON([
-        'resume'      => $files['resume'] ? base_url('uploads/' . $files['resume']) : null,
-        'tor'         => $files['tor'] ? base_url('uploads/' . $files['tor']) : null,
-        'certificate' => $files['certificate'] ? base_url('uploads/' . $files['certificate']) : null,
+        'pds' => $files['pds'] ? base_url('uploads/files/' . $files['pds']) : null,
+        'performance_rating' => $files['performance_rating'] ? base_url('uploads/files/' . $files['performance_rating']) : null,
+        'resume' => $files['resume'] ? base_url('uploads/files/' . $files['resume']) : null,
+        'tor' => $files['tor'] ? base_url('uploads/files/' . $files['tor']) : null,
+        'diploma' => $files['diploma'] ? base_url('uploads/files/' . $files['diploma']) : null,
     ]);
 }
 
