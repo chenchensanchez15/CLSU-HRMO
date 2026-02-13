@@ -37,6 +37,8 @@ $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
 
 // Documents & Files
 $routes->get('applications/viewDocument/(:num)/(:segment)', 'Applications::viewDocument/$1/$2');
+$routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
+$routes->post('applications/updateFiles', 'Applications::updateFiles');
 $routes->get('file/viewDocument/(:num)/(:segment)', 'File::viewDocument/$1/$2');
 $routes->get('applications/viewPhoto/(:num)', 'Applications::viewPhoto/$1');
 $routes->get('applications/viewResume/(:num)', 'Applications::viewResume/$1');

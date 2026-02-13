@@ -706,141 +706,206 @@ window.onclick = function(event) {
 </div>
 
 <!-- Documents Modal -->
-<div id="document-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+<div id="document-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
         <iframe id="document-frame" class="flex-1 w-full h-full border-none"></iframe>
     </div>
 </div>
 
-<!-- Edit Files Modal (Compact Full Version) -->
+<!-- ===================== EDIT FILES MODAL ===================== -->
 <div id="editFilesModal"
-     class="fixed inset-0 flex items-center justify-center bg-black/50
-            opacity-0 pointer-events-none transition-opacity duration-300 z-50">
+     class="fixed inset-0 flex items-center justify-center bg-black/60
+            opacity-0 pointer-events-none transition-all duration-500 ease-out z-50">
 
     <div id="editFilesModalBox"
-         class="bg-white rounded-lg w-11/12 max-w-xl p-2
-                transform scale-95 opacity-0 transition-all duration-300">
+         class="bg-white rounded-2xl w-11/12 max-w-4xl h-[85vh]
+                transform scale-95 opacity-0
+                transition-all duration-500 ease-out
+                overflow-hidden shadow-2xl border border-gray-200 flex flex-col">
 
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-2">
-            <h3 class="text-sm font-semibold text-clsuGreen">
-                Edit File Attachments
-            </h3>
-            <button onclick="closeEditModal()"
-                    class="text-gray-500 hover:text-gray-700 text-base">✕</button>
+        <!-- HEADER -->
+        <div class="px-6 py-4 border-b bg-gradient-to-r from-gray-50 to-gray-100">
+            <div class="flex items-center gap-4">
+
+                <!-- Left Icon -->
+                <div class="w-10 h-10 rounded-lg bg-clsuGreen/10 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-clsuGreen" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+
+                <!-- Title & Warning -->
+                <div>
+                    <h3 class="text-xl font-semibold text-gray-800">
+                        Edit File Attachments
+                    </h3>
+
+                    <div class="flex items-center gap-2 mt-1">
+                        <!-- Warning Icon -->
+                        <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                  d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-6a1 1 0 00-1 1v3a1 1 0 002 0V8a1 1 0 00-1-1z"
+                                  clip-rule="evenodd"/>
+                        </svg>
+
+                        <p class="text-xs text-gray-600">
+                            <span class="font-medium text-gray-700">PDF only</span> • Maximum file size: 5 MB
+                        </p>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <!-- Notice -->
-        <div class="mb-2 p-1.5 bg-blue-50 rounded text-[11px] text-blue-800">
-            <strong>Note:</strong> PDF only. Max 5 MB.
+        <!-- BODY -->
+        <div class="flex-1 overflow-y-auto p-6">
+
+            <form id="editFilesForm"
+                  method="POST"
+                  enctype="multipart/form-data"
+                  class="space-y-4">
+
+                <input type="hidden" name="job_application_id" id="editAppId">
+
+                <div class="border rounded-xl overflow-hidden">
+                    <table class="w-full text-xs">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="px-4 py-3 text-left w-2/5 font-semibold">Document</th>
+                                <th class="px-4 py-3 text-center w-1/5 font-semibold">View</th>
+                                <th class="px-4 py-3 text-center w-2/5 font-semibold">Upload</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y">
+
+                            <!-- 1 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    1. Personal Data Sheet (PDS)
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="pds-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="pds"
+                                           id="pds-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                            <!-- 2 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    2. Performance Rating
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="performance-rating-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="performance_rating"
+                                           id="performance-rating-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                            <!-- 3 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    3. Resume
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="resume-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="resume"
+                                           id="resume-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                            <!-- 4 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    4. Transcript of Records
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="tor-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="tor"
+                                           id="tor-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                            <!-- 5 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    5. Diploma
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="diploma-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="diploma"
+                                           id="diploma-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button"
+                            onclick="closeEditModal()"
+                            class="px-4 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-300 text-xs">
+                        Cancel
+                    </button>
+
+                    <button type="submit"
+                            class="px-4 py-1.5 rounded-lg bg-clsuGreen hover:bg-green-800 text-white text-xs">
+                        Update
+                    </button>
+                </div>
+
+            </form>
         </div>
-
-        <form id="editFilesForm"
-              method="POST"
-              enctype="multipart/form-data"
-              class="space-y-2 text-xs">
-
-            <input type="hidden" name="job_application_id" id="editAppId">
-
-            <div class="border border-gray-200 rounded-md overflow-hidden">
-                <table class="w-full border-collapse text-[11px]">
-                    <thead class="bg-gray-100">
-                        <tr>
-                            <th class="px-2 py-1 border text-left font-medium">Files</th>
-                            <th class="px-2 py-1 border text-left font-medium">Upload</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-
-                        <!-- 1. PDS -->
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <div class="font-medium">1. Personal Data Sheet (PDS)</div>
-                                <div id="pds-view-link" class="mt-0.5"></div>
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <input type="file" name="pds" accept=".pdf"
-                                       id="pds-upload" data-max-size="5242880"
-                                       class="text-[11px]">
-                            </td>
-                        </tr>
-
-                        <!-- 2. Performance Rating -->
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <div class="font-medium">2. Performance Rating</div>
-                                <div id="performance-rating-view-link" class="mt-0.5"></div>
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <input type="file" name="performance_rating" accept=".pdf"
-                                       id="performance-rating-upload" data-max-size="5242880"
-                                       class="text-[11px]">
-                            </td>
-                        </tr>
-
-                        <!-- 3. Resume -->
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <div class="font-medium">3. Resume</div>
-                                <div id="resume-view-link" class="mt-0.5"></div>
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <input type="file" name="resume" accept=".pdf"
-                                       id="resume-upload" data-max-size="5242880"
-                                       class="text-[11px]">
-                            </td>
-                        </tr>
-
-                        <!-- 4. TOR -->
-                        <tr class="border-b hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <div class="font-medium">4. Transcript of Records</div>
-                                <div id="tor-view-link" class="mt-0.5"></div>
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <input type="file" name="tor" accept=".pdf"
-                                       id="tor-upload" data-max-size="5242880"
-                                       class="text-[11px]">
-                            </td>
-                        </tr>
-
-                        <!-- 5. Diploma -->
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-2 py-1 border">
-                                <div class="font-medium">5. Diploma</div>
-                                <div id="diploma-view-link" class="mt-0.5"></div>
-                            </td>
-                            <td class="px-2 py-1 border">
-                                <input type="file" name="diploma" accept=".pdf"
-                                       id="diploma-upload" data-max-size="5242880"
-                                       class="text-[11px]">
-                            </td>
-                        </tr>
-
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Footer -->
-            <div class="flex justify-end gap-2 mt-2 pt-2 border-t border-gray-200">
-                <button type="button"
-                        onclick="closeEditModal()"
-                        class="bg-gray-200 hover:bg-gray-300 text-gray-700
-                               px-2 py-1 rounded text-[11px] font-medium transition">
-                    Cancel
-                </button>
-
-                <button type="submit"
-                        class="bg-clsuGreen hover:bg-green-800 text-white
-                               px-2 py-1 rounded text-[11px] font-medium transition">
-                    Update
-                </button>
-            </div>
-
-        </form>
     </div>
 </div>
-
 
 <div id="jobModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
     <div class="bg-white max-w-3xl w-full rounded-lg p-6 max-h-[90vh] overflow-y-auto">
@@ -848,142 +913,125 @@ window.onclick = function(event) {
         <div id="modalContent"></div>
     </div>
 </div>
-
 <script>
-// Edit Modal Functions
 function openEditModal(applicationId) {
     const modal = document.getElementById('editFilesModal');
     const box = document.getElementById('editFilesModalBox');
-    
-    // Set form action
     document.getElementById('editAppId').value = applicationId;
     document.getElementById('editFilesForm').action = '<?= base_url('applications/updateFiles') ?>';
-    
-    // Reset file inputs and filenames
-    document.querySelectorAll('input[type="file"]').forEach(input => {
-        input.value = '';
-    });
-    document.querySelectorAll('[id$="-filename"]').forEach(el => {
-        el.textContent = 'No file chosen';
-    });
-    document.querySelectorAll('[id$="-view-link"]').forEach(el => {
-        el.innerHTML = '';
-    });
-    document.querySelectorAll('[id$="-current"]').forEach(el => {
-        el.textContent = 'No file uploaded';
-        el.className = 'text-gray-600 text-sm';
-    });
-    
-    // Fetch existing files
-    fetch('<?= base_url('applications/getFiles/') ?>' + applicationId)
-        .then(res => res.json())
+
+    document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
+    document.querySelectorAll('[id$="-view-link"]').forEach(el => el.innerHTML = '<span class="text-gray-400 text-xs">No file available</span>');
+
+    const fetchUrl = '<?= base_url('applications/getFiles/') ?>' + applicationId;
+    fetch(fetchUrl)
+        .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); })
         .then(data => {
-            // Populate current files and view links
-            if (data.pds) {
-                const fileName = data.pds.split('/').pop();
-                document.getElementById('pds-current').textContent = fileName;
-                document.getElementById('pds-current').className = 'text-green-700 text-sm';
-                document.getElementById('pds-view-link').innerHTML = 
-                    `<a href="${data.pds}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
+            function createViewButton(url) {
+                return `
+                    <button type="button" class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800" data-file="${url}">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        View Document
+                    </button>`;
             }
-            if (data.performance_rating) {
-                const fileName = data.performance_rating.split('/').pop();
-                document.getElementById('performance-rating-current').textContent = fileName;
-                document.getElementById('performance-rating-current').className = 'text-green-700 text-sm';
-                document.getElementById('performance-rating-view-link').innerHTML = 
-                    `<a href="${data.performance_rating}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
-            }
-            if (data.resume) {
-                const fileName = data.resume.split('/').pop();
-                document.getElementById('resume-current').textContent = fileName;
-                document.getElementById('resume-current').className = 'text-green-700 text-sm';
-                document.getElementById('resume-view-link').innerHTML = 
-                    `<a href="${data.resume}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
-            }
-            if (data.tor) {
-                const fileName = data.tor.split('/').pop();
-                document.getElementById('tor-current').textContent = fileName;
-                document.getElementById('tor-current').className = 'text-green-700 text-sm';
-                document.getElementById('tor-view-link').innerHTML = 
-                    `<a href="${data.tor}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
-            }
-            if (data.diploma) {
-                const fileName = data.diploma.split('/').pop();
-                document.getElementById('diploma-current').textContent = fileName;
-                document.getElementById('diploma-current').className = 'text-green-700 text-sm';
-                document.getElementById('diploma-view-link').innerHTML = 
-                    `<a href="${data.diploma}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm underline">View File</a>`;
-            }
-            
-            // Open modal with animation
+
+            if (data.pds) document.getElementById('pds-view-link').innerHTML = createViewButton(data.pds);
+            if (data.performance_rating) document.getElementById('performance-rating-view-link').innerHTML = createViewButton(data.performance_rating);
+            if (data.resume) document.getElementById('resume-view-link').innerHTML = createViewButton(data.resume);
+            if (data.tor) document.getElementById('tor-view-link').innerHTML = createViewButton(data.tor);
+            if (data.diploma) document.getElementById('diploma-view-link').innerHTML = createViewButton(data.diploma);
+
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100');
-            
             setTimeout(() => {
                 box.classList.remove('scale-95', 'opacity-0');
                 box.classList.add('scale-100', 'opacity-100');
             }, 50);
         })
         .catch(err => {
-            console.error('Error fetching files:', err);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load application files.',
-                confirmButtonColor: '#0B6B3A'
-            });
+            Swal.fire({ icon: 'error', title: 'Error Loading Files', text: err.message, confirmButtonColor: '#0B6B3A' });
         });
 }
 
 function closeEditModal() {
     const modal = document.getElementById('editFilesModal');
     const box = document.getElementById('editFilesModalBox');
-    
     box.classList.remove('scale-100', 'opacity-100');
     box.classList.add('scale-95', 'opacity-0');
-    
     setTimeout(() => {
         modal.classList.add('opacity-0', 'pointer-events-none');
         modal.classList.remove('opacity-100');
     }, 200);
 }
 
-// Handle file input changes
-document.addEventListener('change', function(e) {
-    if (e.target.type === 'file') {
-        const fileName = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
-        const fileId = e.target.id.replace('-upload', '');
-        document.getElementById(fileId + '-filename').textContent = fileName;
+function closeDocumentViewer() {
+    const modal = document.getElementById('document-modal');
+    const frame = document.getElementById('document-frame');
+    frame.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.view-document-btn');
+    if (!btn) return;
+
+    const fileUrl = btn.getAttribute('data-file');
+    
+    // Show loading first
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Please wait while the file loads.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    // Simulate 2-second loading delay
+    setTimeout(() => {
+        Swal.close();
         
-        // File size validation
-        if (e.target.files[0] && e.target.files[0].size > 5242880) { // 5MB
-            Swal.fire({
-                icon: 'warning',
-                title: 'File Too Large',
-                text: 'File size must not exceed 5 MB.',
-                confirmButtonColor: '#0B6B3A'
-            });
-            e.target.value = '';
-            document.getElementById(fileId + '-filename').textContent = 'No file chosen';
+        // Open document viewer modal (overlays on top of edit modal)
+        const modal = document.getElementById('document-modal');
+        const frame = document.getElementById('document-frame');
+        frame.src = fileUrl;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }, 2000);
+});
+
+document.addEventListener('change', function(e) {
+    if (e.target.type === 'file' && e.target.files[0] && e.target.files[0].size > 5242880) {
+        Swal.fire({ icon: 'warning', title: 'File Too Large', text: 'File size must not exceed 5 MB.', confirmButtonColor: '#0B6B3A' });
+        e.target.value = '';
+    }
+});
+
+document.getElementById('editFilesModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditModal();
+});
+
+document.getElementById('document-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeDocumentViewer();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        const documentModal = document.getElementById('document-modal');
+        if (!documentModal.classList.contains('hidden')) {
+            closeDocumentViewer();
+        } else {
+            closeEditModal();
         }
     }
 });
-
-// Close modal when clicking outside
-document.getElementById('editFilesModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeEditModal();
-    }
-});
-
-// Close with Escape key
-document.addEventListener('keydown', function(e) {
-    const modal = document.getElementById('editFilesModal');
-    if (e.key === 'Escape' && !modal.classList.contains('opacity-0')) {
-        closeEditModal();
-    }
-});
 </script>
+
+
+
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -997,18 +1045,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const documentModal = document.getElementById('document-modal');
     const documentIframe = document.getElementById('document-frame');
 
-    // Handle all view buttons
+    // Handle civil service and training certificate view buttons only
     document.addEventListener('click', async (e) => {
         const civilBtn = e.target.closest('.view-certificate-btn');
         const trainingBtn = e.target.closest('.view-training-certificate-btn');
-        const documentBtn = e.target.closest('.view-document-btn');
-
-        if (!civilBtn && !trainingBtn && !documentBtn) return;
-
+        // Removed documentBtn handling to prevent duplication
+        
+        if (!civilBtn && !trainingBtn) return;
+        
         e.preventDefault();
         e.stopPropagation();
-
-        const btn = civilBtn || trainingBtn || documentBtn;
+        
+        const btn = civilBtn || trainingBtn;
         const fileUrl = btn.dataset.file?.trim();
 
         // Show loading first
@@ -1079,9 +1127,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (trainingBtn) {
                 trainingIframe.src = fileUrl;
                 trainingModal.classList.remove('hidden');
-            } else if (documentBtn) {
-                documentIframe.src = fileUrl;
-                documentModal.classList.remove('hidden');
             } else if (civilBtn) {
                 certIframe.src = fileUrl;
                 certModal.classList.remove('hidden');
@@ -1111,7 +1156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Close modals when clicking outside
-    [certModal, trainingModal, documentModal].forEach(modal => {
+    [certModal, trainingModal].forEach(modal => {
         const iframe = modal.querySelector('iframe');
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
@@ -1124,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close modals with Escape
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            [certModal, trainingModal, documentModal].forEach(modal => {
+            [certModal, trainingModal].forEach(modal => {
                 const iframe = modal.querySelector('iframe');
                 if (!modal.classList.contains('hidden')) {
                     iframe.src = '';
@@ -1141,8 +1186,38 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('editFilesForm').addEventListener('submit', function(e) {
     e.preventDefault();
 
+    // Check if any files are selected
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    let hasFiles = false;
+    
+    fileInputs.forEach(input => {
+        if (input.files.length > 0) {
+            hasFiles = true;
+        }
+    });
+    
+    if (!hasFiles) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No Files Selected',
+            text: 'Please select at least one file to upload.',
+            confirmButtonColor: '#0B6B3A'
+        });
+        return;
+    }
+
     const form = this;
     const formData = new FormData(form);
+
+    // Show loading
+    Swal.fire({
+        title: 'Updating...',
+        text: 'Please wait while your files are being uploaded.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
 
     fetch(form.action, {
         method: 'POST',
@@ -1151,32 +1226,32 @@ document.getElementById('editFilesForm').addEventListener('submit', function(e) 
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: data.message,
                 confirmButtonColor: '#0B6B3A'
             }).then(() => {
+                // Close modal first
+                closeEditModal();
+                // Reload page to show updated files
                 window.location.reload();
             });
-
         } else {
-
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
                 text: data.message,
                 confirmButtonColor: '#0B6B3A'
             });
-
         }
     })
     .catch(error => {
+        console.error('Error:', error);
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Something went wrong.',
+            text: 'Something went wrong. Please try again.',
             confirmButtonColor: '#0B6B3A'
         });
     });

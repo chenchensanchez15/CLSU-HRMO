@@ -1086,36 +1086,67 @@ public function viewDocument($application_id, $doc)
 
     // 1️⃣ Block if not logged in
     if (!$current_user_id) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Unauthorized access'
+        ])->setStatusCode(403);
     }
 
     $db = \Config\Database::connect();
 
-$record = $db->table('application_documents')
-             ->where('job_application_id', $application_id) // ✅ correct column
-             ->get()
-             ->getRowArray();
+    // Get the application to verify ownership
+    $application = $db->table('job_applications')
+                     ->where('id_job_application', $application_id)
+                     ->get()
+                     ->getRowArray();
 
+    if (!$application) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Application not found'
+        ])->setStatusCode(404);
+    }
+
+    // Check if user owns this application
+    if ($application['user_id'] != $current_user_id) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Unauthorized access'
+        ])->setStatusCode(403);
+    }
+
+    // Get document record
+    $record = $db->table('application_documents')
+                 ->where('job_application_id', $application_id)
+                 ->get()
+                 ->getRowArray();
+    
+    log_message('debug', "Viewing document: application_id={$application_id}, doc={$doc}");
+    log_message('debug', "Record data: " . print_r($record, true));
 
     if (!$record || empty($record[$doc])) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException('File not found');
+        log_message('debug', "No record found or empty document field");
+        return $this->response->setJSON([
+            'status' => 'warning',
+            'message' => 'No file has been uploaded for this document.'
+        ])->setStatusCode(404);
     }
 
-    // 3️⃣ Optional: Check if the document belongs to this user
-    $app_owner_id = $record['user_id'] ?? null; // Make sure your table has user_id
-    if ($app_owner_id && $app_owner_id != $current_user_id) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException('Unauthorized access');
-    }
-
-    // 4️⃣ File path
+    // File path
     $file = $record[$doc];
     $filePath = WRITEPATH . 'uploads/files/' . $file;
+    
+    log_message('debug', "Checking file: {$filePath}");
+    log_message('debug', "File exists: " . (file_exists($filePath) ? 'YES' : 'NO'));
 
     if (!file_exists($filePath)) {
-        throw new \CodeIgniter\Exceptions\PageNotFoundException('File does not exist on server.');
+        return $this->response->setJSON([
+            'status' => 'warning',
+            'message' => 'File does not exist on server.'
+        ])->setStatusCode(404);
     }
 
-    // 5️⃣ Stream the file inline
+    // Stream the file inline
     $mime = mime_content_type($filePath) ?: 'application/octet-stream';
     return $this->response->setHeader('Content-Type', $mime)
                           ->setHeader('Content-Disposition', 'inline; filename="' . basename($file) . '"')
@@ -1205,58 +1236,100 @@ public function viewPhoto($user_id)
                           ->setBody(file_get_contents($filePath));
 }
 
+
 public function updateFiles()
 {
+    // Log the request
+    log_message('debug', 'updateFiles called');
+    log_message('debug', 'POST data: ' . print_r($this->request->getPost(), true));
+    log_message('debug', 'FILES data: ' . print_r($this->request->getFiles(), true));
+    
     $application_id = $this->request->getPost('job_application_id');
     
     if (!$application_id) {
+        log_message('error', 'No application_id provided');
         return $this->response->setJSON([
             'success' => false,
             'message' => 'Application ID is required.'
         ]);
     }
     
+    log_message('debug', 'Processing application ID: ' . $application_id);
+    
     $db = \Config\Database::connect();
     $uploadPath = WRITEPATH . 'uploads/files/';
+    
+    // Ensure upload directory exists
+    if (!is_dir($uploadPath)) {
+        if (!mkdir($uploadPath, 0755, true)) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Upload directory could not be created.'
+            ]);
+        }
+    }
+    
+    // Check if directory is writable
+    if (!is_writable($uploadPath)) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Upload directory is not writable.'
+        ]);
+    }
     
     // Get existing documents
     $existingDocs = $db->table('application_documents')
         ->where('job_application_id', $application_id)
         ->get()
-        ->getRowArray() ?? [];
+        ->getRowArray();
     
     $docData = [];
     $currentDate = date('Y-m-d H:i:s');
+    $filesUpdated = false;
     
-    // Handle file uploads for each document type
-    $files = ['pds', 'performance_rating', 'resume', 'tor', 'diploma'];
+    // Handle file uploads
+    $fileFields = ['pds', 'performance_rating', 'resume', 'tor', 'diploma'];
     
-    foreach ($files as $fileInput) {
-        $file = $this->request->getFile($fileInput);
-        $oldFile = $existingDocs[$fileInput] ?? null;
+    log_message('debug', 'Checking file fields: ' . print_r($fileFields, true));
+    
+    foreach ($fileFields as $field) {
+        $file = $this->request->getFile($field);
+        log_message('debug', "Field {$field}: " . ($file ? 'FILE FOUND' : 'NO FILE'));
         
         if ($file && $file->isValid() && !$file->hasMoved()) {
-            // Upload new file
+            log_message('debug', "Processing file for {$field}: " . $file->getName());
+            // Validate PDF only
+            if ($file->getClientExtension() !== 'pdf') {
+                continue;
+            }
+            
+            // Validate max size 5MB
+            if ($file->getSize() > 5242880) {
+                continue;
+            }
+            
             $newName = time() . '_' . $file->getRandomName();
             $file->move($uploadPath, $newName);
-            $docData[$fileInput] = $newName;
-        } elseif (!empty($oldFile)) {
+            
+            $docData[$field] = $newName;
+            $filesUpdated = true;
+        } elseif ($existingDocs && isset($existingDocs[$field])) {
             // Keep existing file
-            $docData[$fileInput] = $oldFile;
-        } else {
-            // No file
-            $docData[$fileInput] = null;
+            $docData[$field] = $existingDocs[$field];
         }
     }
     
+    // Always update timestamps
     $docData['updated_at'] = $currentDate;
-    $docData['uploaded_at'] = $currentDate;
+    if ($filesUpdated) {
+        $docData['uploaded_at'] = $currentDate;
+    }
     
-    // Update or insert document record
+    // Update or insert
     if ($existingDocs) {
         $db->table('application_documents')
-            ->where('job_application_id', $application_id)
-            ->update($docData);
+           ->where('job_application_id', $application_id)
+           ->update($docData);
     } else {
         $docData['job_application_id'] = $application_id;
         $docData['created_at'] = $currentDate;
@@ -1265,14 +1338,20 @@ public function updateFiles()
     
     return $this->response->setJSON([
         'success' => true,
-        'message' => 'Files updated successfully!'
+        'message' => $filesUpdated ? 'Files updated successfully!' : 'Changes saved successfully!'
     ]);
 }
-
 public function getFiles($id)
 {
-    $model = new \App\Models\ApplicantDocumentsModel();
-    $files = $model->where('job_application_id', $id)->first();
+    log_message('debug', 'getFiles called with ID: ' . $id);
+    
+    $db = \Config\Database::connect();
+    $files = $db->table('application_documents')
+        ->where('job_application_id', $id)
+        ->get()
+        ->getRowArray();
+    
+    log_message('debug', 'Files found: ' . print_r($files, true));
     
     if (!$files) {
         return $this->response->setJSON([
@@ -1284,12 +1363,13 @@ public function getFiles($id)
         ]);
     }
     
+    // Return file URLs for viewing
     return $this->response->setJSON([
-        'pds' => $files['pds'] ? base_url('uploads/files/' . $files['pds']) : null,
-        'performance_rating' => $files['performance_rating'] ? base_url('uploads/files/' . $files['performance_rating']) : null,
-        'resume' => $files['resume'] ? base_url('uploads/files/' . $files['resume']) : null,
-        'tor' => $files['tor'] ? base_url('uploads/files/' . $files['tor']) : null,
-        'diploma' => $files['diploma'] ? base_url('uploads/files/' . $files['diploma']) : null,
+        'pds' => $files['pds'] ? base_url('applications/viewDocument/' . $id . '/pds') : null,
+        'performance_rating' => $files['performance_rating'] ? base_url('applications/viewDocument/' . $id . '/performance_rating') : null,
+        'resume' => $files['resume'] ? base_url('applications/viewDocument/' . $id . '/resume') : null,
+        'tor' => $files['tor'] ? base_url('applications/viewDocument/' . $id . '/tor') : null,
+        'diploma' => $files['diploma'] ? base_url('applications/viewDocument/' . $id . '/diploma') : null,
     ]);
 }
 
