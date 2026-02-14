@@ -1668,9 +1668,9 @@ function openModal(row = null) {
             </div>
 
             <div>
-                <label class="text-xs font-semibold">Certificate (Upload PDF or Image) <span class="text-red-500">*</span></label>
-                <input type="file" name="certificate" accept=".pdf,.jpg,.jpeg,.png" class="w-full border px-2 py-1 rounded text-xs">
-            </div>
+                <label class="text-xs font-semibold">Certificate (Upload PDF files only) <span class="text-red-500">*</span></label>
+           <input type="file" name="certificate" accept=".pdf" class="w-full border px-2 py-1 rounded text-xs">
+       </div>
 
             <div class="flex justify-end gap-2 mt-3">
                 <button type="button" id="cancelCivilModal"
@@ -1972,6 +1972,36 @@ function openCertViewer(fileName) {
             return;
         }
 
+        // ===== Validate PDF only =====
+const file = certificateInput.files[0];
+
+if (file) {
+    const allowedTypes = ['application/pdf'];
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+
+    if (!allowedTypes.includes(file.type) || fileExtension !== 'pdf') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Invalid File',
+            text: 'Only PDF files are allowed.'
+        });
+        certificateInput.value = '';
+        return;
+    }
+
+    // Optional: Limit file size (e.g., 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+        Swal.fire({
+            icon: 'error',
+            title: 'File Too Large',
+            text: 'PDF must be 5MB or less.'
+        });
+        certificateInput.value = '';
+        return;
+    }
+}
+
         const formData = new FormData(editForm);
         fetch('<?= base_url("account/updateCivilService") ?>',{
             method:'POST',
@@ -2163,8 +2193,9 @@ function openCertViewer(fileName) {
 
             <!-- Row 5: Certificate File -->
             <div class="mb-3">
-                <label class="text-xs font-semibold">Certificate File <span class="text-red-500">*</span></label>
-                <input type="file" name="training_certificate_file" required class="w-full border px-2 py-1 rounded text-xs">
+                <label class="text-xs font-semibold">Certificate File  (Upload PDF files only)<span class="text-red-500">*</span></label>
+       <input type="file"
+       name="training_certificate_file"accept=".pdf" required class="w-full border px-2 py-1 rounded text-xs">
             </div>
 
             <!-- Buttons -->
@@ -2692,6 +2723,27 @@ if (viewBtn) {
                             </div>
                         </td>
                     </tr>
+
+                    <!-- 6. Civil Service Eligibility Certificates -->
+<tr class="hover:bg-gray-50 transition-colors">
+    <td class="px-3 py-2 border-b text-gray-800 font-medium">
+        6. Civil Service Eligibility Certificates
+    </td>
+
+    <td class="px-3 py-2 border-b text-gray-700">
+        <?php if (!empty($civilCertificatesCount) && $civilCertificatesCount > 0): ?>
+            <button class="viewEligibilityBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                View All Certificates (<?= $civilCertificatesCount ?>)
+            </button>
+        <?php else: ?>
+            <span class="text-gray-400 italic">No certificates available</span>
+        <?php endif; ?>
+    </td>
+
+    <td class="px-3 py-2 border-b text-center">
+        —
+    </td>
+</tr>
                 </tbody>
             </table>
         </div>
@@ -2716,6 +2768,7 @@ if (viewBtn) {
                 class="flex-1 w-full h-full border-none"></iframe>
     </div>
 </div>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const table = document.querySelector('#tab-files table tbody');
@@ -2790,8 +2843,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 }
+// ===== VIEW ALL CIVIL SERVICE ELIGIBILITY CERTIFICATES =====
+const viewEligibilityBtn = e.target.closest('.viewEligibilityBtn');
+if (viewEligibilityBtn) {
 
+    Swal.fire({
+        title: 'Loading Certificates...',
+        text: 'Please wait while we prepare your documents.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
 
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        iframe.src = '<?= base_url("account/viewEligibilityCertificates") ?>';
+        modal.classList.remove('hidden');
+
+        Swal.close();
+
+    } catch (err) {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to load certificates.',
+            showConfirmButton: false,
+            timer: 1200
+        });
+        console.error(err);
+    }
+
+    return; // important so it doesn't continue to other handlers
+}
 
         // ===== EDIT FILE =====
         const editBtn = e.target.closest('.edit-file');

@@ -8,6 +8,8 @@ use App\Models\JobApplicationModel;
 use App\Models\ApplicantDocumentsModel;
 use App\Models\ApplicantCivilServiceModel;
 use App\Models\ApplicantTrainingModel;
+use setasign\Fpdi\Fpdi;
+use Exception;
 
 class Account extends BaseController
 {
@@ -195,6 +197,12 @@ public function personal()
             ($diff->m > 0 ? $diff->m . ' mo ' : '') .
             ($diff->d > 0 ? $diff->d . ' days' : '');
     }
+// ----------------- CIVIL SERVICE CERTIFICATES COUNT -----------------
+$civilCertificatesCount = $civilModel
+    ->where('user_id', $userId)
+    ->where('certificate IS NOT NULL')
+    ->countAllResults();
+
 // ----------------- FILES -----------------
 $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
     'pds'                => '',
@@ -206,17 +214,18 @@ $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
 ];
 
     return view('account/personal', [
-        'user'               => $user,
-        'profile'            => $profile,
-        'educationRecords'   => $finalEducation,
-        'workRecords'        => $workRecords,
-        'civilRecords'       => $civilRecords,
-        'trainingRecords'    => $trainingRecords,
-        'trainingCategories' => $trainingCategories,
+        'user'                  => $user,
+        'profile'               => $profile,
+        'educationRecords'      => $finalEducation,
+        'workRecords'           => $workRecords,
+        'civilRecords'          => $civilRecords,
+        'trainingRecords'       => $trainingRecords,
+        'trainingCategories'    => $trainingCategories,
         'totalTrainingDuration' => $totalDuration, // pass total duration to view
-        'fileRecords'        => $fileRecords,
-        'libDegrees'         => $libDegrees,
-        'libDegreeLevels'    => $libDegreeLevels,
+        'fileRecords'           => $fileRecords,
+        'civilCertificatesCount'=> $civilCertificatesCount,
+        'libDegrees'            => $libDegrees,
+        'libDegreeLevels'       => $libDegreeLevels,
     ]);
 }
 
@@ -699,13 +708,42 @@ public function updateCivilService()
 
     $id = $this->request->getPost('id'); // null if adding new
 
-    // Handle file upload
-    $certificateFile = $this->request->getFile('certificate');
-    $certificateName = null;
-    if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMoved()) {
-        $certificateName = $userId . '_' . time() . '_' . $certificateFile->getRandomName();
-        $certificateFile->move(WRITEPATH . 'uploads/civil_service', $certificateName);
+$certificateFile = $this->request->getFile('certificate');
+$certificateName = null;
+
+if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMoved()) {
+
+    // 🔒 Validate MIME type (REAL file type, not just extension)
+    if ($certificateFile->getMimeType() !== 'application/pdf') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Only PDF files are allowed.'
+        ]);
     }
+
+    // 🔒 Validate extension
+    if (strtolower($certificateFile->getExtension()) !== 'pdf') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid file format. PDF only.'
+        ]);
+    }
+
+    // 🔒 Validate file size (5MB limit)
+    if ($certificateFile->getSize() > 5 * 1024 * 1024) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File size must not exceed 5MB.'
+        ]);
+    }
+
+    // ✅ Generate secure filename
+    $certificateName = $userId . '_' . time() . '_' . $certificateFile->getRandomName();
+
+    // ✅ Move file safely
+    $certificateFile->move(WRITEPATH . 'uploads/civil_service', $certificateName);
+}
+
 
     // Required fields: default to 'N/A' if empty
     $eligibility = $this->request->getPost('eligibility') ?: 'N/A';
@@ -819,6 +857,85 @@ public function viewCivilCertificate($filename = null)
                 ->setBody(file_get_contents($filePath));
 }
 
+public function viewEligibilityCertificates()
+{
+    $session = session();
+
+    if (!$session->get('logged_in')) {
+        return $this->response->setStatusCode(401)
+                              ->setJSON(['message' => 'Unauthorized']);
+    }
+
+    $userId = $session->get('user_id');
+
+    $civilModel = new ApplicantCivilServiceModel();
+
+    $certificates = $civilModel
+        ->where('user_id', $userId)
+        ->where('certificate IS NOT NULL')
+        ->where('certificate !=', '')
+        ->findAll();
+
+    if (empty($certificates)) {
+        // Return a simple PDF with message when no certificates found
+        $pdf = new Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Civil Service Certificates Found', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'You have not uploaded any civil service eligibility certificates yet.', 0, 'C');
+        
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="No_Certificates.pdf"')
+            ->setBody($pdf->Output('S'));
+    }
+
+    $pdf = new Fpdi();
+    $hasValidCertificates = false;
+
+    foreach ($certificates as $cert) {
+        $filePath = WRITEPATH . 'uploads/civil_service/' . $cert['certificate'];
+
+        if (file_exists($filePath) && is_readable($filePath)) {
+            try {
+                $pageCount = $pdf->setSourceFile($filePath);
+                
+                if ($pageCount > 0) {
+                    $hasValidCertificates = true;
+                    
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $pdf->importPage($pageNo);
+                        $size = $pdf->getTemplateSize($templateId);
+                        
+                        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $pdf->useTemplate($templateId);
+                    }
+                }
+            } catch (Exception $e) {
+                // Skip invalid PDF files
+                continue;
+            }
+        }
+    }
+
+    // If no valid certificates were found, return empty PDF
+    if (!$hasValidCertificates) {
+        $pdf = new Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Valid Civil Service Certificates', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'None of the uploaded certificate files are valid PDF documents.', 0, 'C');
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="Civil_Service_Certificates.pdf"')
+        ->setBody($pdf->Output('S'));
+}
 
 public function trainings()
 {
@@ -838,6 +955,7 @@ public function trainings()
 
     return view('account/trainings', compact('trainingRecords', 'trainingCategories'));
 }
+
 public function viewTrainingCertificate($filename = null)
 {
     if (!$filename) {
@@ -883,10 +1001,39 @@ public function addApplicantTraining()
         mkdir($uploadPath, 0777, true);
     }
 
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-        $fileName = $file->getRandomName();
-        $file->move($uploadPath, $fileName);
+if ($file && $file->isValid() && !$file->hasMoved()) {
+
+    // 🔒 MIME type validation
+    if (!in_array($file->getMimeType(), [
+        'application/pdf',
+        'application/x-pdf'
+    ])) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Only PDF files are allowed.'
+        ]);
     }
+
+    // 🔒 Extension validation
+    if (strtolower($file->getExtension()) !== 'pdf') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid file format. PDF only.'
+        ]);
+    }
+
+    // 🔒 Size limit (5MB)
+    if ($file->getSize() > 5 * 1024 * 1024) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File must not exceed 5MB.'
+        ]);
+    }
+
+    $fileName = $userId . '_' . time() . '_' . $file->getRandomName();
+    $file->move($uploadPath, $fileName);
+}
+
 
     $data = [
         'user_id' => $userId,
@@ -945,11 +1092,43 @@ public function updateTraining()
         mkdir($uploadPath, 0777, true);
     }
 
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-        $fileName = $file->getRandomName();
-        $file->move($uploadPath, $fileName);
+if ($file && $file->isValid() && !$file->hasMoved()) {
+
+    if (!in_array($file->getMimeType(), [
+        'application/pdf',
+        'application/x-pdf'
+    ])) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Only PDF files are allowed.'
+        ]);
     }
 
+    if (strtolower($file->getExtension()) !== 'pdf') {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Invalid file format. PDF only.'
+        ]);
+    }
+
+    if ($file->getSize() > 5 * 1024 * 1024) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'File must not exceed 5MB.'
+        ]);
+    }
+
+    // 🔥 Delete old file if exists
+    if (!empty($training['certificate_file'])) {
+        $oldPath = $uploadPath . $training['certificate_file'];
+        if (file_exists($oldPath)) {
+            unlink($oldPath);
+        }
+    }
+
+    $fileName = $userId . '_' . time() . '_' . $file->getRandomName();
+    $file->move($uploadPath, $fileName);
+}
     // Update data
     $data = [
         'training_name' => $this->request->getPost('training_name'),
@@ -971,8 +1150,6 @@ public function updateTraining()
         'message' => 'Training updated successfully!'
     ]);
 }
-
-
     public function deleteTraining($id)
     {
         $trainingModel = new ApplicantTrainingModel();
@@ -988,6 +1165,7 @@ public function updateTraining()
             ]);
         }
     }
+    
 public function viewFile($filename)
 {
     $path = WRITEPATH . 'uploads/files/' . $filename;

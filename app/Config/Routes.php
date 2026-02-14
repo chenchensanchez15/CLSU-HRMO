@@ -82,3 +82,4 @@ $routes->get('file/viewFile/(:any)', 'File::viewFile/$1', ['as' => 'viewFile']);
 $routes->get('file/view-training/(:num)/(:any)', 'File::viewTraining/$1/$2');
 $routes->post('applications/updateFiles', 'Applications::updateFiles');
 $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
+$routes->get('account/viewEligibilityCertificates', 'Account::viewEligibilityCertificates');
