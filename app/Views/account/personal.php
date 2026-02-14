@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             if (data.success) {
-                Swal.fire({icon:'success',title:'Saved!',text:data.message,timer:1500,showConfirmButton:false,willClose:()=>location.reload()});
+                Swal.fire({icon:'success',title:'Saved!',text:data.message,timer:1000,showConfirmButton:false,willClose:()=>location.reload()});
             } else {
                 Swal.fire({icon:'error',title:'Error',text:data.message,timer:2500,showConfirmButton:false});
             }
@@ -471,20 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-</script>
-
-
-
-
-
-
-
-
-
-
-
-
-
 </script>
 </div>
   
@@ -922,7 +908,7 @@ function attachRowDeleteButtons(){
                                 title: 'Error',
                                 text: resultJson.message,
                                 showConfirmButton: false,
-                                timer: 1500
+                                timer: 1000
                             });
                         }
                     } catch(err){
@@ -931,7 +917,7 @@ function attachRowDeleteButtons(){
                             title: 'Error',
                             text: 'Failed to delete: ' + err.message,
                             showConfirmButton: false,
-                            timer: 1500
+                            timer: 1000
                         });
                         console.error('Delete Error:', err);
                     }
@@ -1010,7 +996,7 @@ form.addEventListener('submit', async e => {
                 title: 'Error',
                 text: result.message,
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
         }
 
@@ -1020,7 +1006,7 @@ form.addEventListener('submit', async e => {
             title: 'Error',
             text: 'Failed to save education data: ' + err.message,
             showConfirmButton: false,
-            timer: 1500
+            timer: 1000
         });
         console.error('Education Save Error:', err);
     }
@@ -1704,7 +1690,7 @@ function openCertViewer(fileName) {
             title: 'No Certificate Available',
             text: 'No civil service certificate has been uploaded for this record.',
             showConfirmButton: false,
-            timer: 1500
+            timer: 1000
         });
         return;
     }
@@ -1736,7 +1722,7 @@ function openCertViewer(fileName) {
                             title: 'No Certificate Available',
                             text: data.message || 'No civil service certificate has been uploaded for this record.',
                             showConfirmButton: false,
-                            timer: 1500
+                            timer: 1000
                         });
                         throw new Error('File not available');
                     }
@@ -2339,7 +2325,7 @@ if (viewBtn) {
             title: 'No Certificate Available',
             text: 'No training certificate has been uploaded for this record.',
             showConfirmButton: false,
-            timer: 1500
+            timer: 1000
         });
         return;
     }
@@ -2366,7 +2352,7 @@ if (viewBtn) {
                                 title: 'No Certificate Available',
                                 text: data.message || 'No training certificate has been uploaded for this record.',
                                 showConfirmButton: false,
-                                timer: 1500
+                                timer: 1000
                             });
                             throw new Error('File not available');
                         }
@@ -2382,7 +2368,7 @@ if (viewBtn) {
                     .catch(err => {
                         console.warn(err);
                     });
-            }, 500); // delay before fetch
+            }, 1000); // delay before fetch
         }
     });
 }
@@ -2472,16 +2458,24 @@ if (viewBtn) {
 <div class="tab-content hidden" id="tab-files">
     <h2 class="text-lg font-bold text-clsuGreen mb-3">Files</h2>
 
-    <!-- Professional Compact Files Table -->
+    <!-- PS Warning without background -->
+    <div class="flex items-center mb-2 text-yellow-700 text-sm font-medium">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-600 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clip-rule="evenodd">
+            </path>
+        </svg>
+        <!-- Text -->
+        <span>
+            PS: Upload PDF files only, not exceeding 5 MB.
+        </span>
+    </div>
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs" id="table-files">
                 <thead class="bg-gray-50">
-                    <tr>
-                        <th colspan="3" class="px-3 py-2 text-red-600 text-sm border-b text-left font-medium">
-                            PS: Upload PDF files only, not exceeding 5 MB.
-                        </th>
-                    </tr>
                     <tr>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Files</th>
                         <th class="px-3 py-2 border-b font-semibold text-gray-700">Uploads</th>
@@ -2492,7 +2486,7 @@ if (viewBtn) {
                     <!-- 1. PDS -->
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)
+                            1. Fully accomplished Personal Data Sheet (PDS) <br> with recent passport-sized picture (CS Form No. 212, Revised 2017)
                         </td>
                         <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['pds'])): ?>
@@ -2502,7 +2496,7 @@ if (viewBtn) {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <?= esc($fileRecords['pds']) ?>
+                                    View Document
                                 </button>
                             <?php else: ?>
                                 <span class="text-gray-400 italic">No file available</span>
@@ -2530,7 +2524,8 @@ if (viewBtn) {
                     <!-- 2. Performance Rating -->
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            2. Performance rating in the present position for the last rating period
+                            2. Latest Performance Rating in the Present Position (Most Recent Rating Period)
+
                         </td>
                         <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['performance_rating'])): ?>
@@ -2540,7 +2535,7 @@ if (viewBtn) {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <?= esc($fileRecords['performance_rating']) ?>
+                                    View Document
                                 </button>
                             <?php else: ?>
                                 <span class="text-gray-400 italic">No file available</span>
@@ -2567,7 +2562,7 @@ if (viewBtn) {
 
                     <!-- 3. Resume -->
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">3. Resume</td>
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">3. Updated Resume / Curriculum Vitae</td>
                         <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['resume'])): ?>
                                 <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
@@ -2576,7 +2571,7 @@ if (viewBtn) {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <?= esc($fileRecords['resume']) ?>
+                                    View Document
                                 </button>
                             <?php else: ?>
                                 <span class="text-gray-400 italic">No file available</span>
@@ -2603,7 +2598,7 @@ if (viewBtn) {
 
                     <!-- 4. TOR -->
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">4. Transcript of Records</td>
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">4. Official Transcript of Records (TOR) Issued by the School</td>
                         <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['tor'])): ?>
                                 <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
@@ -2612,7 +2607,7 @@ if (viewBtn) {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <?= esc($fileRecords['tor']) ?>
+                                    View Document
                                 </button>
                             <?php else: ?>
                                 <span class="text-gray-400 italic">No file available</span>
@@ -2639,7 +2634,7 @@ if (viewBtn) {
 
                     <!-- 5. Diploma -->
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">5. Diploma</td>
+                        <td class="px-3 py-2 border-b text-gray-800 font-medium">5. Copy of Diploma or Proof of Graduation</td>
                         <td class="px-3 py-2 border-b text-gray-700 view-mode">
                             <?php if (!empty($fileRecords['diploma'])): ?>
                                 <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
@@ -2648,7 +2643,7 @@ if (viewBtn) {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <?= esc($fileRecords['diploma']) ?>
+                                   View Document
                                 </button>
                             <?php else: ?>
                                 <span class="text-gray-400 italic">No file available</span>
@@ -2718,7 +2713,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: 'No File Available',
                 text: 'No file has been uploaded for this document.',
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
             return;
         }
@@ -2733,7 +2728,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Simulate a small delay for loading effect
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             const res = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`);
             const contentType = res.headers.get('content-type') || '';
@@ -2747,7 +2742,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'No File Available',
                     text: data.message || 'No file has been uploaded for this document.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -2764,7 +2759,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: 'Unable to Open File',
                 text: 'The file could not be loaded.',
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
             console.error(err);
         }
@@ -2808,7 +2803,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             title: 'Error',
                             text: data.message,
                             showConfirmButton: false,
-                            timer: 1500
+                            timer: 1000
                         });
                     }
                 } catch(err){
@@ -2817,7 +2812,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         title: 'Error',
                         text: 'Something went wrong',
                         showConfirmButton: false,
-                        timer: 1500
+                        timer: 1000
                     });
                 }
             }, { once:true });
@@ -2839,7 +2834,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'No File',
                     text: 'No file available to delete.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -2879,7 +2874,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         title: 'Error',
                         text: data.message,
                         showConfirmButton: false,
-                        timer: 1500
+                        timer: 1000
                     });
                 }
             } catch(err){
@@ -2888,7 +2883,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: 'Error',
                     text: 'Something went wrong',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
             }
         }
@@ -3018,7 +3013,7 @@ photoInput.addEventListener('change', () => {
                     icon: 'success',
                     title: 'Profile Updated!',
                     text: 'Your profile photo has been updated.',
-                    timer: 1500,
+                    timer: 1000,
                     showConfirmButton: false
                 });
             } else {

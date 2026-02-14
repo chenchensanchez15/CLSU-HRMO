@@ -292,8 +292,8 @@ window.onclick = function(event) {
         <h2 class="text-sm font-bold text-clsuGreen">Additional Personal Details</h2>
     </div>
     
-    <!-- ROW 1: CLSU Employee, Religion, Indigenous Person -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+    <!-- SINGLE ROW: All 5 fields in requested order -->
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-2">
         <div>
             <p class="text-xs font-bold text-gray-700 mb-1">ARE YOU CLSU EMPLOYEE?</p>
             <?php if ($app['personal']['is_clsu_employee'] === 'Yes'): ?>
@@ -309,21 +309,6 @@ window.onclick = function(event) {
             <?php endif; ?>
         </div>
         <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">RELIGION</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['religion'] ?? '-') ?></p>
-        </div>
-        <div>
-            <p class="text-xs font-bold text-gray-700 mb-1">INDIGENOUS PERSON</p>
-            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_indigenous'] ?? 'No') ?></p>
-            <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
-                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></p>
-            <?php endif; ?>
-        </div>
-    </div>
-    
-    <!-- ROW 2: Person with Disability, Solo Parent -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-        <div>
             <p class="text-xs font-bold text-gray-700 mb-1">PERSON WITH DISABILITY</p>
             <?php if ($app['personal']['is_pwd'] === 'Yes'): ?>
                 <p class="text-xs text-gray-800">Yes</p>
@@ -338,8 +323,19 @@ window.onclick = function(event) {
             <?php endif; ?>
         </div>
         <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">INDIGENOUS PERSON</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['is_indigenous'] ?? 'No') ?></p>
+            <?php if (!empty($app['personal']['indigenous_specify']) && $app['personal']['is_indigenous'] === 'Yes'): ?>
+                <p class="text-xs text-gray-600">Specify: <?= esc($app['personal']['indigenous_specify']) ?></p>
+            <?php endif; ?>
+        </div>
+        <div>
             <p class="text-xs font-bold text-gray-700 mb-1">SOLO PARENT</p>
             <p class="text-xs text-gray-800"><?= esc($app['personal']['is_solo_parent'] ?? 'No') ?></p>
+        </div>
+        <div>
+            <p class="text-xs font-bold text-gray-700 mb-1">RELIGION</p>
+            <p class="text-xs text-gray-800"><?= esc($app['personal']['religion'] ?? '-') ?></p>
         </div>
     </div>
 </div>
@@ -1000,7 +996,7 @@ document.addEventListener('click', function(e) {
 
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-    }, 2000);
+    }, 1000);
 });
 
 document.addEventListener('change', function(e) {
@@ -1069,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Short delay to simulate loading
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // If no file URL, still show loading briefly then show warning
             if (!fileUrl) {
@@ -1090,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: title,
                     text: message,
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -1117,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     title: title,
                     text: data.message || message,
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -1149,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 title: title,
                 text: message,
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
             console.error(err);
         }

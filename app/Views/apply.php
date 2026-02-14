@@ -84,8 +84,6 @@
     <!-- Additional Personal Details -->
     <div class="mb-4">
         <h3 class="text-clsuGreen font-bold text-sm mb-3">Additional Personal Details</h3>
-        
-        <!-- Row 1: CLSU Employee, Person with Disability, Indigenous Person -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
             <!-- CLSU Employee -->
             <div class="relative">
@@ -199,6 +197,7 @@
             </div>
         </div>
     </div>
+
     <div class="text-right mt-2">
         <button type="button" id="step1Next" class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800">
             Next
@@ -206,7 +205,6 @@
     </div>
 </div>
 
-<!-- Step 2: Family Background -->
 <div class="step hidden" id="step-2">
  
     <!-- Verification Message -->
@@ -669,7 +667,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             // Short delay to simulate loading
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // If no file URL
             if (!fileUrl || fileUrl.trim() === '') {
@@ -679,7 +677,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: 'No Certificate Available',
                     text: 'No civil service certificate has been uploaded for this record.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -696,7 +694,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     title: 'No Certificate Available',
                     text: data.message || 'No civil service certificate has been uploaded for this record.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
                 return;
             }
@@ -713,7 +711,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 title: 'No Certificate Available',
                 text: 'No civil service certificate has been uploaded for this record.',
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
             console.error(error);
         }
@@ -949,7 +947,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Short delay to simulate loading
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // If no file URL
             if (!fileUrl || fileUrl.trim() === '' || fileUrl === '#') {
@@ -959,7 +957,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     title: 'No Certificate Available',
                     text: 'No training certificate has been uploaded for this record.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
             }
 
@@ -975,7 +973,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     title: 'No Certificate Available',
                     text: data.message || 'No training certificate has been uploaded for this record.',
                     showConfirmButton: false,
-                    timer: 1500
+                    timer: 1000
                 });
             }
 
@@ -996,7 +994,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 title: 'No Certificate Available',
                 text: error.message || 'No training certificate has been uploaded for this record.',
                 showConfirmButton: false,
-                timer: 1500
+                timer: 1000
             });
             console.error(error);
         }
@@ -1073,8 +1071,7 @@ $documents = $documents ?? [
     'diploma'     => ''
 ];
 ?>
-
-<!-- Step 7: File Attachments (VIEW ONLY) -->
+<!-- Step 7: File Attachments (VIEW / EDIT) -->
 <div class="step hidden" id="step-7">
     <!-- Verification Message -->
     <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
@@ -1083,27 +1080,19 @@ $documents = $documents ?? [
                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
             </svg>
             <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
+                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify your file attachments</h4>
+                <p class="text-xs text-blue-700">You can view or update your uploaded files before submitting the application.</p>
             </div>
         </div>
     </div>
-    
-    <!-- Section Header with Icon -->
-    <div class="px-3 py-2 mb-4 flex items-center">
-        <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-        <h3 class="text-clsuGreen font-semibold text-sm">File Attachments</h3>
-    </div>
-    
+
     <?php
     $docLabels = [
-        'pds'               => '1. Fully accomplished Personal Data Sheet (PDS)',
-        'performance_rating' => '2. Performance rating (last rating period)',
-        'resume'            => '3. Resume (PDF)',
-        'tor'               => '4. Transcript of Records (TOR)',
-        'diploma'           => '5. Diploma'
+        'pds'               => '1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
+        'performance_rating' => '2. Latest Performance Rating in the Present Position (Most Recent Rating Period)',
+        'resume'            => '3. Updated Resume / Curriculum Vitae',
+        'tor'               => '4. Official Transcript of Records (TOR) Issued by the School',
+        'diploma'           => '5. Copy of Diploma or Proof of Graduation'
     ];
     ?>
 
@@ -1111,31 +1100,38 @@ $documents = $documents ?? [
         <table class="table-auto w-full border-collapse text-xs">
             <tbody class="bg-white">
             <?php foreach ($docLabels as $key => $label): ?>
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <th class="px-3 py-2 border-b border-gray-200 text-left font-medium text-gray-700 w-1/3">
-                        <?= esc($label) ?>
-                    </th>
-                    <td class="px-3 py-2 border-b border-gray-200">
-                        <?php if (!empty($documents[$key])): ?>
-                            <button 
-                                type="button"
-                                class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
-                                data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
-                                <i class="fa-regular fa-eye mr-1"></i> View
-                            </button>
-                            <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key]) ?>">
-                        <?php else: ?>
-                            <span class="text-red-600 text-xs">
-                                No file available
-                            </span>
-                            <input type="hidden" name="existing_<?= $key ?>" value="">
-                        <?php endif; ?>
-                    </td>
-                </tr>
+          <tr class="hover:bg-gray-50 transition-colors duration-150">
+    <th class="px-3 py-2 border-b border-gray-200 text-left font-medium text-gray-700 w-1/3">
+        <?= esc($label) ?>
+    </th>
+    <td class="px-3 py-2 border-b border-gray-200 flex items-center gap-2">
+        <?php if (!empty($documents[$key])): ?>
+            <button 
+                type="button"
+                class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
+                data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
+                <i class="fa-regular fa-eye mr-1"></i> View Document
+            </button>
+        <?php else: ?>
+            <span class="text-red-600 text-xs">No file available</span>
+        <?php endif; ?>
+
+        <!-- NEW: Edit / Upload -->
+        <input type="file" 
+               name="<?= $key ?>" 
+               accept="application/pdf" 
+               class="fileUpload border px-2 py-1 text-xs rounded text-gray-700" />
+
+        <!-- Hidden existing file -->
+        <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key] ?? '') ?>">
+    </td>
+</tr>
+
             <?php endforeach; ?>
             </tbody>
         </table>
     </div>
+
 
     <!-- Data Privacy Section -->
     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
@@ -1169,14 +1165,12 @@ $documents = $documents ?? [
         </div>
     </div>
 
-    <!-- Navigation Buttons -->
     <div class="text-right mt-3">
         <button type="button" onclick="prevStep(7)"
                 class="bg-gray-400 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-gray-500">
             Previous
         </button>
 
-        <!-- Only this submits -->
         <button type="submit"
                 class="bg-clsuGreen text-white px-4 py-2 rounded text-xs font-semibold hover:bg-green-800"
                 id="submitApplication">
@@ -1185,6 +1179,7 @@ $documents = $documents ?? [
     </div>
 </div>
 
+
 <!-- File Preview Modal -->
 <div id="fileModal" 
      class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
@@ -1192,28 +1187,37 @@ $documents = $documents ?? [
     <div class="bg-white w-full max-w-6xl h-[90vh] shadow-lg">
         <iframe id="fileFrame" src="" class="w-full h-full" frameborder="0"></iframe>
     </div>
-</div><script>
-document.addEventListener('DOMContentLoaded', function() {
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
 
     const modal = document.getElementById('fileModal');
     const frame = document.getElementById('fileFrame');
+    let isOpening = false;
 
-    let isOpening = false; // prevent double click / duplicate Swal
-
-    // Open file preview
-    document.addEventListener('click', function(e) {
-        const viewBtn = e.target.closest('.viewFileBtn');
-        if (!viewBtn) return;
+    // View button click
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest('.viewFileBtn');
+        if(!btn) return;
 
         e.preventDefault();
-        e.stopPropagation();
+        const fileUrl = btn.dataset.file;
 
-        if (isOpening) return;
+        // No file → show SweetAlert2 warning
+        if(!fileUrl || fileUrl.trim() === ''){
+            Swal.fire({
+                icon: 'warning',
+                title: 'No File Available',
+                text: 'No file has been uploaded for this document.',
+                showConfirmButton: false,
+                timer: 1000
+            });
+            return;
+        }
+
+        if(isOpening) return;
         isOpening = true;
 
-        const file = viewBtn.dataset.file;
-
-        // Show loading first
         Swal.fire({
             title: 'Loading...',
             text: 'Please wait while the file loads.',
@@ -1223,64 +1227,92 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         setTimeout(async () => {
-            try {
-                // If no file in button → show friendly warning
-                if (!file || file.trim() === '' || file === '#') {
-                    throw new Error('No training certificate has been uploaded for this record.');
-                }
+            try{
+                const response = await fetch(fileUrl);
 
-                const response = await fetch(file);
-
-                // If backend returned error (404)
-                if (!response.ok) {
-                    let message = 'No training certificate has been uploaded for this record.';
-                    try {
+                // Check if the response is OK
+                if(!response.ok){
+                    let msg = 'File not available';
+                    const contentType = response.headers.get('content-type') || '';
+                    if(contentType.includes('application/json')){
                         const data = await response.json();
-                        message = data.message || message;
-                    } catch {}
-                    throw new Error(message);
+                        msg = data.message || msg;
+                    }
+                    throw new Error(msg);
                 }
 
-                // If backend returned JSON error
-                const contentType = response.headers.get('content-type') || '';
-                if (contentType.includes('application/json')) {
-                    const data = await response.json();
-                    throw new Error(data.message || 'No training certificate has been uploaded for this record.');
-                }
-
-                // ✅ File exists → show modal
+                // File exists → show modal
                 Swal.close();
-                frame.src = file;
+                frame.src = fileUrl;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
 
-            } catch (error) {
+            }catch(err){
+                // Show SweetAlert2 warning for errors
                 Swal.fire({
-                    icon: 'warning', // changed from 'error' to 'warning'
-                    title: 'No Certificate Available',
-                    text: error.message,
-                    timer: 2000,
-                    showConfirmButton: false
+                    icon: 'warning',
+                    title: 'No File Available',
+                    text: err.message || 'No file has been uploaded for this document.',
+                    showConfirmButton: false,
+                    timer: 1000
                 });
-            } finally {
+            }finally{
                 isOpening = false;
             }
-
-        }, 500); // loading delay
+        }, 500);
     });
 
-    // Close modal when clicking outside iframe
-    modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
+    // Close modal when clicking outside the frame
+    modal.addEventListener('click', e => {
+        if(e.target === modal){
             frame.src = '';
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }
     });
 
+    // Live update View button when a new file is selected
+    const fileInputs = document.querySelectorAll('.fileUpload');
+    fileInputs.forEach(input => {
+        input.addEventListener('change', function(){
+            const file = this.files[0];
+            if(!file) return;
+
+            if(file.type !== 'application/pdf'){
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File',
+                    text: 'Only PDF files are allowed.'
+                });
+                this.value = '';
+                return;
+            }
+
+            // Create object URL for preview
+            const url = URL.createObjectURL(file);
+
+            // Update the corresponding View button
+            const row = this.closest('tr');
+            const viewBtn = row.querySelector('.viewFileBtn');
+
+            if(viewBtn){
+                viewBtn.dataset.file = url;
+                // Blue "View Uploaded Document" with eye icon
+                viewBtn.innerHTML = `
+                    <span class="text-blue-600 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        View Uploaded Document
+                    </span>
+                `;
+            }
+        });
+    });
+
 });
 </script>
-
 <script>
 // Navigate to next step
 function nextStep(currentStep){
