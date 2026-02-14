@@ -31,7 +31,7 @@ $routes->post('applications/apply/(:any)', 'Applications::submit/$1'); // form s
 $routes->post('applications/submit/(:num)', 'Applications::submit/$1'); // redundant? you can keep it if needed
 
 $routes->get('applications/view/(:num)', 'Applications::view/$1');
-$routes->get('applications/edit/(:num)', 'Applications::edit/$1');
+
 $routes->post('applications/update/(:num)', 'Applications::update/$1'); // this fixes your 404
 $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
 

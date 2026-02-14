@@ -48,12 +48,19 @@ th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
 <script>
 function toggleDropdown() {
     const dropdown = document.getElementById('accountDropdown');
-    dropdown.style.display = dropdown.style.display==='block'?'none':'block';
+    // Toggle between hidden and block display
+    if (dropdown.classList.contains('hidden')) {
+        dropdown.classList.remove('hidden');
+    } else {
+        dropdown.classList.add('hidden');
+    }
 }
+// Close dropdown when clicking outside
 window.onclick = function(event) {
-    if(!event.target.closest('.account-menu')) {
-        const dropdown = document.getElementById('accountDropdown');
-        if(dropdown) dropdown.style.display='none';
+    const dropdown = document.getElementById('accountDropdown');
+    const accountMenu = document.querySelector('.account-menu');
+    if (!accountMenu.contains(event.target)) {
+        dropdown.classList.add('hidden');
     }
 }
 </script>
@@ -93,9 +100,34 @@ window.onclick = function(event) {
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                     </svg>
                 </button>
-                <div id="accountDropdown" class="account-dropdown absolute right-0 mt-2 hidden bg-white text-black min-w-[200px] rounded shadow-lg z-50">
-                    <a href="<?= site_url('account/changePassword') ?>" class="block px-4 py-2 hover:bg-gray-100">Account</a>
-                    <a href="<?= site_url('logout') ?>" class="block px-4 py-2 hover:bg-gray-100">Logout</a>
+                <div id="accountDropdown" class="absolute right-0 mt-2 hidden bg-white text-black min-w-[220px] rounded-lg shadow-xl z-50 border border-gray-100 overflow-hidden">
+                    <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <p class="text-sm font-medium text-gray-900 truncate">
+                            <?= esc($user['first_name'] ?? $profile['first_name'] ?? '') ?> 
+                            <?= !empty($user['middle_name'] ?? $profile['middle_name'] ?? '') ? esc(substr($user['middle_name'] ?? $profile['middle_name'],0,1)) . '. ' : '' ?>
+                            <?= esc($user['last_name'] ?? $profile['last_name'] ?? '') ?>
+                            <?= esc($user['extension'] ?? $profile['suffix'] ?? '') ?>
+                        </p>
+                        <p class="text-xs text-gray-500 truncate mt-1">
+                            <?= esc($user['email'] ?? $profile['email'] ?? 'noemail@example.com') ?>
+                        </p>
+                    </div>
+                    <div class="py-1">
+                        <a href="<?= site_url('account/changePassword') ?>" class="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-green-50 hover:text-clsuGreen transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                            Change Password
+                        </a>
+                    </div>
+                    <div class="border-t border-gray-100 py-1">
+                        <a href="<?= site_url('logout') ?>" class="flex items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 mr-3 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                            Logout
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

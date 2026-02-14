@@ -409,6 +409,12 @@ $db->table('application_documents')->insert([
 
 public function view($application_id = null)
 {
+    // 🔒 Authentication check - Users must be logged in to view applications
+    $session = session();
+    if (!$session->get('logged_in')) {
+        return redirect()->to('/login');
+    }
+    
     if (!$application_id) {
         return redirect()->to('applications');
     }
@@ -627,155 +633,7 @@ if ($user_id) {
     ]);
 }
 
-public function edit($application_id = null)
-{
-    if (!$application_id) {
-        return redirect()->to('applications');
-    }
 
-    $db = \Config\Database::connect();
-
-    // =========================
-    // Main application
-    // =========================
-    $app = $this->jobApplications
-        ->where('id_job_application', $application_id)
-        ->first();
-
-    if (!$app) {
-        throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Application not found');
-    }
-
-    // =========================
-    // Personal Information
-    // =========================
-    $personal = $db->table('application_personal')
-        ->where('job_application_id', $application_id)
-        ->orderBy('updated_at', 'DESC')
-        ->limit(1)
-        ->get()
-        ->getRowArray() ?? [];
-
-// Family background functionality removed
-
-    // =========================
-    // Educational Background
-    // =========================
-    $educationRows = $db->table('application_education')
-        ->where('job_application_id', $application_id)
-        ->get()
-        ->getResultArray();
-
-    $defaultEdu = [
-        'id_application_education' => '',
-        'school_name' => 'N/A',
-        'degree_course' => 'N/A',
-        'period_from' => 'N/A',
-        'period_to' => 'N/A',
-        'highest_level_units' => 'N/A',
-        'year_graduated' => 'N/A',
-        'awards' => 'N/A',
-    ];
-
-    $education_data = [
-        'elementary' => $defaultEdu,
-        'secondary'  => $defaultEdu,
-        'vocational' => $defaultEdu,
-        'college'    => $defaultEdu,
-        'graduate'   => $defaultEdu,
-    ];
-
-    foreach ($educationRows as $edu) {
-        $edu = array_merge($defaultEdu, $edu);
-        switch (strtolower(trim($edu['level']))) {
-            case 'elementary': $education_data['elementary'] = $edu; break;
-            case 'secondary':
-            case 'high school': $education_data['secondary'] = $edu; break;
-            case 'vocational / trade': $education_data['vocational'] = $edu; break;
-            case 'college': $education_data['college'] = $edu; break;
-            case 'graduate studies': $education_data['graduate'] = $edu; break;
-        }
-    }
-
-    $elementary  = $education_data['elementary'];
-    $highschool  = $education_data['secondary'];
-    $vocational  = $education_data['vocational'];
-    $college     = $education_data['college'];
-    $graduate    = $education_data['graduate'];
-
-    // =========================
-    // Work Experience
-    // =========================
-    $applicant_work = $db->table('application_work_experience')
-        ->where('job_application_id', $application_id)
-        ->orderBy('date_from', 'DESC')
-        ->get()
-        ->getResultArray();
-
-    // =========================
-    // Civil Service Eligibility
-    // =========================
-    $civil_services = $db->table('application_civil_service')
-        ->where('job_application_id', $application_id)
-        ->orderBy('date_of_exam', 'DESC')
-        ->get()
-        ->getResultArray();
-
-    // =========================
-    // Trainings / Seminars / Workshops
-    // =========================
-    $trainings = $db->table('application_trainings at')
-        ->select('at.*, tc.training_category_name')
-        ->join('lib_training_category tc', 'tc.id_training_category = at.training_category_id', 'left')
-        ->where('at.job_application_id', $application_id)
-        ->orderBy('at.date_from', 'DESC')
-        ->get()
-        ->getResultArray();
-
-    $categories = $db->table('lib_training_category')->get()->getResultArray();
-
-    // =========================
-    // Documents
-    // =========================
-    $documents = $db->table('application_documents')
-        ->where('job_application_id', $application_id)
-        ->orderBy('uploaded_at', 'DESC')
-        ->limit(1)
-        ->get()
-        ->getRowArray() ?? [];
-
-    // =========================
-    // Job Info & Profile
-    // =========================
-    $job = $db->table('job_vacancies')
-        ->where('id', $app['job_vacancy_id'])
-        ->get()
-        ->getRowArray() ?? [];
-
-    $profileModel = new \App\Models\ApplicantModel();
-    $profile = $profileModel->where('user_id', $app['user_id'])->first() ?? [];
-
-    // =========================
-    // Return view
-    // =========================
-    return view('applications/edit', [
-        'app'             => $app,
-        'job'             => $job,
-        'profile'         => $profile,
-        'personal'        => $personal,
-        // Family background functionality removed
-        'elementary'      => $elementary,
-        'highschool'      => $highschool,
-        'vocational'      => $vocational,
-        'college'         => $college,
-        'graduate'        => $graduate,
-        'applicant_work'  => $applicant_work,
-        'civil_services'  => $civil_services,
-        'trainings'       => $trainings,
-        'categories'      => $categories,
-        'documents'       => $documents
-    ]);
-}
 
 public function update($job_application_id = null)
 {

@@ -15,6 +15,12 @@ class Account extends BaseController
 public function personal()
 {
     $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return redirect()->to('/login');
+    }
+    
     $userId = $session->get('user_id');
 
     // Models
@@ -217,6 +223,15 @@ $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
 public function update()
 {
     $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     $userId = $session->get('user_id');
 
     $userModel = new \App\Models\UserModel();
@@ -266,6 +281,15 @@ public function update()
 public function updatePhoto()
 {
     $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     $userId = $session->get('user_id');
 
     $applicantModel = new ApplicantModel();
@@ -302,6 +326,12 @@ public function updatePhoto()
     public function changePassword()
     {
         $session = session();
+        
+        // 🔒 Authentication check
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login');
+        }
+        
         $userId = $session->get('user_id');
         $userModel = new UserModel();
         $user = $userModel->find($userId);
@@ -314,6 +344,12 @@ public function updatePhoto()
     public function updatePassword()
     {
         $session = session();
+        
+        // 🔒 Authentication check
+        if (!$session->get('logged_in')) {
+            return redirect()->to('/login');
+        }
+        
         $userId = $session->get('user_id');
 
         $current = $this->request->getPost('current_password');
@@ -343,6 +379,16 @@ public function updatePhoto()
     
 public function updateEducation()
 {
+    $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     if (!$this->request->isAJAX()) {
         return redirect()->to('account/personal');
     }
@@ -437,13 +483,23 @@ private function getDegreeName($degreeId)
 
 public function updateWorkExperience()
 {
+    $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     if (!$this->request->isAJAX()) {
         return redirect()->to('account/personal');
     }
 
     // Get the single work entry from the modal form
     $id = $this->request->getPost('id');
-    $userId = session()->get('user_id');
+    $userId = $session->get('user_id');
 
     $data = [
         'user_id' => $userId,
@@ -522,11 +578,21 @@ public function deleteWorkExperience($id = null)
 
 public function updateCivilService()
 {
+    $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     if (!$this->request->isAJAX()) {
         return redirect()->to('account/personal');
     }
 
-    $userId = session()->get('user_id');
+    $userId = $session->get('user_id');
     $civilModel = new \App\Models\ApplicantCivilServiceModel();
 
     $id = $this->request->getPost('id'); // null if adding new
@@ -840,6 +906,15 @@ public function viewFile($filename)
 public function updateFile()
 {
     $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     $userId = $session->get('user_id');
 
     $fileModel = new \App\Models\ApplicantDocumentsModel();
@@ -901,6 +976,15 @@ public function updateFile()
 public function deleteFile()
 {
     $session = session();
+    
+    // 🔒 Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Authentication required.'
+        ])->setStatusCode(401);
+    }
+    
     $userId = $session->get('user_id');
 
     $fileField = $this->request->getPost('file_field');
