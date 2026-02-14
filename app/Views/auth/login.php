@@ -92,5 +92,22 @@ tailwind.config = {
 </script>
 <?php endif; ?>
 
+<!-- Registration Success -->
+<?php if(session()->getFlashdata('registration_success')): ?>
+<script>
+    Swal.fire({
+        icon: 'success',
+        title: 'Account Created Successfully!',
+        text: '<?= session()->getFlashdata('registration_success') ?>',
+        confirmButtonColor: '#0B6B3A',
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Stay on login page
+            window.location.href = '<?= base_url('login') ?>';
+        }
+    });
+</script>
+<?php endif; ?>
+
 </body>
 </html>

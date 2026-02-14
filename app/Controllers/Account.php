@@ -356,6 +356,20 @@ public function updatePhoto()
         $new = $this->request->getPost('new_password');
         $confirm = $this->request->getPost('confirm_password');
 
+        // Basic validation
+        if (empty($current)) {
+            return redirect()->back()->with('error', 'Current password is required.');
+        }
+        
+        if (empty($new)) {
+            return redirect()->back()->with('error', 'New password is required.');
+        }
+        
+        if (strlen($new) < 8) {
+            return redirect()->back()->with('error', 'New password must be at least 8 characters long.');
+        }
+
+        // Verify current password FIRST (critical security check)
         $userModel = new UserModel();
         $user = $userModel->find($userId);
 
@@ -363,10 +377,12 @@ public function updatePhoto()
             return redirect()->back()->with('error', 'Current password is incorrect.');
         }
 
+        // Only validate new password confirmation AFTER current password is verified
         if ($new !== $confirm) {
             return redirect()->back()->with('error', 'New password and confirm password do not match.');
         }
 
+        // Update password only if all validations pass
         $userModel->update($userId, [
             'password' => password_hash($new, PASSWORD_DEFAULT),
             'first_login' => 0
@@ -374,7 +390,93 @@ public function updatePhoto()
 
         $session->set('first_login', 0);
 
-        return redirect()->to('/dashboard')->with('success', 'Password updated successfully!');
+        // Send email notification
+        $this->sendPasswordChangeEmail($user['email'], $user['first_name']);
+
+        // Stay on the same page after successful update
+        return redirect()->back()->with('success', 'Password updated successfully!');
+    }
+    
+    /**
+     * Send password change notification email
+     */
+    private function sendPasswordChangeEmail($email, $firstName)
+    {
+        $emailService = \Config\Services::email();
+        
+        // Email content
+        $subject = 'Password Changed - CLSU HRMO';
+        $message = $this->getEmailTemplate($firstName);
+        
+        // Configure email
+        $emailService->setTo($email);
+        $emailService->setFrom('rogelioalmerol1@gmail.com', 'CLSU HRMO');
+        $emailService->setSubject($subject);
+        $emailService->setMessage($message);
+        
+        // Send email
+        if (!$emailService->send()) {
+            // Log error but don't interrupt user flow
+            log_message('error', 'Failed to send password change email to: ' . $email);
+        }
+    }
+    
+    /**
+     * Get email template
+     */
+    private function getEmailTemplate($firstName)
+    {
+        // Convert to Philippine time
+        $utcDateTime = new \DateTime('now', new \DateTimeZone('UTC'));
+        $philippineTimeZone = new \DateTimeZone('Asia/Manila');
+        $utcDateTime->setTimezone($philippineTimeZone);
+        $currentTime = $utcDateTime->format('F j, Y g:i A');
+        
+        $template = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0B6B3A; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .warning { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CLSU Human Resource Management Office</h1>
+            <p>Online Job Application System</p>
+        </div>
+        
+        <div class="content">
+            <h2>Hello ' . $firstName . '!</h2>
+            
+            <p>Your password has been successfully changed on <strong>' . $currentTime . '</strong>.</p>
+            
+            <div class="warning">
+                <strong>⚠ Security Notice:</strong><br>
+                If you did not make this change, please contact our support team immediately.
+            </div>
+            
+            <p>If you have any questions or concerns, please don\'t hesitate to reach out to us.</p>
+            
+            <p>Best regards,<br>
+            <strong>CLSU HRMO Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            &copy; 2026 CLSU-HRMO. All rights reserved.<br>
+            Powered by Management Information System Office (CLSU-MISO)
+        </div>
+    </div>
+</body>
+</html>';
+        
+        return $template;
     }
     
 public function updateEducation()

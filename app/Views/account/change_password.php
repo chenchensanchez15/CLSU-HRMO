@@ -2,8 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Applicant Dashboard | CLSU HRMO</title>
+<title>Change Password | CLSU HRMO</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 tailwind.config = {
     theme: {
@@ -16,94 +20,126 @@ tailwind.config = {
     }
 }
 </script>
-<style>
-body { margin:0; font-family: Arial, sans-serif; background:#f4f6f9; }
-
-/* NAVBAR */
-.navbar { background: #0B6B3A; padding: 10px 30px; color: #fff; display:flex; justify-content:space-between; align-items:center; }
-.nav-links a { color:#fff; margin-right:20px; font-weight:bold; text-decoration:none; }
-.account-menu { position: relative; display:inline-block; }
-.account-dropdown { display:none; position:absolute; right:0; background:#fff; color:#000; min-width:160px; border-radius:5px; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:100; }
-.account-dropdown a { display:block; padding:10px; text-decoration:none; color:#0B6B3A; }
-.account-dropdown a:hover { background:#f2f2f2; }
-
-/* LAYOUT */
-.container { display:flex; padding:30px; gap:30px; flex-wrap:wrap; }
-.left { flex:0 0 30%; background:#fff; padding:20px; border-radius:10px; text-align:center; position:sticky; top:20px; align-self:flex-start; }
-.right { flex:1; background:transparent; }
-.card { background:#fff; padding:20px; border-radius:10px; margin-bottom:20px; }
-.card h3 { color:#0B6B3A; margin-bottom:15px; }
-table { width:100%; border-collapse:collapse; }
-th, td { padding:10px; border-bottom:1px solid #ddd; text-align:left; }
-.status { padding:5px 10px; border-radius:5px; color:#fff; font-size:13px; }
-.Pending { background:orange; }
-.Approved { background:green; }
-.Rejected { background:red; }
-
-@media (max-width:1024px) {
-    .container { flex-direction:column; }
-    .left, .right { width:100%; flex:none; }
-}
-</style>
-<script>
-function toggleDropdown() {
-    const dropdown = document.getElementById('accountDropdown');
-    dropdown.style.display = dropdown.style.display==='block'?'none':'block';
-}
-window.onclick = function(event) {
-    if(!event.target.closest('.account-menu')) {
-        const dropdown = document.getElementById('accountDropdown');
-        if(dropdown) dropdown.style.display='none';
-    }
-}
-</script>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+<body class="min-h-screen bg-gray-100 flex flex-col">
 
+<!-- HEADER -->
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
-    <div class="flex items-center justify-between max-w-7xl mx-auto">
-        <div class="flex items-center gap-4">
-            <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
-            <div class="flex flex-col leading-tight">
-                <span class="text-xl font-bold">CLSU Online Job Application</span>
-                <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>
-            </div>
+    <div class="flex items-center gap-3">
+        <img
+            src="/HRMO/public/assets/images/clsu-logo2.png"
+            alt="CLSU Logo"
+            class="w-12 h-auto"
+        >
+        <div class="flex flex-col leading-tight">
+            <a href="<?= site_url('dashboard') ?>" class="text-xl font-bold">
+                CLSU Online Job Application
+            </a>
         </div>
     </div>
 </header>
-<main class="max-w-2xl w-full mx-auto my-10 bg-white p-6 rounded-lg shadow-lg">
 
-    <h2 class="text-xl font-bold text-clsuGreen mb-4 text-center">Change Password</h2>
-
-    <form id="changePasswordForm" action="<?= site_url('account/updatePassword') ?>" method="post" class="space-y-4">
-        <?= csrf_field() ?>
-
-        <div>
-            <label class="block text-sm mb-1 font-semibold">Current Password</label>
-            <input type="password" name="current_password" class="w-full border rounded px-3 py-2" required>
+<!-- MAIN CONTENT -->
+<div class="flex-1 flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md bg-white rounded-xl shadow-lg overflow-hidden">
+        
+        <!-- FORM HEADER -->
+        <div class="bg-clsuGreen text-white px-6 py-4 text-center">
+            <h1 class="text-xl font-bold">Change Password</h1>
+            <p class="text-xs opacity-90 mt-1">Secure your account</p>
         </div>
 
-        <div>
-            <label class="block text-sm mb-1 font-semibold">New Password</label>
-            <input type="password" name="new_password" class="w-full border rounded px-3 py-2" required>
-        </div>
-
-        <div>
-            <label class="block text-sm mb-1 font-semibold">Confirm New Password</label>
-            <input type="password" name="confirm_password" class="w-full border rounded px-3 py-2" required>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-3">
-            <?php if(session()->get('first_login') == 0): ?>
-            <a href="<?= site_url('dashboard') ?>" class="px-4 py-2 rounded bg-gray-400 text-white hover:bg-gray-500">Cancel</a>
+        <!-- FORM -->
+        <form id="changePasswordForm" action="<?= site_url('account/updatePassword') ?>" method="post" class="p-6 space-y-4">
+            <?= csrf_field() ?>
+        
+            <!-- LAST UPDATED INFO -->
+            <?php 
+                $userModel = new \App\Models\UserModel();
+                $user = $userModel->find(session()->get('user_id'));
+                $lastUpdated = $user['updated_at'] ?? $user['created_at'] ?? null;
+                if ($lastUpdated):
+                    // Convert database timestamp (UTC) to Philippine time
+                    $utcDateTime = new DateTime($lastUpdated, new DateTimeZone('UTC'));
+                    $philippineTimeZone = new DateTimeZone('Asia/Manila');
+                    $utcDateTime->setTimezone($philippineTimeZone);
+                    $formattedDate = $utcDateTime->format('F j, Y');
+                    $formattedTime = $utcDateTime->format('g:i A');
+            ?>
+            <div class="text-sm text-gray-600">
+                Last Updated: <?= $formattedDate ?> at <?= $formattedTime ?>
+            </div>
             <?php endif; ?>
+        
+            <!-- CURRENT PASSWORD -->
+            <div>
+                <label class="block text-xs font-medium mb-1 text-gray-700">Current Password</label>
+                <input 
+                    type="password" 
+                    name="current_password" 
+                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-clsuGreen focus:outline-none" 
+                    placeholder="Enter your current password"
+                    required
+                >
+            </div>
 
-            <button type="submit" class="px-4 py-2 rounded bg-clsuGreen text-white hover:bg-green-800">Save</button>
+            <!-- NEW PASSWORD -->
+            <div>
+                <label class="block text-xs font-medium mb-1 text-gray-700">New Password</label>
+                <input 
+                    type="password" 
+                    name="new_password" 
+                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-clsuGreen focus:outline-none" 
+                    placeholder="Enter your new password"
+                    required
+                >
+            </div>
+
+            <!-- CONFIRM PASSWORD -->
+            <div>
+                <label class="block text-xs font-medium mb-1 text-gray-700">Confirm New Password</label>
+                <input 
+                    type="password" 
+                    name="confirm_password" 
+                    class="w-full border rounded-md px-3 py-2 focus:ring-2 focus:ring-clsuGreen focus:outline-none" 
+                    placeholder="Confirm your new password"
+                    required
+                >
+            </div>
+
+            <!-- BUTTONS -->
+            <div class="flex gap-3 pt-4">
+                <?php if(session()->get('first_login') == 0): ?>
+                <a 
+                    href="<?= site_url('dashboard') ?>" 
+                    class="flex-1 text-center py-2.5 rounded-md font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 transition text-sm"
+                >
+                    Cancel
+                </a>
+                <?php endif; ?>
+
+                <button 
+                    type="submit" 
+                    class="flex-1 py-2.5 rounded-md font-bold bg-clsuGreen text-white hover:bg-green-800 transition text-sm"
+                >
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="w-full bg-gray-100 py-4 border-t">
+    <div class="flex justify-end px-6 text-xs text-gray-600">
+        <div class="text-right">
+            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
+            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
         </div>
-    </form>
+    </div>
+</footer>
 
-</main>
-
+<!-- SWEETALERT SCRIPTS -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -119,9 +155,11 @@ document.addEventListener('DOMContentLoaded', function () {
             icon: 'success',
             title: 'Success!',
             text: '<?= session()->getFlashdata('success') ?>',
-            confirmButtonColor: '#0B6B3A'
-        }).then((result) => {
-            // Redirect to dashboard after password update
+            confirmButtonColor: '#0B6B3A',
+            timer: 1500,
+            showConfirmButton: false
+        }).then(() => {
+            // Redirect to dashboard after showing success message
             window.location.href = "<?= site_url('dashboard') ?>";
         });
     <?php endif; ?>
@@ -129,35 +167,15 @@ document.addEventListener('DOMContentLoaded', function () {
     <?php if(session()->getFlashdata('error')): ?>
         Swal.fire({
             icon: 'error',
-            title: 'Error!',
+            title: 'Error',
             text: '<?= session()->getFlashdata('error') ?>',
-            confirmButtonColor: '#0B6B3A'
+            confirmButtonColor: '#0B6B3A',
+            timer: 2000,
+            showConfirmButton: false
         });
     <?php endif; ?>
 });
 </script>
-
-
-<footer class="w-full bg-gray-100 py-4 mt-auto border-t">
-    <div class="flex justify-end px-6 text-xs text-gray-600">
-        <div class="text-right">
-            &copy; <?= date('Y') ?> CLSU-HRMO. All rights reserved.<br>
-            Powered by <span class="text-green-700">Management Information System Office (CLSU-MISO)</span>
-        </div>
-    </div>
-</footer>
-<script>
-function showEdit() {
-    document.getElementById('readView').classList.add('hidden');
-    document.getElementById('editView').classList.remove('hidden');
-}
-
-function cancelEdit() {
-    document.getElementById('editView').classList.add('hidden');
-    document.getElementById('readView').classList.remove('hidden');
-}
-</script>
-
 
 </body>
 </html>

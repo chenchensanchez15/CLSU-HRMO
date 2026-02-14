@@ -51,35 +51,106 @@ class Register extends BaseController
 
         $userModel->insert($data);
 
-        $email = \Config\Services::email();
+        // Send welcome email
+        $emailSent = $this->sendWelcomeEmail($data['email'], $data['first_name'], $plainPassword);
 
-  $email->setFrom('hrmo@noreply.com', 'CLSU HRMO'); // Sender
-$email->setTo($data['email']); // Recipient
-$email->setSubject('CLSU HRMO Account Created');
-$email->setMessage("
-    <h3>Welcome to CLSU Online Job Application System</h3>
-    <p>Your account has been successfully created.</p>
-    <p><strong>Temporary Password:</strong> {$plainPassword}</p>
-    <p>Please log in and change your password immediately.</p>
-    <p>
-        <a href='http://localhost:8080/HRMO/login' style='
-            display: inline-block;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: white;
-            background-color: #0B6B3A;
-            text-decoration: none;
-            border-radius: 5px;
-        '>Log In Here</a>
-    </p>
-");
-
-        if (!$email->send()) {
+        if (!$emailSent) {
             return redirect()->back()
                 ->with('swal_error', 'Account created but email failed to send.');
         }
 
         return redirect()->to('/login')
-            ->with('swal_success', 'Account created successfully. Check your email.');
+            ->with('registration_success', 'Account created successfully! Check your email for the temporary password.');
+    }
+    
+    /**
+     * Send welcome email to new registrants
+     */
+    private function sendWelcomeEmail($email, $firstName, $tempPassword)
+    {
+        $emailService = \Config\Services::email();
+        
+        // Email content
+        $subject = 'Welcome to CLSU HRMO - Account Created';
+        $message = $this->getWelcomeEmailTemplate($firstName, $tempPassword);
+        
+        // Configure email
+        $emailService->setTo($email);
+        $emailService->setFrom('rogelioalmerol1@gmail.com', 'CLSU HRMO');
+        $emailService->setSubject($subject);
+        $emailService->setMessage($message);
+        
+        // Send email
+        return $emailService->send();
+    }
+    
+    /**
+     * Get welcome email template
+     */
+    private function getWelcomeEmailTemplate($firstName, $tempPassword)
+    {
+        // Convert to Philippine time
+        $utcDateTime = new \DateTime('now', new \DateTimeZone('UTC'));
+        $philippineTimeZone = new \DateTimeZone('Asia/Manila');
+        $utcDateTime->setTimezone($philippineTimeZone);
+        $registrationTime = $utcDateTime->format('F j, Y g:i A');
+        
+        $template = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background-color: #0B6B3A; color: white; padding: 20px; text-align: center; }
+        .content { background-color: #f9f9f9; padding: 30px; border: 1px solid #ddd; }
+        .password-box { background-color: #e8f5e8; border: 2px dashed #0B6B3A; padding: 15px; text-align: center; margin: 20px 0; border-radius: 5px; }
+        .login-button { display: inline-block; padding: 15px 30px; background-color: #0B6B3A; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; font-size: 16px; border: 2px solid #0B6B3A; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+        .important { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CLSU Human Resource Management Office</h1>
+            <p>Online Job Application System</p>
+        </div>
+        
+        <div class="content">
+            <h2>Welcome ' . $firstName . '!</h2>
+            
+            <p>Your account has been successfully created on <strong>' . $registrationTime . '</strong>.</p>
+            
+            <div class="important">
+                <strong>⚠ Important:</strong> This is a temporary password. You must change it on your first login.
+            </div>
+            
+            <div class="password-box">
+                <strong>Your Temporary Password:</strong><br>
+                <span style="font-size: 24px; font-family: monospace; letter-spacing: 2px;">' . $tempPassword . '</span>
+            </div>
+            
+            <p style="text-align: center;">
+                <a href="http://localhost:8080/HRMO/login" class="login-button">LOGIN TO YOUR ACCOUNT</a>
+            </p>
+            
+            <p>After logging in, you\'ll be prompted to create a new secure password.</p>
+            
+            <p>If you have any questions, please don\'t hesitate to contact our support team.</p>
+            
+            <p>Best regards,<br>
+            <strong>CLSU HRMO Team</strong></p>
+        </div>
+        
+        <div class="footer">
+            &copy; 2026 CLSU-HRMO. All rights reserved.<br>
+            Powered by Management Information System Office (CLSU-MISO)
+        </div>
+    </div>
+</body>
+</html>';
+        
+        return $template;
     }
 }
