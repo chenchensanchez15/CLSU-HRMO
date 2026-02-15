@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Change Password | CLSU HRMO</title>
+<head>
+    <title>Change Password | CLSU Online Job Application System</title>
+    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+</head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Tailwind CSS -->

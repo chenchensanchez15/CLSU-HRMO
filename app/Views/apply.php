@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Online Job Application | Step 1 - Personal Information</title>
+<head>
+    <title>Application Information | CLSU Online Job Application System</title>
+    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+</head>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 

@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Applicant Dashboard | CLSU HRMO</title>
+<head>
+    <title>Applicant Dashboard | CLSU Online Job Application System</title>
+    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+</head>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script>
 tailwind.config = {

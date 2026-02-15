@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Login | CLSU HRMO</title>
+<head>
+    <title>Login | CLSU Online Job Application System</title>
+    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+</head>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Applicant Registration | CLSU HRMO</title>
+<head>
+    <title>Applicant Registration | CLSU Online Job Application System</title>
+    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+</head>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- Tailwind CSS -->
@@ -58,7 +62,7 @@
         <!-- FORM -->
         <form class="p-6 space-y-4" action="<?= base_url('register/save') ?>" method="post">
 
-   <!-- PERSONAL INFO -->
+            <!-- PERSONAL INFO -->
             <div>
                 <h2 class="text-base font-semibold text-clsuGreen mb-2">Personal Information</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -94,14 +98,8 @@
             </div>
 
             <!-- SUBMIT -->
-            <button type="submit" id="registerBtn" class="w-full bg-clsuGreen text-white py-2.5 rounded-md font-bold hover:bg-green-800 transition text-sm relative">
-                <span id="btnText">Register</span>
-                <span id="loadingSpinner" class="hidden absolute inset-0 flex items-center justify-center">
-                    <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </span>
+            <button type="submit" class="w-full bg-clsuGreen text-white py-2.5 rounded-md font-bold hover:bg-green-800 transition text-sm">
+                Register
             </button>
 
             <p class="text-xs text-center">
@@ -124,21 +122,6 @@
 </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-    <script>
-        // Handle form submission with loading state
-        document.querySelector('form').addEventListener('submit', function(e) {
-            const btn = document.getElementById('registerBtn');
-            const btnText = document.getElementById('btnText');
-            const spinner = document.getElementById('loadingSpinner');
-            
-            // Disable button and show loading
-            btn.disabled = true;
-            btn.classList.add('opacity-75', 'cursor-not-allowed');
-            btnText.classList.add('invisible');
-            spinner.classList.remove('hidden');
-        });
-    </script>
 
     <?php if (session()->getFlashdata('swal_error')): ?>
     <script>
