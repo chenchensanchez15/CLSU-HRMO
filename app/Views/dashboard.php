@@ -161,6 +161,9 @@ window.onclick = function(event) {
 <div class="right w-full flex-1 space-y-2">
 <div class="card bg-white p-4 rounded-lg shadow">
     <h3 class="text-clsuGreen font-bold mb-3 text-sm">My Job Applications</h3>
+    
+    <!-- Applications Container -->
+    <div id="applications-container">
     <div class="overflow-x-auto">
         <table class="w-full table-auto border-collapse text-xs">
             <thead class="bg-gray-50 text-xs">
@@ -179,9 +182,13 @@ window.onclick = function(event) {
                     <tr>
                         <td colspan="7" class="p-3 text-gray-500 text-center italic text-xs">No applications found</td>
                     </tr>
-                <?php else: $i = 1; foreach($applications as $app): ?>
+                <?php else: 
+                    $startIndex = ($appPage - 1) * $appsPerPage + 1;
+                    foreach($applications as $index => $app): 
+                        $displayNumber = $startIndex + $index;
+                ?>
                     <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="p-2 border-b"><?= $i++ ?></td>
+                        <td class="p-2 border-b"><?= $displayNumber ?></td>
                         <td class="p-2 border-b font-medium"><?= esc($app['position_title']) ?></td>
                         <td class="p-2 border-b text-gray-600"><?= esc($app['department']) ?></td>
                         <td class="p-2 border-b"><?= !empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : '-' ?></td>
@@ -238,6 +245,39 @@ window.onclick = function(event) {
             </tbody>
         </table>
     </div>
+    
+    <!-- Applications Pagination -->
+    <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <!-- Left side: Entries info -->
+        <div class="text-xs text-gray-600">
+            Showing <?= (($appPage - 1) * $appsPerPage) + 1 ?> to 
+            <?= min($appPage * $appsPerPage, $totalApps) ?> of 
+            <?= $totalApps ?> application<?= $totalApps != 1 ? 's' : '' ?>
+        </div>
+        
+        <!-- Right side: Prev 1 Next controls -->
+        <div class="flex items-center gap-2" id="applications-pagination">
+            <!-- Prev button -->
+            <button onclick="loadApplicationsPage(<?= $appPage - 1 ?>)" 
+                    class="px-3 py-1 text-xs font-medium <?= $appPage > 1 ? 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 cursor-pointer' : 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed' ?> rounded transition-colors"
+                    <?= $appPage <= 1 ? 'disabled' : '' ?>>
+                Prev
+            </button>
+            
+            <!-- Current page button -->
+            <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded">
+                <?= $appPage ?>
+            </span>
+            
+            <!-- Next button -->
+            <button onclick="loadApplicationsPage(<?= $appPage + 1 ?>)" 
+                    class="px-3 py-1 text-xs font-medium <?= $appPage < $totalAppPages ? 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 cursor-pointer' : 'text-gray-400 bg-gray-100 border border-gray-200 cursor-not-allowed' ?> rounded transition-colors"
+                    <?= $appPage >= $totalAppPages ? 'disabled' : '' ?>>
+                Next
+            </button>
+        </div>
+    </div>
+    </div> <!-- Close applications-container -->
 </div>
 
 <div class="card bg-white p-6 rounded-lg">
@@ -300,7 +340,8 @@ $inactiveStatuses = [
 $applied = false;
 $appStatus = null;
 
-foreach ($applications as $app) {
+// Use allApplications (non-paginated) for checking applied status
+foreach ($allApplications as $app) {
     if ($app['job_vacancy_id'] == $vac['id']) {
 
         // Normalize status
@@ -488,6 +529,9 @@ const jobs = <?= json_encode($vacancies) ?>;
 const jobCards = Array.from(document.querySelectorAll('.job-card'));
 let perPage = 5, currentPage = 1, filteredJobs = [];
 
+// Start on first page
+currentPage = 1;
+
 // Initialize filtered jobs with all jobs
 filteredJobs = [...jobCards];
 
@@ -582,115 +626,87 @@ function hidePagination() {
     }
 }
 
+// Store total jobs count for pagination display
+let totalJobCount = <?= count($vacancies) ?>;
+
 function renderPagination(totalPages) {
-    const pagination = document.getElementById('pagination');
-    pagination.innerHTML = '';
-    pagination.className = 'flex justify-center mt-6 gap-2';
+    const paginationContainer = document.getElementById('pagination');
+    
+    // Create main container with flex layout
+    paginationContainer.innerHTML = `
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 w-full mt-6">
+            <!-- Left side: Entries info -->
+            <div class="text-xs text-gray-600" id="entriesInfo">
+                Showing ${((currentPage - 1) * perPage) + 1} to 
+                ${Math.min(currentPage * perPage, filteredJobs.length)} of 
+                ${filteredJobs.length} entries
+            </div>
+            
+            <!-- Right side: Simple pagination -->
+            <div class="flex items-center gap-2" id="paginationControls">
+                <!-- Prev button -->
+                <button id="prevBtn" 
+                        class="px-3 py-1 text-xs font-medium transition-colors rounded ${
+                            currentPage === 1 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }">
+                    Prev
+                </button>
+                
+                <!-- Current page -->
+                <span class="px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded">
+                    ${currentPage}
+                </span>
+                
+                <!-- Next button -->
+                <button id="nextBtn" 
+                        class="px-3 py-1 text-xs font-medium transition-colors rounded ${
+                            currentPage === totalPages 
+                                ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                        }">
+                    Next
+                </button>
+            </div>
+        </div>
+    `;
     
     if (totalPages <= 1) {
-        pagination.className = 'flex justify-center mt-6 gap-2 hidden';
+        paginationContainer.innerHTML = '';
         return;
     }
     
-    // Prev button
-    const prevBtn = document.createElement('button');
-    prevBtn.textContent = 'Prev';
-    prevBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-        currentPage === 1 
-            ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
-    }`;
-    prevBtn.disabled = currentPage === 1;
-    prevBtn.addEventListener('click', () => { 
-        if(currentPage > 1){ 
-            currentPage--; 
-            renderJobs(); 
-        } 
-    });
-    pagination.appendChild(prevBtn);
+    // Keep URL clean - no parameters needed
     
-    // Page numbers (show up to 5 pages around current page)
-    const maxVisible = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisible/2));
-    let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-    
-    // Adjust start page if near the end
-    if (endPage - startPage + 1 < maxVisible) {
-        startPage = Math.max(1, endPage - maxVisible + 1);
-    }
-    
-    // First page button (if not in visible range)
-    if (startPage > 1) {
-        const firstBtn = document.createElement('button');
-        firstBtn.textContent = '1';
-        firstBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm';
-        firstBtn.addEventListener('click', () => { 
-            currentPage = 1; 
-            renderJobs(); 
+    // Add event listeners
+    if (currentPage > 1) {
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderJobs();
+            }
         });
-        pagination.appendChild(firstBtn);
-        
-        if (startPage > 2) {
-            const dots = document.createElement('span');
-            dots.textContent = '...';
-            dots.className = 'px-2 py-2 text-gray-500';
-            pagination.appendChild(dots);
-        }
     }
     
-    // Page number buttons
-    for (let i = startPage; i <= endPage; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = i;
-        pageBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-            i === currentPage 
-                ? 'bg-clsuGreen text-white shadow-md' 
-                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
-        }`;
-        if (i !== currentPage) {
-            pageBtn.addEventListener('click', () => { 
-                currentPage = i; 
-                renderJobs(); 
-            });
-        }
-        pagination.appendChild(pageBtn);
-    }
-    
-    // Last page button (if not in visible range)
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            const dots = document.createElement('span');
-            dots.textContent = '...';
-            dots.className = 'px-2 py-2 text-gray-500';
-            pagination.appendChild(dots);
-        }
-        
-        const lastBtn = document.createElement('button');
-        lastBtn.textContent = totalPages;
-        lastBtn.className = 'px-4 py-2 rounded-lg text-sm font-medium bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 shadow-sm';
-        lastBtn.addEventListener('click', () => { 
-            currentPage = totalPages; 
-            renderJobs(); 
+    if (currentPage < totalPages) {
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderJobs();
+            }
         });
-        pagination.appendChild(lastBtn);
     }
     
-    // Next button
-    const nextBtn = document.createElement('button');
-    nextBtn.textContent = 'Next';
-    nextBtn.className = `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-        currentPage === totalPages 
-            ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm'
-    }`;
-    nextBtn.disabled = currentPage === totalPages;
-    nextBtn.addEventListener('click', () => { 
-        if(currentPage < totalPages){ 
-            currentPage++; 
-            renderJobs(); 
-        } 
-    });
-    pagination.appendChild(nextBtn);
+
+    
+
+    
+
+    
+
+    
+
 }
 
 // Debounced search handler
@@ -699,6 +715,10 @@ document.querySelector('input[placeholder="Search jobs..."]').addEventListener('
     clearTimeout(searchTimeout);
     searchTimeout = setTimeout(() => {
         currentPage = 1; // Reset to first page on new search
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('vac_page', currentPage);
+        window.history.pushState({}, '', url);
         renderJobs();
     }, 300); // 300ms debounce
 });
@@ -708,6 +728,10 @@ document.querySelector('input[placeholder="Search jobs..."]').addEventListener('
     if (e.key === 'Enter') {
         clearTimeout(searchTimeout);
         currentPage = 1;
+        // Update URL
+        const url = new URL(window.location);
+        url.searchParams.set('vac_page', currentPage);
+        window.history.pushState({}, '', url);
         renderJobs();
     }
 });
@@ -1085,6 +1109,103 @@ document.getElementById('existingFiles').innerHTML = html;
         });
     });
 
+});
+</script>
+
+<!-- AJAX Pagination Script -->
+<script>
+function loadApplicationsPage(page) {
+    // Prevent loading if page is out of bounds
+    if (page < 1) return;
+    
+    // Send AJAX request
+    fetch('<?= base_url("dashboard/pagination") ?>', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: 'app_page=' + page
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Smoothly update the applications container with new content
+            const container = document.getElementById('applications-container');
+            container.innerHTML = data.html;
+            
+            // Re-attach event listeners for withdraw buttons
+            attachWithdrawListeners();
+        } else {
+            alert('Error loading page: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Network error occurred');
+    });
+}
+
+// Re-attach withdraw button event listeners
+function attachWithdrawListeners() {
+    document.querySelectorAll('.withdraw-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const appId = this.getAttribute('data-id');
+            
+            Swal.fire({
+                title: 'Confirm Withdrawal',
+                text: 'Are you sure you want to withdraw this application?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#0B6B3A',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, withdraw it!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Submit withdrawal via AJAX
+                    fetch('<?= base_url("applications/withdraw/") ?>' + appId, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Reload current page to reflect changes
+                            const currentPageMatch = window.location.href.match(/app_page=(\d+)/);
+                            const currentPage = currentPageMatch ? parseInt(currentPageMatch[1]) : 1;
+                            loadApplicationsPage(currentPage);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'Failed to withdraw application.',
+                                confirmButtonColor: '#0B6B3A'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An error occurred.',
+                            confirmButtonColor: '#0B6B3A'
+                        });
+                    });
+                }
+            });
+        });
+    });
+}
+
+// Initialize event listeners on page load
+document.addEventListener('DOMContentLoaded', function() {
+    attachWithdrawListeners();
 });
 </script>
 

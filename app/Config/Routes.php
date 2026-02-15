@@ -18,6 +18,8 @@ $routes->post('/register/save', 'Register::save');
 
 // Dashboard
 $routes->get('/dashboard', 'Dashboard::index');
+$routes->post('/dashboard', 'Dashboard::index');
+$routes->post('/dashboard/pagination', 'Dashboard::pagination');
 
 // Jobs
 $routes->get('/jobs', 'Jobs::index');
