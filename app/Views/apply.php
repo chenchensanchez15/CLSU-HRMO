@@ -210,20 +210,39 @@
 </div>
 
 <div class="step hidden" id="step-2">
- 
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
+<!-- Verification & Edit Prompt (Yellow) -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- Content -->
+        <div class="flex-1">
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                Please verify that all information is correct
+            </h4>
+            <p class="text-xs text-yellow-700 mb-2">
+                Review the details below carefully. Ensure accuracy for further processing.
+                If you need to make changes to your personal information, you can edit it before submission.
+            </p>
+
+            <!-- Smaller Edit Button -->
+            <button id="editFromAlert" 
+                    type="button"
+                    class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Personal Info
+            </button>
         </div>
     </div>
-
+</div>
 
     <!-- Personal Information Details (2-Row Format) -->
     <div class="space-y-3 text-xs">
@@ -381,19 +400,40 @@ foreach($libDegreeLevels as $levelObj){
 
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
+    <!-- Verification & Edit Prompt for Educational Background -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- Content -->
+        <div class="flex-1">
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                Please verify that all information is correct
+            </h4>
+            <p class="text-xs text-yellow-700 mb-2">
+                Review the details below carefully. Ensure accuracy for further processing. 
+                If you need to make changes to your educational background, you can edit it before submission.
+            </p>
+
+            <!-- Smaller Edit Button -->
+            <button id="editEducationBtn" 
+                    type="button"
+                    class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Education Info
+            </button>
         </div>
     </div>
-    
+</div>
+
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
         <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -446,18 +486,41 @@ foreach($libDegreeLevels as $levelObj){
 </div>
 <!-- Step 4: Work Experience (Read-Only) -->
 <div class="step hidden" id="step-4">
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
+
+<!-- Verification & Edit Prompt for Work Experience -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- Content -->
+        <div class="flex-1">
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                Please verify that all information is correct
+            </h4>
+            <p class="text-xs text-yellow-700 mb-2">
+                Review the details below carefully. Ensure accuracy for further processing. 
+                If you need to make changes to your work experience, you can edit it before submission.
+            </p>
+
+            <!-- Smaller Edit Button -->
+            <button id="editWorkBtn" 
+                    type="button"
+                    class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Work Experience
+            </button>
         </div>
     </div>
+</div>
+
     
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -550,18 +613,41 @@ $civil_services = $db->table('applicant_civil_service')
 ?>
 
 <div class="step hidden" id="step-5">
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
+    
+<!-- Verification & Edit Prompt for Civil Service -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- Content -->
+        <div class="flex-1">
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                Please verify that all information is correct
+            </h4>
+            <p class="text-xs text-yellow-700 mb-2">
+                Review the details below carefully. Ensure accuracy for further processing. 
+                If you need to make changes to your civil service information, you can edit it before submission.
+            </p>
+
+            <!-- Smaller Edit Button -->
+            <button id="editCivilServiceBtn" 
+                    type="button"
+                    class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Civil Service Info
+            </button>
         </div>
     </div>
+</div>
+
     
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -808,19 +894,40 @@ $trainings = $db->table('applicant_trainings at')
 ?>
 
 <div class="step hidden" id="step-6">
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify that all information is correct</h4>
-                <p class="text-xs text-blue-700">Review the details below carefully. Ensure accuracy for further processing.</p>
-            </div>
+<!-- Verification & Edit Prompt for Trainings -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <!-- Icon -->
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"></path>
+        </svg>
+
+        <!-- Content -->
+        <div class="flex-1">
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">
+                Please verify that all information is correct
+            </h4>
+            <p class="text-xs text-yellow-700 mb-2">
+                Review the details below carefully. Ensure accuracy for further processing. 
+                If you need to make changes to your trainings, you can edit them before submission.
+            </p>
+
+            <!-- Smaller Edit Button -->
+            <button id="editTrainingsBtn" 
+                    type="button"
+                    class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
+                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                Edit Trainings Info
+            </button>
         </div>
     </div>
-    
+</div>
+
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
         <svg class="w-4 h-4 text-clsuGreen mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1077,18 +1184,18 @@ $documents = $documents ?? [
 ?>
 <!-- Step 7: File Attachments (VIEW / EDIT) -->
 <div class="step hidden" id="step-7">
-    <!-- Verification Message -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
-        <div class="flex items-start">
-            <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
-            </svg>
-            <div>
-                <h4 class="text-sm font-semibold text-blue-800 mb-1">Please verify your file attachments</h4>
-                <p class="text-xs text-blue-700">You can view or update your uploaded files before submitting the application.</p>
-            </div>
+<!-- Verification Message (Yellow) -->
+<div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
+    <div class="flex items-start">
+        <svg class="w-5 h-5 text-yellow-500 mt-0.5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+        <div>
+            <h4 class="text-sm font-semibold text-yellow-800 mb-1">Please verify your file attachments</h4>
+            <p class="text-xs text-yellow-700">You can view or update your uploaded files before submitting the application.</p>
         </div>
     </div>
+</div>
 
     <?php
     $docLabels = [

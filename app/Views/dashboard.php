@@ -872,12 +872,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const statusText = statusCell.textContent.trim();
 
             // If already withdrawn, show info modal
-            if(statusText === 'Withdrawn application' || statusText === 'Withdrawn'){
+            if(statusText.includes('Withdrawn') || statusText === 'Withdrawn application' || statusText === 'Withdrawn'){
                 Swal.fire({
                     icon: 'info',
                     title: 'Cannot Withdraw',
-                    text: 'This application has already been withdrawn.',
-                    confirmButtonColor: '#0B6B3A'
+                    text: 'You can\'t withdraw this - it\'s already withdrawn.',
+                    confirmButtonColor: '#0B6B3A',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
                 return;
             }
@@ -1158,6 +1160,23 @@ function attachWithdrawListeners() {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const appId = this.getAttribute('data-id');
+            
+            // Check if already withdrawn
+            const row = this.closest('tr');
+            const statusCell = row.querySelector('td:nth-child(6) span');
+            const statusText = statusCell ? statusCell.textContent.trim() : '';
+            
+            if(statusText.includes('Withdrawn') || statusText === 'Withdrawn application' || statusText === 'Withdrawn'){
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Cannot Withdraw',
+                    text: 'You can\'t withdraw this - it\'s already withdrawn.',
+                    confirmButtonColor: '#0B6B3A',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                return;
+            }
             
             Swal.fire({
                 title: 'Confirm Withdrawal',
