@@ -885,13 +885,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const appId = this.dataset.id;
 
             Swal.fire({
-                title: 'Withdraw Application?',
+                title: 'Confirm Withdrawal',
                 text: 'Are you sure you want to withdraw this application?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#0B6B3A',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes'
+                confirmButtonText: 'Yes, withdraw it!',
+                cancelButtonText: 'Cancel'
             }).then(result => {
                 if(result.isConfirmed){
                     fetch(`<?= base_url('applications/withdraw') ?>/${appId}`, {
@@ -901,16 +902,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     .then(res => res.json())
                     .then(data => {
                         if(data.success){
-                            // Update status badge
-                            statusCell.textContent = 'Withdrawn application';
-                            statusCell.className = 'px-3 py-1 rounded-full text-xs font-semibold bg-gray-400 text-black';
-
-                            // Show info modal instead of disabling
+                            // Show success message
                             Swal.fire({
                                 icon: 'success',
-                                title: 'Application Withdrawn',
-                                text: 'Your application status has been updated.',
-                                confirmButtonColor: '#0B6B3A'
+                                title: 'Success!',
+                                text: 'This application was successfully withdrawn.',
+                                confirmButtonColor: '#0B6B3A',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Refresh the page to see dynamic results
+                                window.location.reload();
                             });
                         } else {
                             Swal.fire({
@@ -1179,10 +1181,18 @@ function attachWithdrawListeners() {
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Reload current page to reflect changes
-                            const currentPageMatch = window.location.href.match(/app_page=(\d+)/);
-                            const currentPage = currentPageMatch ? parseInt(currentPageMatch[1]) : 1;
-                            loadApplicationsPage(currentPage);
+                            // Show success message and refresh page
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'This application was successfully withdrawn.',
+                                confirmButtonColor: '#0B6B3A',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                // Refresh the page to see dynamic results
+                                window.location.reload();
+                            });
                         } else {
                             Swal.fire({
                                 icon: 'error',
