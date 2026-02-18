@@ -85,3 +85,14 @@ $routes->get('file/view-training/(:num)/(:any)', 'File::viewTraining/$1/$2');
 $routes->post('applications/updateFiles', 'Applications::updateFiles');
 $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
 $routes->get('account/viewEligibilityCertificates', 'Account::viewEligibilityCertificates');
+
+// Job Vacancies
+$routes->get('job-vacancies', 'JobVacancies::index');
+$routes->get('job-vacancies/create', 'JobVacancies::create');
+$routes->post('job-vacancies', 'JobVacancies::store');
+$routes->get('job-vacancies/(:num)', 'JobVacancies::show/$1');
+$routes->get('job-vacancies/(:num)/edit', 'JobVacancies::edit/$1');
+$routes->put('job-vacancies/(:num)', 'JobVacancies::update/$1');
+$routes->delete('job-vacancies/(:num)', 'JobVacancies::delete/$1');
+$routes->get('job-vacancies/search', 'JobVacancies::search');
+

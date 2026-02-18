@@ -5,7 +5,9 @@ use CodeIgniter\Exceptions\PageNotFoundException; // make sure this is at the to
 
 use App\Controllers\BaseController;
 use App\Models\JobApplicationModel;
-use App\Models\JobPositionModel;
+use App\Models\JobVacancyModel;
+use App\Models\PlantillaItemModel;
+use App\Models\JobPublicationModel;
 use App\Models\ApplicantModel;
 
 use App\Models\ApplicantEducationModel;
@@ -16,7 +18,9 @@ use App\Models\ApplicationCivilServiceModel;
 
 class Applications extends BaseController
 {
-    protected $jobPositions;
+    protected $jobVacancyModel;
+    protected $plantillaItemModel;
+    protected $jobPublicationModel;
     protected $jobApplications;
     protected $applicantPersonal;
     protected $educationModel;
@@ -26,7 +30,9 @@ class Applications extends BaseController
 
     public function __construct()
     {
-        $this->jobPositions = new JobPositionModel();          
+        $this->jobVacancyModel = new JobVacancyModel();          
+        $this->plantillaItemModel = new PlantillaItemModel();          
+        $this->jobPublicationModel = new JobPublicationModel();          
         $this->jobApplications = new JobApplicationModel();   
         $this->applicantPersonal = new ApplicantModel();      
         // Family background functionality removed
@@ -40,7 +46,39 @@ class Applications extends BaseController
 {
     if (!$id) return redirect()->to('/jobs');
 
-    $job = $this->jobPositions->find($id);
+    // Get job vacancy with related details
+    $builder = $this->jobVacancyModel->db->table('job_vacancies jv');
+    $builder->select([
+        'jv.id_vacancy as id',
+        'jv.plantilla_item_id',
+        'jv.date_posted',
+        'jv.created_at',
+        'jp.interview_date',
+        'jp.interview_venue',
+        'jp.publication_status',
+        'jp.type as publication_type',
+        'jp.hr_head',
+        'jp.application_deadline',
+        'jp.remarks',
+        'pi.item_number as plantilla_item_no',
+        'pi.xItemTitle as position_title',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'o.office_name',
+        'd.division_name as department',
+        'pi.ItemStatus as status',
+
+    ]);
+    $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $builder->where('jv.id_vacancy', $id);
+    $builder->where('jp.publication_status', 1); // Only show published jobs
+    
+    $job = $builder->get()->getRowArray();
+    
     if (!$job) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
 
     $user_id = session()->get('user_id');
@@ -78,7 +116,39 @@ class Applications extends BaseController
 
 public function submit($id = null)
 {
-    $job = $this->jobPositions->find($id);
+    // Get job vacancy with related details
+    $builder = $this->jobVacancyModel->db->table('job_vacancies jv');
+    $builder->select([
+        'jv.id_vacancy as id',
+        'jv.plantilla_item_id',
+        'jv.date_posted',
+        'jv.created_at',
+        'jp.interview_date',
+        'jp.interview_venue',
+        'jp.publication_status',
+        'jp.type as publication_type',
+        'jp.hr_head',
+        'jp.application_deadline',
+        'jp.remarks',
+        'pi.item_number as plantilla_item_no',
+        'pi.xItemTitle as position_title',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'o.office_name',
+        'd.division_name as department',
+        'pi.ItemStatus as status',
+
+    ]);
+    $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $builder->where('jv.id_vacancy', $id);
+    $builder->where('jp.publication_status', 1); // Only show published jobs
+    
+    $job = $builder->get()->getRowArray();
+    
     if (!$job) {
         return $this->response->setStatusCode(404)->setBody('Job not found');
     }
@@ -572,16 +642,43 @@ unset($work);
     // -------------------------
     // Fetch job details
     // -------------------------
-    $job = $db->table('job_vacancies')
-              ->where('id', $app['job_vacancy_id'])
-              ->get()
-              ->getRowArray() ?? [
-                  'position_title' => '-',
-                  'office'         => '-',
-                  'department'     => '-',
-                  'monthly_salary' => 0,
-                  'application_deadline' => null
-              ];
+    $jobBuilder = $db->table('job_vacancies jv');
+    $jobBuilder->select([
+        'pi.xItemTitle as position_title',
+        'o.office_name as office',
+        'd.division_name as department',
+        'jp.application_deadline',
+        'pi.item_number as plantilla_item_no',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'pi.ItemStatus as status'
+    ]);
+    $jobBuilder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $jobBuilder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $jobBuilder->where('jv.id_vacancy', $app['job_vacancy_id']);
+    
+    $job = $jobBuilder->get()->getRowArray() ?? [
+        'position_title' => '-',
+        'office'         => '-',
+        'department'     => '-',
+        'monthly_salary' => null,
+        'application_deadline' => null,
+        'plantilla_item_no' => '-',
+        'salary_grade' => '-',
+        'position_name' => '-',
+        'status' => '-',
+        'description' => '-',
+        'education' => '-',
+        'training' => '-',
+        'experience' => '-',
+        'eligibility' => '-',
+        'competency' => '-',
+        'duties_responsibilities' => '-',
+        'application_requirements' => '-'
+    ];
 
     // -------------------------
     // Fetch applicant profile

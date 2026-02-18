@@ -50,7 +50,7 @@
     <p><strong>Monthly Salary:</strong> ₱<?= number_format($job['monthly_salary'] ?? 0, 2) ?></p>
 
     <p><strong>Posted:</strong> <?= !empty($job['created_at']) ? date('F j, Y', strtotime($job['created_at'])) : 'N/A' ?></p>
-    <p class="text-red-600 font-semibold"><strong>Deadline:</strong> <?= date('F j, Y', strtotime($job['application_deadline'])) ?></p>
+    <p class="text-red-600 font-semibold"><strong>Deadline:</strong> <?= !empty($job['application_deadline']) ? date('F j, Y', strtotime($job['application_deadline'])) : 'N/A' ?></p>
 
 </div>
 
@@ -63,11 +63,11 @@
         </summary>
         <div class="px-4 py-2 text-sm">
             <ul class="list-disc ml-4 space-y-0.5">
-                <li><strong>Education:</strong> <?= esc($job['education']) ?></li>
-                <li><strong>Training:</strong> <?= esc($job['training']) ?></li>
-                <li><strong>Experience:</strong> <?= esc($job['experience']) ?></li>
-                <li><strong>Eligibility:</strong> <?= esc($job['eligibility']) ?></li>
-                <li><strong>Competency:</strong> <?= esc($job['competency']) ?></li>
+                <li><strong>Education:</strong> <?= esc($job['education'] ?? 'N/A') ?></li>
+                <li><strong>Training:</strong> <?= esc($job['training'] ?? 'N/A') ?></li>
+                <li><strong>Experience:</strong> <?= esc($job['experience'] ?? 'N/A') ?></li>
+                <li><strong>Eligibility:</strong> <?= esc($job['eligibility'] ?? 'N/A') ?></li>
+                <li><strong>Competency:</strong> <?= esc($job['competency'] ?? 'N/A') ?></li>
             </ul>
         </div>
     </details>
@@ -77,7 +77,7 @@
             Duties and Responsibilities
         </summary>
         <div class="px-4 py-2 text-sm">
-            <?= nl2br(esc((string) $job['duties_responsibilities'])) ?>
+            <?= nl2br(esc((string) ($job['duties_responsibilities'] ?? 'N/A'))) ?>
         </div>
     </details>
 
@@ -86,7 +86,7 @@
             Application Requirements
         </summary>
         <div class="px-4 py-2 text-sm">
-           <?= nl2br(esc((string) $job['application_requirements'])) ?>
+           <?= nl2br(esc((string) ($job['application_requirements'] ?? 'N/A'))) ?>
         </div>
     </details>
 

@@ -8,7 +8,8 @@ use App\Models\JobVacancyModel;
 use App\Models\ApplicantModel;
 
 class Dashboard extends BaseController
-{  public function index()
+{  
+    public function index()
 {
     $session = session();
 
@@ -36,29 +37,45 @@ class Dashboard extends BaseController
     
     // Fetch paginated applications for display
 $builder = $db->table('job_applications');
-$builder->select('
-    job_applications.id_job_application,
-    job_applications.job_vacancy_id,
-    job_applications.applied_at,
-    job_applications.application_status,
-    job_vacancies.position_title,
-    job_vacancies.office AS department,
-    job_vacancies.plantilla_item_no,
-    job_vacancies.salary_grade,
-    job_vacancies.monthly_salary,
-    job_vacancies.posted_at,
-    job_vacancies.application_deadline
-');
-$builder->join('job_vacancies', 'job_vacancies.id = job_applications.job_vacancy_id', 'left');
+$builder->select([
+    'job_applications.id_job_application',
+    'job_applications.job_vacancy_id',
+    'job_applications.applied_at',
+    'job_applications.application_status',
+    'pi.xItemTitle as position_title',
+    'o.office_name AS department',
+    'pi.item_number as plantilla_item_no',
+    'pi.ItemSalaryGrade as salary_grade',
+
+    'jv.date_posted',
+    'jp.application_deadline',
+    'jp.interview_date'   // ✅ ADD THIS
+]);
+
+$builder->join('job_vacancies jv', 'jv.id_vacancy = job_applications.job_vacancy_id', 'left');
+$builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+$builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+$builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
 $builder->where('job_applications.user_id', $userId);
 $builder->orderBy('job_applications.applied_at', 'DESC');
 $applications = $builder->get($appsPerPage, ($appPage - 1) * $appsPerPage)->getResultArray();
 
-    // Fetch ALL applications for applied status checking (without pagination)
-    $allApplicationsBuilder = $db->table('job_applications');
-    $allApplicationsBuilder->select('job_applications.job_vacancy_id, job_applications.application_status');
-    $allApplicationsBuilder->where('job_applications.user_id', $userId);
-    $allApplications = $allApplicationsBuilder->get()->getResultArray();
+   // Fetch the latest application per vacancy
+$allApplicationsRaw = $db->table('job_applications')
+    ->select('job_applications.job_vacancy_id, job_applications.application_status, job_applications.updated_at')
+    ->where('user_id', $userId)
+    ->orderBy('updated_at', 'DESC')
+    ->get()
+    ->getResultArray();
+
+// Keep only the latest per vacancy
+$allApplications = [];
+foreach ($allApplicationsRaw as $app) {
+    $vacId = $app['job_vacancy_id'];
+    if (!isset($allApplications[$vacId])) {
+        $allApplications[$vacId] = $app; // first occurrence is latest because of DESC
+    }
+}
 
 // Calculate total pages for applications
 $totalAppPages = ceil($totalApps / $appsPerPage);
@@ -72,11 +89,41 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
     $appliedJobIds = array_column($applications, 'job_vacancy_id');
 
     // Fetch all posted job vacancies
-    $vacancyModel = new JobVacancyModel();
-    $vacancies = $vacancyModel
-        ->where('is_posted', 1)
-        ->orderBy('posted_at', 'DESC')
-        ->findAll();
+    $db = \Config\Database::connect();
+    $builder = $db->table('job_vacancies jv');
+    $builder->select([
+        'jv.id_vacancy',
+        'jv.plantilla_item_id',
+        'jv.date_posted',
+        'jv.created_at',
+        'jp.interview_date',
+        'jp.interview_venue',
+        'jp.publication_status',
+        'jp.type as publication_type',
+        'jp.hr_head',
+        'jp.application_deadline',
+        'pi.item_number as plantilla_item_no',
+        'pi.xItemTitle as position_title',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'o.office_name',
+        'd.division_name as department',
+        'pi.ItemStatus as status'
+    ]);
+    $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $builder->where('jp.publication_status', 1); // Assuming 1 means active/public
+    $builder->orderBy('jv.created_at', 'DESC');
+    
+    $vacancies = $builder->get()->getResultArray();
+    // ✅ Compute monthly salary for each vacancy
+foreach ($vacancies as &$vac) {
+    $vac['monthly_salary'] = $this->get_monthly_salary($vac['plantilla_item_id']) ?? 0;
+}
+
 
     // Fetch applicant profile
     $applicantModel = new ApplicantModel();
@@ -107,7 +154,42 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
 
     return view('dashboard', $data);
 }
- 
+ private function get_monthly_salary($plantilla_item_id)
+{
+    $db = \Config\Database::connect();
+
+    $schedule = $db->query("
+        SELECT *
+        FROM `hrmis-template`.lib_salary_schedules
+        WHERE schedule_forpermanent = 1
+        AND schedule_effectivity <= CURDATE()
+        ORDER BY schedule_effectivity DESC
+        LIMIT 1
+    ")->getRow();
+
+    if (!$schedule) return null;
+
+    $item = $db->query("
+        SELECT pi.id_plantilla_item, lp.salary_grade
+        FROM `hrmis-template`.plantilla_items pi
+        LEFT JOIN `hrmis-template`.lib_positions lp 
+            ON pi.position_id = lp.id_position
+        WHERE pi.id_plantilla_item = ?
+    ", [$plantilla_item_id])->getRow();
+
+    if (!$item || !$item->salary_grade) return null;
+
+    $salary = $db->query("
+        SELECT sg_sin1
+        FROM `hrmis-template`.lib_salaries
+        WHERE salary_grade = ?
+        AND salary_schedule_id = ?
+        LIMIT 1
+    ", [$item->salary_grade, $schedule->id_salary_schedule])->getRow();
+
+    return $salary ? $salary->sg_sin1 : null;
+}
+
     
     public function apply()
     {
@@ -175,20 +257,25 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
         
         // Fetch paginated applications
         $builder = $db->table('job_applications');
-        $builder->select('
-            job_applications.id_job_application,
-            job_applications.job_vacancy_id,
-            job_applications.applied_at,
-            job_applications.application_status,
-            job_vacancies.position_title,
-            job_vacancies.office AS department,
-            job_vacancies.plantilla_item_no,
-            job_vacancies.salary_grade,
-            job_vacancies.monthly_salary,
-            job_vacancies.posted_at,
-            job_vacancies.application_deadline
-        ');
-        $builder->join('job_vacancies', 'job_vacancies.id = job_applications.job_vacancy_id', 'left');
+$builder->select([
+    'job_applications.id_job_application',
+    'job_applications.job_vacancy_id',
+    'job_applications.applied_at',
+    'job_applications.application_status',
+    'pi.xItemTitle as position_title',
+    'o.office_name AS department',
+    'pi.item_number as plantilla_item_no',
+    'pi.ItemSalaryGrade as salary_grade',
+
+    'jv.date_posted',
+    'jp.application_deadline',
+    'jp.interview_date'   // ✅ ADD THIS
+]);
+
+        $builder->join('job_vacancies jv', 'jv.id_vacancy = job_applications.job_vacancy_id', 'left');
+        $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+        $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+        $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
         $builder->where('job_applications.user_id', $userId);
         $builder->orderBy('job_applications.applied_at', 'DESC');
         $applications = $builder->get($appsPerPage, ($appPage - 1) * $appsPerPage)->getResultArray();
@@ -226,8 +313,14 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
                 $html .= '<td class="p-2 border-b font-medium">' . esc($app['position_title']) . '</td>';
                 $html .= '<td class="p-2 border-b text-gray-600">' . esc($app['department']) . '</td>';
                 $html .= '<td class="p-2 border-b">' . (!empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : '-') . '</td>';
-                $html .= '<td class="p-2 border-b">-</td>';
-                
+             if (($app['application_status'] ?? '') === 'Scheduled for Interview' && !empty($app['interview_date'])) {
+    $interviewDate = date('M d, Y', strtotime($app['interview_date']));
+} else {
+    $interviewDate = '-';
+}
+
+$html .= '<td class="p-2 border-b">' . $interviewDate . '</td>';
+
                 // Status badge
                 $status = $app['application_status'] ?? 'Submitted';
                 $displayText = ($status === 'Submitted. For Evaluation') ? 'Submitted' : $status;
