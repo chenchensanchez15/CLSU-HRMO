@@ -62,6 +62,15 @@
 
                     <!-- Job Info -->
                     <div class="text-xs text-gray-600 mb-5 space-y-1">
+                        <!-- <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Status:</span>
+                            <?php if ($job['vacancy_status'] === 'Active'): ?>
+                                <span class="text-green-600 font-semibold">Active</span>
+                            <?php else: ?>
+                                <span class="text-red-600 font-semibold">Closed</span>
+                            <?php endif; ?>
+                        </div> -->
+
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Office:</span>
                             <span class="text-gray-700"><?= esc($job['office'] ?? 'N/A') ?></span>
@@ -322,13 +331,12 @@ function closeJobModal() {
 
 // Apply for job function (smart logic)
 function applyForJobModal() {
+
     const jobId = document.getElementById('modalJobTitle').dataset.jobId;
-    
-    // Check if user is logged in (by checking if session data exists)
+
     const isLoggedIn = <?= session()->get('logged_in') ? 'true' : 'false' ?>;
-    
+
     if (!isLoggedIn) {
-        // Show login required alert for logged out users
         Swal.fire({
             icon: 'warning',
             title: 'Login Required',
@@ -337,15 +345,14 @@ function applyForJobModal() {
             confirmButtonText: 'Go to Login'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Redirect to apply page - the controller will handle the redirect to login
                 window.location.href = `<?= base_url('applications/apply/') ?>${jobId}`;
             }
         });
     } else {
-        // User is logged in - redirect directly to apply
         window.location.href = `<?= base_url('applications/apply/') ?>${jobId}`;
     }
 }
+
 
 // Close modal when clicking outside
 document.getElementById('jobModal').addEventListener('click', function(e) {

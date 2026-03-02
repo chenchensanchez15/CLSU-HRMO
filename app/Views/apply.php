@@ -1198,13 +1198,41 @@ $documents = $documents ?? [
 </div>
 
     <?php
-    $docLabels = [
-        'pds'               => '1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
-        'performance_rating' => '2. Latest Performance Rating in the Present Position (Most Recent Rating Period)',
-        'resume'            => '3. Updated Resume / Curriculum Vitae',
-        'tor'               => '4. Official Transcript of Records (TOR) Issued by the School',
-        'diploma'           => '5. Copy of Diploma or Proof of Graduation'
-    ];
+    // Use position-specific requirements if available, otherwise fallback to default
+    if (!empty($requirements)) {
+        $docLabels = [];
+        $displayIndex = 1;
+        
+        foreach ($requirements as $req) {
+            $requirementText = $req['requirement_text'];
+            
+            // Check if this is a combined requirement that needs to be split
+            if (strpos($requirementText, 'Transcript of Records, Diploma, Certificate of Employment and Certificate of Trainings and Seminars') !== false) {
+                // Split into individual requirements
+                $docLabels['requirement_' . $req['id_requirement'] . '_tor'] = $displayIndex . '. Official Transcript of Records (TOR) Issued by the School';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_diploma'] = $displayIndex . '. Copy of Diploma or Proof of Graduation';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_employment'] = $displayIndex . '. Certificate of Employment';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_trainings'] = $displayIndex . '. Certificate of Trainings and Seminars';
+                $displayIndex++;
+            } else {
+                // Regular requirement
+                $docLabels['requirement_' . $req['id_requirement']] = $displayIndex . '. ' . $requirementText;
+                $displayIndex++;
+            }
+        }
+    } else {
+        // Fallback to default requirements
+        $docLabels = [
+            'pds'               => '1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
+            'performance_rating' => '2. Latest Performance Rating in the Present Position (Most Recent Rating Period)',
+            'resume'            => '3. Updated Resume / Curriculum Vitae',
+            'tor'               => '4. Official Transcript of Records (TOR) Issued by the School',
+            'diploma'           => '5. Copy of Diploma or Proof of Graduation'
+        ];
+    }
     ?>
 
     <div class="overflow-x-auto mb-5">
@@ -1216,11 +1244,38 @@ $documents = $documents ?? [
         <?= esc($label) ?>
     </th>
     <td class="px-3 py-2 border-b border-gray-200 flex items-center gap-2">
-        <?php if (!empty($documents[$key])): ?>
+        <?php 
+        // For dynamic requirements, we don't have existing documents to show by default
+        // For default requirements, show existing documents
+        // For split requirements, handle special cases
+        $hasExistingDoc = false;
+        $fileValue = '';
+        
+        if (strpos($key, 'requirement_') === false && !empty($documents[$key])) {
+            // Default requirements with existing documents
+            $hasExistingDoc = true;
+            $fileValue = $documents[$key];
+        } elseif (strpos($key, '_tor') !== false) {
+            // Split TOR requirement
+            $fileValue = $documents['tor'] ?? '';
+            $hasExistingDoc = !empty($fileValue);
+        } elseif (strpos($key, '_diploma') !== false) {
+            // Split Diploma requirement
+            $fileValue = $documents['diploma'] ?? '';
+            $hasExistingDoc = !empty($fileValue);
+        } elseif (strpos($key, '_employment') !== false) {
+            // Employment certificate - would need to check work experience certificates
+            $hasExistingDoc = false; // No existing employment certificates in current structure
+        } elseif (strpos($key, '_trainings') !== false) {
+            // Training certificates - would need to check training certificates
+            $hasExistingDoc = false; // No existing training certificates in current structure
+        }
+        ?>
+        <?php if ($hasExistingDoc): ?>
             <button 
                 type="button"
                 class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
-                data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
+                data-file="<?= base_url('file/viewFile/' . $fileValue) ?>">
                 <i class="fa-regular fa-eye mr-1"></i> View Document
             </button>
         <?php else: ?>
@@ -1234,7 +1289,7 @@ $documents = $documents ?? [
                class="fileUpload border px-2 py-1 text-xs rounded text-gray-700" />
 
         <!-- Hidden existing file -->
-        <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key] ?? '') ?>">
+        <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($fileValue ?? '') ?>">
     </td>
 </tr>
 

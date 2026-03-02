@@ -389,8 +389,7 @@ window.onclick = function(event) {
     
     <?php if (!empty($app['education_display'])): ?>
         <!-- Labels Row (shown only once at the top) -->
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-1">
-            <div><p class="text-xs font-bold text-gray-700">LEVEL</p></div>
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-1">
             <div><p class="text-xs font-bold text-gray-700">SCHOOL NAME</p></div>
             <div><p class="text-xs font-bold text-gray-700">DEGREE / COURSE</p></div>
             <div><p class="text-xs font-bold text-gray-700">PERIOD</p></div>
@@ -418,8 +417,7 @@ window.onclick = function(event) {
                     $degreeCourseDisplay = '-';
                 }
                 ?>
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                    <div><p class="text-xs text-gray-800"><?= !empty($edu['level']) && $edu['level'] !== '-' ? esc($edu['level']) : '' ?></p></div>
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 p-2 bg-gray-50 rounded">
                     <div><p class="text-xs text-gray-800"><?= esc($edu['school_name']) ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= $degreeCourseDisplay ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p></div>

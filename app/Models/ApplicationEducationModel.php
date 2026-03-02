@@ -11,7 +11,8 @@ class ApplicationEducationModel extends Model
 
     protected $allowedFields = [
         'job_application_id',
-        'level',
+        'degree_level_id',
+        'degree_id',
         'school_name',
         'degree_course',
         'course',

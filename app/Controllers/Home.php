@@ -11,6 +11,7 @@ class Home extends BaseController
         $builder = $jobVacancyModel->db->table('job_vacancies jv');
         $builder->select([
             'jv.id_vacancy as id',
+            'jv.status as vacancy_status',
             'jv.plantilla_item_id',
             'jv.date_posted',
             'jv.created_at',
@@ -27,7 +28,6 @@ class Home extends BaseController
             'pos.position_name',
             'o.office_name',
             'd.division_name as department',
-            'pi.ItemStatus as status',
         ]);
 
         $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
@@ -35,7 +35,8 @@ class Home extends BaseController
         $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
         $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
         $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
-        $builder->where('jp.publication_status', 1);
+        $builder->where('jv.status', 'Active'); // Only Active vacancies
+        $builder->where('jv.status', 'Active');
         $builder->orderBy('jv.created_at', 'DESC');
 
         $jobs = $builder->get()->getResultArray();

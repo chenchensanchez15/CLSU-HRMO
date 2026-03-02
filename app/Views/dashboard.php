@@ -178,6 +178,7 @@ window.onclick = function(event) {
                     <th class="border-b p-2 text-left font-semibold">Date Applied</th>
                     <th class="border-b p-2 text-left font-semibold">Interview</th>
                     <th class="border-b p-2 text-left font-semibold">Status</th>
+                    <th class="border-b p-2 text-left font-semibold">Remarks</th>
                     <th class="border-b p-2 text-left font-semibold">Actions</th>
                 </tr>
             </thead>
@@ -229,6 +230,15 @@ window.onclick = function(event) {
                             <span class="px-2 py-1 rounded-full text-xs font-medium <?= $badgeClass ?>">
                                 <?= esc($displayText) ?>
                             </span>
+                        </td>
+                        <td class="p-2 border-b">
+                            <?php if (!empty($app['remarks'])): ?>
+                                <span class="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                    <?= esc($app['remarks']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="text-xs text-gray-400 italic">-</span>
+                            <?php endif; ?>
                         </td>
                         <td class="p-2 border-b">
                             <div class="flex gap-1">

@@ -85,6 +85,7 @@ $routes->get('file/view-training/(:num)/(:any)', 'File::viewTraining/$1/$2');
 $routes->post('applications/updateFiles', 'Applications::updateFiles');
 $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
 $routes->get('account/viewEligibilityCertificates', 'Account::viewEligibilityCertificates');
+$routes->get('account/viewTrainingCertificates', 'Account::viewTrainingCertificates');
 
 // Job Vacancies
 $routes->get('job-vacancies', 'JobVacancies::index');

@@ -34,6 +34,9 @@ public function personal()
     $trainingModel         = new \App\Models\ApplicantTrainingModel();
     $trainingCategoryModel = new \App\Models\TrainingCategoryModel();
     $fileModel             = new \App\Models\ApplicantDocumentsModel();
+    $documentTypeModel     = new \App\Models\DocumentTypeModel();
+    $jobApplicationModel   = new \App\Models\JobApplicationModel();
+    $jobPublicationReqModel = new \App\Models\JobPublicationRequirementsModel();
     // Family background functionality removed
 
     // Load degree tables
@@ -203,14 +206,65 @@ $civilCertificatesCount = $civilModel
     ->where('certificate IS NOT NULL')
     ->countAllResults();
 
+// ----------------- TRAINING CERTIFICATES COUNT -----------------
+$trainingModelForCount = new \App\Models\ApplicantTrainingModel();
+$trainingCertificatesCount = $trainingModelForCount
+    ->where('user_id', $userId)
+    ->where('certificate_file IS NOT NULL')
+    ->countAllResults();
+
 // ----------------- FILES -----------------
-$fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
-    'pds'                => '',
-    'performance_rating' => '',
-    'resume'             => '',
-    'tor'                => '',
-    'diploma'            => '',
-    'uploaded_at'        => '',
+// Get all document types
+$documentTypes = $documentTypeModel->getAllDocumentTypes();
+
+// Get user's documents
+$userDocuments = $fileModel->getDocumentsByUser($userId);
+
+// Create associative array for easy access
+$fileRecords = [];
+foreach ($userDocuments as $doc) {
+    $fileRecords[$doc['document_type_id']] = $doc['filename'];
+}
+
+// Get current job application and its requirements
+$currentApplication = $jobApplicationModel
+    ->where('user_id', $userId)
+    ->where('application_status', 'draft')
+    ->orderBy('created_at', 'DESC')
+    ->first();
+
+$requiredDocuments = [];
+if ($currentApplication) {
+    $requiredDocuments = $jobPublicationReqModel->getRequirementsByVacancy($currentApplication['job_vacancy_id']);
+}
+
+// If no application or no requirements, show all document types
+if (empty($requiredDocuments)) {
+    $requiredDocuments = $documentTypes;
+}
+
+// Get certificates from trainings and civil service
+$trainingModel = new \App\Models\ApplicantTrainingModel();
+$civilServiceModel = new \App\Models\ApplicantCivilServiceModel();
+
+// Get training certificates
+$trainingCertificates = $trainingModel
+    ->where('user_id', $userId)
+    ->where('certificate_file IS NOT NULL')
+    ->where('certificate_file !=', '')
+    ->findAll();
+
+// Get civil service certificates
+$civilServiceCertificates = $civilServiceModel
+    ->where('user_id', $userId)
+    ->where('certificate IS NOT NULL')
+    ->where('certificate !=', '')
+    ->findAll();
+
+// Add certificate information to file records for display
+$certificateInfo = [
+    'training_certificates' => $trainingCertificates,
+    'civil_service_certificates' => $civilServiceCertificates
 ];
 
     return view('account/personal', [
@@ -223,7 +277,11 @@ $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
         'trainingCategories'    => $trainingCategories,
         'totalTrainingDuration' => $totalDuration, // pass total duration to view
         'fileRecords'           => $fileRecords,
+        'documentTypes'         => $documentTypes,
+        'requiredDocuments'     => $requiredDocuments,
+        'certificateInfo'       => $certificateInfo,
         'civilCertificatesCount'=> $civilCertificatesCount,
+        'trainingCertificatesCount'=> $trainingCertificatesCount,
         'libDegrees'            => $libDegrees,
         'libDegreeLevels'       => $libDegreeLevels,
     ]);
@@ -771,6 +829,10 @@ if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMov
     // Add certificate if uploaded
     if ($certificateName) {
         $data['certificate'] = $certificateName;
+        
+        //✅ Automatically save to applicant_documents table
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 3, $certificateName); // document_type_id = 3 for Certificate of Eligibility
     }
 
     if ($id) {
@@ -811,9 +873,26 @@ public function deleteCivilService($id = null)
         ]);
     }
 
+    $userId = session()->get('user_id');
     $civilModel = new \App\Models\ApplicantCivilServiceModel();
+    $fileModel = new \App\Models\ApplicantDocumentsModel();
+
+    // Get the certificate filename before deleting the record
+    $civilRecord = $civilModel->find($id);
+    $certificateFile = $civilRecord['certificate'] ?? null;
 
     if ($civilModel->delete($id)) {
+        //✅ Also delete from applicant_documents table
+        if ($certificateFile) {
+            $fileModel->deleteDocument($userId, 3); // document_type_id = 3 for Certificate of Eligibility
+            
+            // Delete physical file
+            $filePath = WRITEPATH . 'uploads/civil_service/' . $certificateFile;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+        
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Civil Service record deleted successfully.'
@@ -984,6 +1063,87 @@ public function viewTrainingCertificate($filename = null)
                 ->setBody(file_get_contents($filePath));
 }
 
+public function viewTrainingCertificates()
+{
+    $session = session();
+
+    if (!$session->get('logged_in')) {
+        return $this->response->setStatusCode(401)
+                              ->setJSON(['message' => 'Unauthorized']);
+    }
+
+    $userId = $session->get('user_id');
+
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+
+    $certificates = $trainingModel
+        ->where('user_id', $userId)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->findAll();
+
+    if (empty($certificates)) {
+        // Return a simple PDF with message when no certificates found
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Training Certificates Found', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'You have not uploaded any training certificates yet.', 0, 'C');
+        
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="No_Training_Certificates.pdf"')
+            ->setBody($pdf->Output('S'));
+    }
+
+    $pdf = new \setasign\Fpdi\Fpdi();
+    $hasValidCertificates = false;
+
+    foreach ($certificates as $cert) {
+        $filePath = WRITEPATH . 'uploads/trainings/' . $cert['certificate_file'];
+
+        if (file_exists($filePath) && is_readable($filePath)) {
+            try {
+                $pageCount = $pdf->setSourceFile($filePath);
+                
+                if ($pageCount > 0) {
+                    $hasValidCertificates = true;
+                    
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $pdf->importPage($pageNo);
+                        $size = $pdf->getTemplateSize($templateId);
+                        
+                        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $pdf->useTemplate($templateId);
+                    }
+                }
+            } catch (Exception $e) {
+                // Skip invalid PDF files
+                continue;
+            }
+        }
+    }
+
+    // If no valid certificates were found, return empty PDF
+    if (!$hasValidCertificates) {
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Valid Training Certificates', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'None of the uploaded certificate files are valid PDF documents.', 0, 'C');
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="Training_Certificates.pdf"')
+        ->setBody($pdf->Output('S'));
+}
+
+
 public function addApplicantTraining()
 {
     if (!$this->request->isAJAX()) {
@@ -1058,6 +1218,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
             'message' => 'Insert failed',
             'errors' => $trainingModel->errors()
         ]);
+    }
+
+    //✅ Automatically save to applicant_documents table
+    if ($fileName) {
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 7, $fileName); // document_type_id = 7 for Certificate of Trainings and Seminars
     }
 
     return $this->response->setJSON([
@@ -1145,6 +1311,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
 
     $trainingModel->update($id, $data);
 
+    //✅ Automatically save/update in applicant_documents table
+    if ($fileName) {
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 7, $fileName); // document_type_id = 7 for Certificate of Trainings and Seminars
+    }
+
     return $this->response->setJSON([
         'success' => true,
         'message' => 'Training updated successfully!'
@@ -1152,8 +1324,26 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
 }
     public function deleteTraining($id)
     {
+        $userId = session()->get('user_id');
         $trainingModel = new ApplicantTrainingModel();
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        
+        // Get the certificate filename before deleting the record
+        $trainingRecord = $trainingModel->find($id);
+        $certificateFile = $trainingRecord['certificate_file'] ?? null;
+        
         if ($trainingModel->delete($id)) {
+            //✅ Also delete from applicant_documents table
+            if ($certificateFile) {
+                $fileModel->deleteDocument($userId, 7); // document_type_id = 7 for Certificate of Trainings and Seminars
+                
+                // Delete physical file
+                $filePath = WRITEPATH . 'uploads/trainings/' . $certificateFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Training deleted successfully!'
@@ -1168,9 +1358,22 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
     
 public function viewFile($filename)
 {
-    $path = WRITEPATH . 'uploads/files/' . $filename;
+    // Check multiple possible locations for the file
+    $possiblePaths = [
+        WRITEPATH . 'uploads/files/' . $filename,  // Main document uploads
+        FCPATH . 'uploads/' . $filename,           // Legacy uploads
+        WRITEPATH . 'uploads/' . $filename         // Training/civil service certificates
+    ];
+    
+    $path = null;
+    foreach ($possiblePaths as $possiblePath) {
+        if (file_exists($possiblePath)) {
+            $path = $possiblePath;
+            break;
+        }
+    }
 
-    if (!file_exists($path)) {
+    if (!$path) {
         return $this->response->setJSON([
             'status'  => 'warning',
             'message' => 'No file has been uploaded for this document.'
@@ -1198,14 +1401,23 @@ public function updateFile()
     $userId = $session->get('user_id');
 
     $fileModel = new \App\Models\ApplicantDocumentsModel();
+    $documentTypeModel = new \App\Models\DocumentTypeModel();
 
-    $field = $this->request->getPost('file_field'); // e.g., 'pds', 'performance_rating', 'resume', 'tor', 'diploma'
-    $allowedFields = ['pds','performance_rating','resume','tor','diploma'];
-
-    if (!$field || !in_array($field, $allowedFields)) {
+    $documentTypeId = $this->request->getPost('document_type_id');
+    
+    // Validate document type ID
+    if (!$documentTypeId) {
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Invalid file field.'
+            'message' => 'Document type is required.'
+        ]);
+    }
+
+    $documentType = $documentTypeModel->find($documentTypeId);
+    if (!$documentType) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid document type.'
         ]);
     }
 
@@ -1214,6 +1426,24 @@ public function updateFile()
         return $this->response->setJSON([
             'status' => 'error',
             'message' => 'No valid file uploaded.'
+        ]);
+    }
+
+    // Check file type (PDF only)
+    $allowedTypes = ['application/pdf'];
+    if (!in_array($file->getMimeType(), $allowedTypes)) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Only PDF files are allowed.'
+        ]);
+    }
+
+    // Check file size (5MB limit)
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    if ($file->getSize() > $maxFileSize) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'File size must not exceed 5 MB.'
         ]);
     }
 
@@ -1226,31 +1456,22 @@ public function updateFile()
 
     $file->move($uploadPath, $newName);
 
-    $uploaded = $fileModel->where('user_id', $userId)->first();
+    // Save or update document using the new model method
+    $result = $fileModel->saveDocument($userId, $documentTypeId, $newName);
 
-    // Philippine time
-    $manilaTime = new \DateTime('now', new \DateTimeZone('Asia/Manila'));
-
-    $data = [
-        $field => $newName,
-        'uploaded_at' => $manilaTime->format('Y-m-d H:i:s'),
-        'updated_at'  => $manilaTime->format('Y-m-d H:i:s')
-    ];
-
-    if ($uploaded) {
-        $fileModel->update($uploaded['id'], $data);
+    if ($result) {
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $documentType['document_type_name'].' updated successfully!',
+            'file_name' => $newName,
+            'file_url'  => base_url('writable/uploads/files/'.$newName)
+        ]);
     } else {
-        $data['user_id'] = $userId;
-        $data['created_at'] = $manilaTime->format('Y-m-d H:i:s');
-        $fileModel->insert($data);
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to save document.'
+        ]);
     }
-
-    return $this->response->setJSON([
-        'status' => 'success',
-        'message' => ucfirst(str_replace('_',' ',$field)).' updated successfully!',
-        'file_name' => $newName,
-        'file_url'  => base_url('writable/uploads/files/'.$newName)
-    ]);
 }
 
 public function deleteFile()
@@ -1267,43 +1488,55 @@ public function deleteFile()
     
     $userId = $session->get('user_id');
 
-    $fileField = $this->request->getPost('file_field');
-
-    // Allow all your uploaded file fields
-    $allowedFields = ['pds', 'performance_rating', 'resume', 'tor', 'diploma', 'certificate'];
-    if (!$fileField || !in_array($fileField, $allowedFields)) {
+    $documentTypeId = $this->request->getPost('document_type_id');
+    
+    if (!$documentTypeId) {
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Invalid file field.'
+            'message' => 'Document type is required.'
         ]);
     }
 
     $fileModel = new \App\Models\ApplicantDocumentsModel();
-    $uploaded = $fileModel->where('user_id', $userId)->first();
-
-    if (!$uploaded || empty($uploaded[$fileField])) {
+    $documentTypeModel = new \App\Models\DocumentTypeModel();
+    
+    $document = $fileModel->getDocumentByType($userId, $documentTypeId);
+    
+    if (!$document) {
         return $this->response->setJSON([
             'status' => 'error',
             'message' => 'No file to delete.'
         ]);
     }
+    
+    $documentType = $documentTypeModel->find($documentTypeId);
+    if (!$documentType) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid document type.'
+        ]);
+    }
 
     // Delete file from server
-    $filePath = FCPATH . 'uploads/' . $uploaded[$fileField];
+    $filePath = WRITEPATH . 'uploads/files/' . $document['filename'];
     if (is_file($filePath)) {
         unlink($filePath);
     }
 
-    // Update DB
-    $fileModel->update($uploaded['id'], [
-        $fileField => null,
-        'updated_at' => date('Y-m-d H:i:s')
-    ]);
+    // Delete from DB
+    $result = $fileModel->deleteDocument($userId, $documentTypeId);
 
-    return $this->response->setJSON([
-        'status' => 'success',
-        'message' => ucfirst($fileField).' deleted successfully!'
-    ]);
+    if ($result) {
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $documentType['document_type_name'].' deleted successfully!'
+        ]);
+    } else {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to delete document.'
+        ]);
+    }
 }
 
 }

@@ -2543,215 +2543,142 @@ if (viewBtn) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <!-- 1. PDS -->
+                    <?php $index = 1; ?>
+                    <?php foreach ($requiredDocuments as $docType): ?>
+                        <?php 
+                        // Get document type ID and name
+                        $docTypeId = isset($docType['id']) ? $docType['id'] : $docType['document_type_id'];
+                        $docTypeName = isset($docType['document_type_name']) ? $docType['document_type_name'] : $docType['requirement_text'];
+                        $filename = isset($fileRecords[$docTypeId]) ? $fileRecords[$docTypeId] : '';
+                        
+                        // Check if this is a certificate-related document type
+                        $isCertificateType = false;
+                        $certificateList = [];
+                        
+                        // Certificate of Eligibility / Rating / License (document type ID 3)
+                        if ($docTypeId == 3) {
+                            $isCertificateType = true;
+                            $certificateList = $certificateInfo['civil_service_certificates'] ?? [];
+                        }
+                        // Certificate of Trainings and Seminars (document type ID 7)
+                        elseif ($docTypeId == 7) {
+                            $isCertificateType = true;
+                            $certificateList = $certificateInfo['training_certificates'] ?? [];
+                        }
+                        ?>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-3 py-2 border-b text-gray-800 font-medium">
+                                <?= $index ?>. <?= esc($docTypeName) ?>
+                                <?php if ($isCertificateType && !empty($certificateList)): ?>
+                                    <br><span class="text-xs text-gray-500 italic">(Includes <?= count($certificateList) ?> existing certificate<?= count($certificateList) > 1 ? 's' : '' ?> from your records)</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-gray-700 view-mode">
+                                <?php if (!empty($filename)): ?>
+                                    <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                            data-file="<?= esc($filename) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View Document
+                                    </button>
+                                <?php elseif ($isCertificateType && !empty($certificateList)): ?>
+                                    <div class="text-xs">
+                                        <span class="text-gray-600">Existing certificates:</span>
+                                        <?php foreach ($certificateList as $cert): ?>
+                                            <?php 
+                                            $certName = '';
+                                            if (isset($cert['certificate_file'])) {
+                                                $certName = $cert['training_name'] ?? 'Training Certificate';
+                                            } elseif (isset($cert['certificate'])) {
+                                                $certName = $cert['eligibility'] ?? 'Civil Service Certificate';
+                                            }
+                                            $certFile = $cert['certificate_file'] ?? $cert['certificate'] ?? '';
+                                            ?>
+                                            <?php if (!empty($certFile)): ?>
+                                                <div class="mt-1">
+                                                    <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                            data-file="<?= esc($certFile) ?>">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        </svg>
+                                                        <?= esc($certName) ?>
+                                                    </button>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-gray-400 italic">No file available</span>
+                                <?php endif; ?>
+                                <input type="file" name="document_<?= $docTypeId ?>" data-doc-type="<?= $docTypeId ?>" accept=".pdf" class="w-full text-xs edit-mode hidden">
+                            </td>
+                            <td class="px-3 py-2 border-b text-center">
+                                <div class="flex justify-center gap-1">
+                                    <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors" data-doc-type="<?= $docTypeId ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php $index++; ?>
+                    <?php endforeach; ?>
+
+                    <!-- Civil Service Eligibility Certificates (always show) -->
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            1. Fully accomplished Personal Data Sheet (PDS) <br> with recent passport-sized picture (CS Form No. 212, Revised 2017)
+                            <?= $index ?>. Civil Service Eligibility Certificates
                         </td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['pds'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['pds']) ?>">
+                        <td class="px-3 py-2 border-b text-gray-700">
+                            <?php if (!empty($civilCertificatesCount) && $civilCertificatesCount > 0): ?>
+                                <button class="viewEligibilityBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    View Document
+                                    View All Certificates (<?= $civilCertificatesCount ?>)
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
+                                <span class="text-gray-400 italic">No certificates available</span>
                             <?php endif; ?>
-                            <input type="file" name="pds" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
                         <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
+                            —
                         </td>
                     </tr>
-
-                    <!-- 2. Performance Rating -->
+                    <!-- Training Certificates (always show) -->
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            2. Latest Performance Rating in the Present Position (Most Recent Rating Period)
-
+                            <?= $index+1 ?>. Certificate of Trainings and Seminars
                         </td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['performance_rating'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['performance_rating']) ?>">
+                        <td class="px-3 py-2 border-b text-gray-700">
+                            <?php if (!empty($trainingCertificatesCount) && $trainingCertificatesCount > 0): ?>
+                                <button class="viewTrainingBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    View Document
+                                    View All Certificates (<?= $trainingCertificatesCount ?>)
                                 </button>
                             <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
+                                <span class="text-gray-400 italic">No certificates available</span>
                             <?php endif; ?>
-                            <input type="file" name="performance_rating" accept=".pdf" class="w-full text-xs edit-mode hidden">
                         </td>
                         <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
+                            —
                         </td>
                     </tr>
-
-                    <!-- 3. Resume -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">3. Updated Resume / Curriculum Vitae</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['resume'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['resume']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="resume" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 4. TOR -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">4. Official Transcript of Records (TOR) Issued by the School</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['tor'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['tor']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="tor" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 5. Diploma -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">5. Copy of Diploma or Proof of Graduation</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['diploma'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['diploma']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                   View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="diploma" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 6. Civil Service Eligibility Certificates -->
-<tr class="hover:bg-gray-50 transition-colors">
-    <td class="px-3 py-2 border-b text-gray-800 font-medium">
-        6. Civil Service Eligibility Certificates
-    </td>
-
-    <td class="px-3 py-2 border-b text-gray-700">
-        <?php if (!empty($civilCertificatesCount) && $civilCertificatesCount > 0): ?>
-            <button class="viewEligibilityBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                    View All Certificates (<?= $civilCertificatesCount ?>)
-            </button>
-        <?php else: ?>
-            <span class="text-gray-400 italic">No certificates available</span>
-        <?php endif; ?>
-    </td>
-
-    <td class="px-3 py-2 border-b text-center">
-        —
-    </td>
-</tr>
                 </tbody>
             </table>
         </div>
@@ -2850,6 +2777,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         }
     })();
+    return; // Important to prevent other handlers from running
 }
 // ===== VIEW ALL CIVIL SERVICE ELIGIBILITY CERTIFICATES =====
 const viewEligibilityBtn = e.target.closest('.viewEligibilityBtn');
@@ -2885,6 +2813,40 @@ if (viewEligibilityBtn) {
     return; // important so it doesn't continue to other handlers
 }
 
+// ===== VIEW ALL TRAINING CERTIFICATES =====
+const viewTrainingBtn = e.target.closest('.viewTrainingBtn');
+if (viewTrainingBtn) {
+
+    Swal.fire({
+        title: 'Loading Certificates...',
+        text: 'Please wait while we prepare your documents.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        iframe.src = '<?= base_url("account/viewTrainingCertificates") ?>';
+        modal.classList.remove('hidden');
+
+        Swal.close();
+
+    } catch (err) {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to load certificates.',
+            showConfirmButton: false,
+            timer: 1200
+        });
+        console.error(err);
+    }
+
+    return; // important so it doesn't continue to other handlers
+}
+
         // ===== EDIT FILE =====
         const editBtn = e.target.closest('.edit-file');
         if (editBtn) {
@@ -2895,9 +2857,22 @@ if (viewEligibilityBtn) {
             fileInput.addEventListener('change', async () => {
                 if (!fileInput.files[0]) return;
 
+                // Check file size (5MB limit)
+                const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (fileInput.files[0].size > maxFileSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'File size must not exceed 5 MB.',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    return;
+                }
+
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                formData.append('file_field', fileInput.name);
+                formData.append('document_type_id', fileInput.dataset.docType);
 
                 try {
                     const res = await fetch('<?= base_url("account/updateFile") ?>', {
@@ -2941,9 +2916,9 @@ if (viewEligibilityBtn) {
         if(deleteBtn){
             const row = deleteBtn.closest('tr');
             const fileInput = row.querySelector('input[type="file"]');
-            const fileField = fileInput.name;
+            const documentTypeId = deleteBtn.dataset.docType;
             const fileLink = row.querySelector('.view-mode .viewFileBtn');
-            const fileName = fileLink?.textContent;
+            const fileName = fileLink?.dataset.file;
 
             if(!fileName){
                 Swal.fire({
@@ -2969,7 +2944,7 @@ if (viewEligibilityBtn) {
 
             try{
                 const formData = new FormData();
-                formData.append('file_field', fileField);
+                formData.append('document_type_id', documentTypeId);
 
                 const res = await fetch('<?= base_url("account/deleteFile") ?>',{
                     method:'POST',

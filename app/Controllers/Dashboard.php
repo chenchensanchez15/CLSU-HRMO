@@ -42,6 +42,7 @@ $builder->select([
     'job_applications.job_vacancy_id',
     'job_applications.applied_at',
     'job_applications.application_status',
+    'job_applications.remarks',
     'pi.xItemTitle as position_title',
     'o.office_name AS department',
     'pi.item_number as plantilla_item_no',
@@ -115,14 +116,14 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
     $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
     $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
     $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
-    $builder->where('jp.publication_status', 1); // Assuming 1 means active/public
+    $builder->where('jv.status', 'Active'); 
     $builder->orderBy('jv.created_at', 'DESC');
     
     $vacancies = $builder->get()->getResultArray();
     // ✅ Compute monthly salary for each vacancy
-foreach ($vacancies as &$vac) {
-    $vac['monthly_salary'] = $this->get_monthly_salary($vac['plantilla_item_id']) ?? 0;
-}
+    foreach ($vacancies as &$vac) {
+        $vac['monthly_salary'] = $this->get_monthly_salary($vac['plantilla_item_id']) ?? 0;
+    }
 
 
     // Fetch applicant profile
@@ -214,7 +215,7 @@ foreach ($vacancies as &$vac) {
         $db->table('job_applications')->insert([
             'user_id' => $userId,
             'job_vacancy_id' => $vacancyId,
-            'application_status' => 'Pending',
+            'application_status' => 'Submitted',
             'applied_at' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s')
@@ -222,6 +223,42 @@ foreach ($vacancies as &$vac) {
 
         return redirect()->back()->with('success', 'Application submitted successfully.');
     }
+
+    public function withdraw()
+    {
+        $userId = session()->get('user_id');
+        $applicationId = $this->request->getPost('id'); // or get from AJAX
+
+        $db = \Config\Database::connect();
+
+        // Make sure the user owns this application
+        $application = $db->table('job_applications')
+            ->where('id_job_application', $applicationId)
+            ->where('user_id', $userId)
+            ->get()
+            ->getRow();
+
+        if (!$application) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Application not found or unauthorized.'
+            ]);
+        }
+
+        // Only applicant-controlled status
+        $db->table('job_applications')
+            ->where('id_job_application', $applicationId)
+            ->update([
+                'application_status' => 'Withdrawn',
+                'updated_at' => date('Y-m-d H:i:s')
+            ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Application withdrawn successfully.'
+        ]);
+    }
+
     
     // AJAX pagination endpoint
     public function pagination()
@@ -257,20 +294,20 @@ foreach ($vacancies as &$vac) {
         
         // Fetch paginated applications
         $builder = $db->table('job_applications');
-$builder->select([
-    'job_applications.id_job_application',
-    'job_applications.job_vacancy_id',
-    'job_applications.applied_at',
-    'job_applications.application_status',
-    'pi.xItemTitle as position_title',
-    'o.office_name AS department',
-    'pi.item_number as plantilla_item_no',
-    'pi.ItemSalaryGrade as salary_grade',
+        $builder->select([
+            'job_applications.id_job_application',
+            'job_applications.job_vacancy_id',
+            'job_applications.applied_at',
+            'job_applications.application_status',
+            'pi.xItemTitle as position_title',
+            'o.office_name AS department',
+            'pi.item_number as plantilla_item_no',
+            'pi.ItemSalaryGrade as salary_grade',
 
-    'jv.date_posted',
-    'jp.application_deadline',
-    'jp.interview_date'   // ✅ ADD THIS
-]);
+            'jv.date_posted',
+            'jp.application_deadline',
+            'jp.interview_date'   // ✅ ADD THIS
+        ]);
 
         $builder->join('job_vacancies jv', 'jv.id_vacancy = job_applications.job_vacancy_id', 'left');
         $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');

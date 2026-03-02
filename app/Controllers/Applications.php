@@ -9,6 +9,7 @@ use App\Models\JobVacancyModel;
 use App\Models\PlantillaItemModel;
 use App\Models\JobPublicationModel;
 use App\Models\ApplicantModel;
+use App\Models\JobPublicationRequirementsModel;
 
 use App\Models\ApplicantEducationModel;
 use App\Models\ApplicantWorkExperienceModel;
@@ -26,7 +27,8 @@ class Applications extends BaseController
     protected $educationModel;
     protected $workModel;
     protected $documentModel; 
-    protected $civilServiceModel; 
+    protected $civilServiceModel;
+    protected $jobPublicationRequirementsModel; 
 
     public function __construct()
     {
@@ -40,6 +42,7 @@ class Applications extends BaseController
         $this->workModel = new ApplicantWorkExperienceModel();
         $this->documentModel = new ApplicantDocumentsModel(); 
         $this->civilServiceModel = new ApplicationCivilServiceModel();
+        $this->jobPublicationRequirementsModel = new JobPublicationRequirementsModel();
     }
     
     public function apply($id = null)
@@ -107,10 +110,17 @@ class Applications extends BaseController
     }
 
     $profile = $this->applicantPersonal->where('user_id', $user_id)->first();
+    
+    // Get position-specific document requirements
+    $requirements = $this->jobPublicationRequirementsModel->getRequirementsByVacancy($id);
+
+    // Compute monthly salary using the same logic as in Home controller
+    $job['monthly_salary'] = $this->get_monthly_salary($id);
 
     return view('apply', [
-        'job'     => $job,
-        'profile' => $profile
+        'job'          => $job,
+        'profile'      => $profile,
+        'requirements' => $requirements
     ]);
 }
 
@@ -241,7 +251,6 @@ public function submit($id = null)
             'job_application_id' => $application_id,
             'degree_level_id' => $edu['degree_level_id'] ?? null,
             'degree_id' => $edu['degree_id'] ?? null,
-            'level' => '', // Will be populated from lib_degree_level
             'school_name' => $edu['school_name'] ?? 'N/A',
             'degree_course' => $edu['degree_course'] ?? 'N/A',
             'course' => $edu['course'] ?? 'N/A',
@@ -396,7 +405,27 @@ for ($i = 0; $i < $totalRows; $i++) {
 // =========================
 // FILE UPLOADS: application_documents (FINAL FIX)
 // =========================
+// Get position-specific requirements for this application
+$requirements = $this->jobPublicationRequirementsModel->getRequirementsByVacancy($id);
 $files = ['pds','performance_rating','resume','tor','diploma'];
+
+// Add dynamic requirement fields
+$dynamicFiles = [];
+foreach ($requirements as $req) {
+    $requirementText = $req['requirement_text'];
+    
+    // Check if this is a combined requirement that needs to be split
+    if (strpos($requirementText, 'Transcript of Records, Diploma, Certificate of Employment and Certificate of Trainings and Seminars') !== false) {
+        // Split into individual requirements
+        $dynamicFiles[] = 'requirement_' . $req['id_requirement'] . '_tor';
+        $dynamicFiles[] = 'requirement_' . $req['id_requirement'] . '_diploma';
+        $dynamicFiles[] = 'requirement_' . $req['id_requirement'] . '_employment';
+        $dynamicFiles[] = 'requirement_' . $req['id_requirement'] . '_trainings';
+    } else {
+        // Regular requirement
+        $dynamicFiles[] = 'requirement_' . $req['id_requirement'];
+    }
+}
 
 $writablePath = WRITEPATH . 'uploads/files/';
 $publicPath   = FCPATH . 'uploads/';
@@ -409,8 +438,14 @@ $docData = [
     'diploma' => null
 ];
 
+// Add dynamic file fields to docData
+foreach ($dynamicFiles as $dynamicFile) {
+    $docData[$dynamicFile] = null;
+}
+
 // Handle existing files first (READ-ONLY scenario)
-foreach ($files as $fileInput) {
+$allFiles = array_merge($files, $dynamicFiles);
+foreach ($allFiles as $fileInput) {
     $oldFile = $this->request->getPost('existing_' . $fileInput);
     
     if (!empty($oldFile)) {
@@ -420,6 +455,12 @@ foreach ($files as $fileInput) {
                 $docData['pds'] = $oldFile;
             } elseif ($fileInput === 'performance_rating') {
                 $docData['performance_rating'] = $oldFile;
+            } elseif (strpos($fileInput, '_tor') !== false) {
+                // Handle split TOR requirement
+                $docData['tor'] = $oldFile;
+            } elseif (strpos($fileInput, '_diploma') !== false) {
+                // Handle split Diploma requirement
+                $docData['diploma'] = $oldFile;
             } else {
                 $docData[$fileInput] = $oldFile;
             }
@@ -431,6 +472,12 @@ foreach ($files as $fileInput) {
                 $docData['pds'] = $oldFile;
             } elseif ($fileInput === 'performance_rating') {
                 $docData['performance_rating'] = $oldFile;
+            } elseif (strpos($fileInput, '_tor') !== false) {
+                // Handle split TOR requirement
+                $docData['tor'] = $oldFile;
+            } elseif (strpos($fileInput, '_diploma') !== false) {
+                // Handle split Diploma requirement
+                $docData['diploma'] = $oldFile;
             } else {
                 $docData[$fileInput] = $oldFile;
             }
@@ -439,7 +486,7 @@ foreach ($files as $fileInput) {
 }
 
 // Handle new file uploads (if any)
-foreach ($files as $fileInput) {
+foreach ($allFiles as $fileInput) {
     $file = $this->request->getFile($fileInput);
     
     // Only process if it's a valid new upload
@@ -452,6 +499,12 @@ foreach ($files as $fileInput) {
             $docData['pds'] = $newName;
         } elseif ($fileInput === 'performance_rating') {
             $docData['performance_rating'] = $newName;
+        } elseif (strpos($fileInput, '_tor') !== false) {
+            // Handle split TOR requirement
+            $docData['tor'] = $newName;
+        } elseif (strpos($fileInput, '_diploma') !== false) {
+            // Handle split Diploma requirement
+            $docData['diploma'] = $newName;
         } else {
             $docData[$fileInput] = $newName;
         }
@@ -555,7 +608,7 @@ public function view($application_id = null)
         if (!empty($educationByLevel[$levelName])) {
             foreach ($educationByLevel[$levelName] as $index => $edu) {
                 $app['education_display'][] = [
-                    'level' => $index === 0 ? $levelName : '', // Show level name only on first row
+                    'level_name' => $index === 0 ? $levelName : '', // Show level name only on first row,
                     'school_name' => !empty($edu['school_name']) && strtoupper($edu['school_name']) !== 'N/A' ? $edu['school_name'] : '-',
                     'degree_course' => !empty($edu['degree_name']) ? $edu['degree_name'] : (!empty($edu['degree_course']) && strtoupper($edu['degree_course']) !== 'N/A' ? $edu['degree_course'] : '-'),
                     'course' => !empty($edu['course']) && strtoupper($edu['course']) !== 'N/A' ? $edu['course'] : '-',
@@ -569,7 +622,7 @@ public function view($application_id = null)
         } else {
             // Add empty row for level with no records
             $app['education_display'][] = [
-                'level' => $levelName,
+                'level_name' => $levelName,
                 'school_name' => '-',
                 'degree_course' => '-',
                 'period_from' => '-',
@@ -664,7 +717,6 @@ unset($work);
         'position_title' => '-',
         'office'         => '-',
         'department'     => '-',
-        'monthly_salary' => null,
         'application_deadline' => null,
         'plantilla_item_no' => '-',
         'salary_grade' => '-',
@@ -679,6 +731,9 @@ unset($work);
         'duties_responsibilities' => '-',
         'application_requirements' => '-'
     ];
+    
+    // Compute monthly salary using the same logic as in Home controller
+    $job['monthly_salary'] = $this->get_monthly_salary($app['job_vacancy_id']);
 
     // -------------------------
     // Fetch applicant profile
@@ -786,15 +841,16 @@ $db->table('application_personal')
     // Update Educational Background
     // -------------------
     $eduLevels = [
-        'Elementary'         => 'elementary',
-        'Secondary'          => 'secondary',
-        'Vocational / Trade' => 'vocational',
-        'College'            => 'college',
-        'Graduate Studies'   => 'graduate'
+        'Elementary'         => ['key' => 'elementary', 'id' => 1],
+        'Secondary'          => ['key' => 'secondary', 'id' => 2],
+        'Vocational / Trade' => ['key' => 'vocational', 'id' => 3],
+        'College'            => ['key' => 'college', 'id' => 4],
+        'Graduate Studies'   => ['key' => 'graduate', 'id' => 5]
     ];
     $eduTable = $db->table('application_education');
 
-    foreach ($eduLevels as $level => $key) {
+    foreach ($eduLevels as $level => $levelData) {
+        $key = $levelData['key'];
         $data = [
             'school_name'         => $this->request->getPost($key.'_school') ?: '-',
             'degree_course'       => $this->request->getPost($key.'_degree') ?: '-',
@@ -807,7 +863,7 @@ $db->table('application_personal')
         ];
 
         $existing = $eduTable->where('job_application_id', $job_application_id)
-                             ->where('level', $level)
+                             ->where('degree_level_id', $levelData['id'])
                              ->get()
                              ->getRowArray();
 
@@ -816,7 +872,7 @@ $db->table('application_personal')
                      ->update($data);
         } else {
             $data['job_application_id'] = $job_application_id;
-            $data['level'] = $level;
+            $data['degree_level_id'] = $levelData['id'];
             $data['created_at'] = $currentDate;
             $eduTable->insert($data);
         }
@@ -1385,5 +1441,48 @@ public function viewTrainingCertificate($id, $filename)
         ->setBody(file_get_contents($filePath));
 }
 
+private function get_monthly_salary($job_vacancy_id)
+{
+    $db = \Config\Database::connect();
+    
+    // First get the plantilla_item_id from the job_vacancies table
+    $vacancy = $db->table('job_vacancies')
+                ->select('plantilla_item_id')
+                ->where('id_vacancy', $job_vacancy_id)
+                ->get()
+                ->getRowArray();
+    
+    if (!$vacancy || !$vacancy['plantilla_item_id']) {
+        return null;
+    }
+    
+    $plantilla_item_id = $vacancy['plantilla_item_id'];
+    
+    // ✅ Use hrmis-template database explicitly
+    $schedule = $db->query("SELECT *
+        FROM `hrmis-template`.lib_salary_schedules
+        WHERE schedule_forpermanent = 1
+        AND schedule_effectivity <= CURDATE()
+        ORDER BY schedule_effectivity DESC
+        LIMIT 1")->getRow();
+
+    if (!$schedule) return null;
+
+    $item = $db->query("SELECT pi.id_plantilla_item, lp.salary_grade
+        FROM `hrmis-template`.plantilla_items pi
+        LEFT JOIN `hrmis-template`.lib_positions lp 
+            ON pi.position_id = lp.id_position
+        WHERE pi.id_plantilla_item = ?", [$plantilla_item_id])->getRow();
+
+    if (!$item || !$item->salary_grade) return null;
+
+    $salary = $db->query("SELECT sg_sin1
+        FROM `hrmis-template`.lib_salaries
+        WHERE salary_grade = ?
+        AND salary_schedule_id = ?
+        LIMIT 1", [$item->salary_grade, $schedule->id_salary_schedule])->getRow();
+
+    return $salary ? $salary->sg_sin1 : null;
+}
 
 }
