@@ -210,6 +210,7 @@
 </div>
 
 <div class="step hidden" id="step-2">
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt (Yellow) -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -243,6 +244,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Personal Information Details (2-Row Format) -->
     <div class="space-y-3 text-xs">
@@ -260,7 +262,7 @@
     <div>
         <p class="text-[10px] font-semibold text-gray-600">Full Name</p>
         <p class="font-medium text-gray-800">
-            <?= esc(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ?? '') . ' ' . ($profile['last_name'] ?? '') . ($profile['suffix'] ? ' ' . $profile['suffix'] : '')) ?: '-' ?>
+            <?= esc(trim(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ?? '') . ' ' . ($profile['last_name'] ?? '') . (($profile['suffix'] ?? '') ? ' ' . ($profile['suffix'] ?? '') : '')) ?: '-') ?>
         </p>
     </div>
 
@@ -400,6 +402,7 @@ foreach($libDegreeLevels as $levelObj){
 
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
+<?php if(empty($createdBy)): ?>
     <!-- Verification & Edit Prompt for Educational Background -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -433,6 +436,7 @@ foreach($libDegreeLevels as $levelObj){
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -488,6 +492,7 @@ foreach($libDegreeLevels as $levelObj){
 <div class="step hidden" id="step-4">
 
 <!-- Verification & Edit Prompt for Work Experience -->
+<?php if(empty($createdBy)): ?>
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
         <!-- Icon -->
@@ -520,6 +525,7 @@ foreach($libDegreeLevels as $levelObj){
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     
     <!-- Section Header with Icon -->
@@ -614,6 +620,7 @@ $civil_services = $db->table('applicant_civil_service')
 
 <div class="step hidden" id="step-5">
     
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt for Civil Service -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -647,6 +654,7 @@ $civil_services = $db->table('applicant_civil_service')
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     
     <!-- Section Header with Icon -->
@@ -894,6 +902,7 @@ $trainings = $db->table('applicant_trainings at')
 ?>
 
 <div class="step hidden" id="step-6">
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt for Trainings -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -927,6 +936,7 @@ $trainings = $db->table('applicant_trainings at')
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -1378,6 +1388,20 @@ document.addEventListener('DOMContentLoaded', function(){
                 showConfirmButton: false,
                 timer: 1000
             });
+            return;
+        }
+
+        // Check if this is a Google Drive file ID (28-33 characters, no timestamp prefix)
+        const fileName = fileUrl.split('/').pop();
+        const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(fileName) && !/^\d{10}_/.test(fileName);
+
+        if(isGoogleDriveFile) {
+            // For Google Drive files, show in modal with iframe
+            const googleDriveUrl = `https://drive.google.com/file/d/${fileName}/preview`;
+            Swal.close();
+            frame.src = googleDriveUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
             return;
         }
 

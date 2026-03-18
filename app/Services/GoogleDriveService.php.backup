@@ -16,7 +16,7 @@ class GoogleDriveService
     public function __construct()
     {
         // Check if Google API client is available
-        if (class_exists('\Google\Client')) {
+        if (class_exists('Google\Client')) {
             $this->enabled = true;
         } else {
             // Log that Google API client is not installed

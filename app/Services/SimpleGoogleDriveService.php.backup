@@ -1,0 +1,294 @@
+<?php
+
+namespace App\Services;
+
+/**
+ * Simplified Google Drive Service
+ * 
+ * This service handles file uploads/downloads to/from Google Drive
+ * using direct HTTP requests instead of the full Google API client
+ */
+class SimpleGoogleDriveService
+{
+    private $enabled = false;
+    private $credentials = null;
+    private $accessToken = null;
+    
+    public function __construct()
+    {
+        // Check if credentials file exists
+        $credentialsPath = realpath(__DIR__ . '/../../writable/credentials/google_credentials.json');
+        if ($credentialsPath && file_exists($credentialsPath)) {
+            $this->credentials = json_decode(file_get_contents($credentialsPath), true);
+            if ($this->credentials) {
+                $this->enabled = true;
+                $this->accessToken = $this->getAccessToken();
+            }
+        } else {
+            error_log('Google Drive credentials not found at: ' . $credentialsPath);
+        }
+    }
+
+    /**
+     * Check if Google Drive service is available
+     */
+    public function isEnabled(): bool
+    {
+        return $this->enabled && $this->accessToken !== null;
+    }
+
+    /**
+     * Get access token from service account credentials
+     */
+    private function getAccessToken()
+    {
+        if (!$this->credentials) {
+            return null;
+        }
+
+        try {
+            // Create JWT token
+            $now = time();
+            $jwtHeader = base64_encode(json_encode(['alg' => 'RS256', 'typ' => 'JWT']));
+            
+            $jwtPayload = base64_encode(json_encode([
+                'iss' => $this->credentials['client_email'],
+                'scope' => 'https://www.googleapis.com/auth/drive',
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'exp' => $now + 3600,
+                'iat' => $now
+            ]));
+            
+            // Create signature
+            $data = $jwtHeader . '.' . $jwtPayload;
+            $privateKey = $this->credentials['private_key'];
+            
+            if (!openssl_sign($data, $signature, $privateKey, 'SHA256')) {
+                throw new \Exception('Failed to create signature');
+            }
+            
+            $jwtSignature = base64_encode($signature);
+            $jwt = $data . '.' . $jwtSignature;
+            
+            // Exchange JWT for access token
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://oauth2.googleapis.com/token');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode == 200) {
+                $tokenData = json_decode($response, true);
+                return $tokenData['access_token'] ?? null;
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            log_message('error', 'Failed to get access token: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Upload a file to Google Drive
+     */
+    public function uploadFile($filePath, $fileName, $mimeType = 'application/pdf')
+    {
+        if (!$this->isEnabled()) {
+            throw new \Exception('Google Drive service not enabled. Check credentials and access token.');
+        }
+    
+        try {
+            // First, upload the file content
+            $fileContent = file_get_contents($filePath);
+                
+            $boundary = '----GoogleDriveUploadBoundary' . uniqid();
+            $delimiter = "\r\n--" . $boundary . "\r\n";
+            $closeDelimiter = "\r\n--" . $boundary . "--";
+                
+            // Upload to service account's workspace first (avoids storage quota issue)
+            $metadata = json_encode([
+                'name' => $fileName
+            ]);
+                
+            $body = $delimiter;
+            $body .= 'Content-Type: application/json; charset=UTF-8' . "\r\n\r\n";
+            $body .= $metadata . $delimiter;
+            $body .= 'Content-Type: ' . $mimeType . "\r\n\r\n";
+            $body .= $fileContent;
+            $body .= $closeDelimiter;
+                
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $this->accessToken,
+                'Content-Type: multipart/related; boundary=' . $boundary
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+                
+            if ($httpCode == 200) {
+                $fileData = json_decode($response, true);
+                $fileId = $fileData['id'];
+                    
+                // Make the file publicly readable
+                $this->makeFilePublic($fileId);
+                    
+                // If a folder ID is specified and valid, try to move the file there
+                $folderId = $_ENV['GOOGLE_DRIVE_FOLDER_ID'] ?? '';
+                if (!empty($folderId) && $folderId !== 'your_folder_id_here' && $folderId !== '0AK1RNQfurjLlUk9PVA') {
+                    try {
+                        $this->moveFileToFolder($fileId, $folderId);
+                    } catch (\Exception $moveError) {
+                        // Log the error but don't fail the upload
+                        error_log('Failed to move file to folder: ' . $moveError->getMessage());
+                    }
+                }
+                    
+                return $fileId;
+            } else {
+                // Check if it's the storage quota error
+                if ($httpCode == 403 && strpos($response, 'storageQuotaExceeded') !== false) {
+                    // This indicates the service account doesn't have access to upload anywhere
+                    throw new \Exception('Service Account does not have storage quota. The service account must be shared with a Google Drive folder or Shared Drive.');
+                }
+                throw new \Exception('Upload failed with HTTP code: ' . $httpCode . '. Response: ' . $response);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('Google Drive upload failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Move a file to a specific folder
+     */
+    private function moveFileToFolder($fileId, $folderId)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'parents' => [$folderId]
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->accessToken,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+        curl_exec($ch);
+        curl_close($ch);
+    }
+    
+    /**
+     * Make a file publicly readable
+     */
+    private function makeFilePublic($fileId)
+    {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId . '/permissions');
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+            'role' => 'reader',
+            'type' => 'anyone'
+        ]));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Authorization: Bearer ' . $this->accessToken,
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        
+        curl_exec($ch);
+        curl_close($ch);
+    }
+
+    /**
+     * Download a file from Google Drive
+     */
+    public function downloadFile($fileId, $destinationPath)
+    {
+        if (!$this->isEnabled()) {
+            throw new \Exception('Google Drive service not enabled.');
+        }
+
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?alt=media');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $this->accessToken
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            $fileContent = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode == 200) {
+                file_put_contents($destinationPath, $fileContent);
+                return true;
+            } else {
+                throw new \Exception('Download failed with HTTP code: ' . $httpCode);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('Google Drive download failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get public URL for a file
+     */
+    public function getFileUrl($fileId)
+    {
+        return "https://drive.google.com/uc?id={$fileId}";
+    }
+    
+    /**
+     * Delete a file from Google Drive
+     */
+    public function deleteFile($fileId)
+    {
+        if (!$this->isEnabled()) {
+            throw new \Exception('Google Drive service not enabled.');
+        }
+
+        try {
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId);
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $this->accessToken
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode == 204) {
+                return true;
+            } else {
+                throw new \Exception('Delete failed with HTTP code: ' . $httpCode);
+            }
+        } catch (\Exception $e) {
+            throw new \Exception('Google Drive delete failed: ' . $e->getMessage());
+        }
+    }
+}

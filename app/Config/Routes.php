@@ -48,6 +48,8 @@ $routes->get('applications/viewCivilCertificate/(:any)', 'Applications::viewCivi
 
 // Account
 $routes->get('account/personal', 'Account::personal');
+$routes->get('account/getProfilePhoto', 'Photo::getProfilePhoto');
+$routes->get('account/getProfilePhoto/(:num)', 'Photo::getProfilePhoto/$1');
 $routes->post('account/update', 'Account::update');
 $routes->get('account/changePassword', 'Account::changePassword');
 $routes->post('account/updatePassword', 'Account::updatePassword');
@@ -71,6 +73,11 @@ $routes->get('applications/viewTrainingCertificate/(:num)/(:any)', 'Applications
 $routes->get('trainings/certificate/(:any)', 'Account::viewTrainingCertificate/$1');
 $routes->get('files/training/(:any)', 'Files::training/$1');
 $routes->get('files/document/(:any)', 'Files::document/$1');
+// New routes for multi-document training certificate viewer (actual files, NOT combined)
+$routes->get('training-documents/view-multiple/(:num)', 'TrainingDocuments::viewMultiple/$1');
+$routes->get('training-documents/get-certificate/(:any)', 'TrainingDocuments::getCertificate/$1');
+// Route for user's own multiple training certificates in profile
+$routes->get('account/view-multiple-training-certificates', 'Account::viewMultipleTrainingCertificates');
 $routes->delete('account/deleteEducation/(:num)', 'Account::deleteEducation/$1');
 // Family background functionality removed
 $routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1');
@@ -86,6 +93,11 @@ $routes->post('applications/updateFiles', 'Applications::updateFiles');
 $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
 $routes->get('account/viewEligibilityCertificates', 'Account::viewEligibilityCertificates');
 $routes->get('account/viewTrainingCertificates', 'Account::viewTrainingCertificates');
+
+// Google Auth
+$routes->get('google/redirectToGoogle', 'GoogleAuth::redirectToGoogle');
+$routes->get('google/callback', 'GoogleAuth::handleCallback');
+$routes->get('google/revokeAccess', 'GoogleAuth::revokeAccess');
 
 // Job Vacancies
 $routes->get('job-vacancies', 'JobVacancies::index');

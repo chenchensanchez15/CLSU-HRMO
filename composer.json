@@ -12,7 +12,10 @@
     "require": {
         "php": "^8.1",
         "codeigniter4/framework": "^4.0",
+        "dompdf/dompdf": "^3.0",
         "fpdf/fpdf": "^1.86",
+        "google/apiclient": "^2.19",
+        "google/apiclient-services": "0.350",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",
         "tecnickcom/tcpdf": "^6.10"

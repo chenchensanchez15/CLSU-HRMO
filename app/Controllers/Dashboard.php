@@ -19,6 +19,41 @@ class Dashboard extends BaseController
 
     $userId = $session->get('user_id');
 
+    // Only check profile completion AFTER password has been changed
+    // This prevents redirecting user before they see the "change password" message
+    $passwordChanged = $session->get('password_changed');
+    
+    if ($passwordChanged) {
+        $session->remove('password_changed');
+        
+        // Get the stored redirect URL (if any)
+        $redirectAfterPasswordChange = $session->get('redirect_after_password_change');
+        
+        // Check if personal details are complete before redirecting to apply
+        $applicantModel = new \App\Models\ApplicantModel();
+        $profile = $applicantModel->where('user_id', $userId)->first();
+        
+        // Check if essential fields are filled
+        $hasPersonalDetails = !empty($profile['sex']) && 
+                              !empty($profile['date_of_birth']) && 
+                              !empty($profile['civil_status']) && 
+                              !empty($profile['citizenship']) && 
+                              !empty($profile['residential_address']);
+        
+        if (!$hasPersonalDetails) {
+            // Redirect to account/personal to fill details first, store apply URL for later
+            if ($redirectAfterPasswordChange) {
+                $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
+            }
+            return redirect()->to('/account/personal')->with('fill_details_required', true);
+        }
+        
+        // Personal details complete, redirect to original apply URL (if exists)
+        if ($redirectAfterPasswordChange) {
+            return redirect()->to($redirectAfterPasswordChange);
+        }
+    }
+
     // Fetch user info
     $userModel = new UserModel();
     $user = $userModel->find($userId);
@@ -130,12 +165,23 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
     $applicantModel = new ApplicantModel();
     $profile = $applicantModel->where('user_id', $userId)->first();
 
-    // Check if profile photo exists
+    // Check if profile photo exists (supports both Google Drive and local storage)
     $profilePhoto = null;
+    $isGoogleDrivePhoto = false;
+    
     if (!empty($profile['photo'])) {
-        $photoPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $profile['photo'];
-        if (file_exists($photoPath)) {
+        // Check if it's a Google Drive file ID (20+ characters, alphanumeric with underscores/hyphens)
+        if (preg_match('/^[a-zA-Z0-9_-]{20,}$/', $profile['photo']) && !preg_match('/^\d{10}_/', $profile['photo'])) {
+            // Google Drive photo
             $profilePhoto = $profile['photo'];
+            $isGoogleDrivePhoto = true;
+        } else {
+            // Local photo - verify file exists
+            $photoPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $profile['photo'];
+            if (file_exists($photoPath)) {
+                $profilePhoto = $profile['photo'];
+                $isGoogleDrivePhoto = false;
+            }
         }
     }
 
@@ -146,6 +192,7 @@ $totalAppPages = ceil($totalApps / $appsPerPage);
         'vacancies' => $vacancies,
         'profile' => $profile,
         'profilePhoto' => $profilePhoto,
+        'isGoogleDrivePhoto' => $isGoogleDrivePhoto,
         'appliedJobIds' => $appliedJobIds,
         'appPage' => $appPage,
         'totalApps' => $totalApps,

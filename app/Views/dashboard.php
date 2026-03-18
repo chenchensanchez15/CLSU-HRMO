@@ -91,10 +91,20 @@ window.onclick = function(event) {
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
                     <?php 
-                    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-                    if(!empty($profile['photo']) && file_exists($photoPath)): ?>
+                    // Check if photo is from Google Drive or local storage
+                    if (!empty($profile['photo']) && isset($isGoogleDrivePhoto) && $isGoogleDrivePhoto): ?>
+                        <!-- Google Drive Photo -->
+                        <img src="<?= base_url('account/getProfilePhoto') ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    <?php elseif(!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+                        <!-- Local Photo -->
                         <img src="<?= base_url('uploads/' . $profile['photo']) ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover">
                     <?php else: ?>
+                        <!-- No Photo -->
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
@@ -142,13 +152,21 @@ window.onclick = function(event) {
 <div class="w-full min-h-screen flex flex-col lg:flex-row gap-2 p-4 mx-auto flex-1">
 
 <div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
-    <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-hidden flex items-center justify-center mb-4">
+    <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-visible flex items-center justify-center mb-4">
         <?php
-        $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-        if(!empty($profile['photo']) && file_exists($photoPath)): ?>
-            <img src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
+        // Check if photo is from Google Drive or local storage
+        if (!empty($profile['photo']) && isset($isGoogleDrivePhoto) && $isGoogleDrivePhoto): ?>
+            <!-- Google Drive Photo -->
+            <img id="profilePhoto" src="<?= base_url('account/getProfilePhoto') ?>" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <svg id="profilePhotoPlaceholder" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500 hidden" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+            </svg>
+        <?php elseif(!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+            <!-- Local Photo -->
+            <img id="profilePhoto" src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
         <?php else: ?>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+            <!-- No Photo -->
+            <svg id="profilePhoto" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
             </svg>
         <?php endif; ?>
