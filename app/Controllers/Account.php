@@ -25,6 +25,14 @@ public function personal()
     
     $userId = $session->get('user_id');
 
+    // Check if there's a pending redirect after profile completion
+    $redirectAfterProfileComplete = $session->get('redirect_after_profile_complete');
+    if ($redirectAfterProfileComplete) {
+        // Store it for later use after profile update
+        $session->set('pending_redirect_url', $redirectAfterProfileComplete);
+        $session->remove('redirect_after_profile_complete');
+    }
+
     // Models
     $userModel             = new \App\Models\UserModel();
     $applicantModel        = new \App\Models\ApplicantModel();
@@ -34,6 +42,9 @@ public function personal()
     $trainingModel         = new \App\Models\ApplicantTrainingModel();
     $trainingCategoryModel = new \App\Models\TrainingCategoryModel();
     $fileModel             = new \App\Models\ApplicantDocumentsModel();
+    $documentTypeModel     = new \App\Models\DocumentTypeModel();
+    $jobApplicationModel   = new \App\Models\JobApplicationModel();
+    $jobPublicationReqModel = new \App\Models\JobPublicationRequirementsModel();
     // Family background functionality removed
 
     // Load degree tables
@@ -45,7 +56,7 @@ public function personal()
     // ----------------- USER & PROFILE -----------------
     $user    = $userModel->find($userId);
     $profile = $applicantModel->where('user_id', $userId)->first();
-
+    
     if (!$profile) {
         $profile = [
             'first_name' => '',
@@ -59,8 +70,60 @@ public function personal()
             'phone' => '',
             'citizenship' => '',
             'residential_address' => '',
-            'permanent_address' => ''
+            'permanent_address' => '',
+            'photo' => ''
         ];
+    }
+    
+    // ----------------- GOOGLE DRIVE PHOTO -----------------
+    // Check if photo is stored in Google Drive (Google Drive file ID format)
+    $photoUrl = null;
+    $hasGoogleDrivePhoto = false;
+    
+    if (!empty($profile['photo'])) {
+        // Check if it's a Google Drive file ID (alphanumeric, 20+ chars, no timestamp prefix)
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $profile['photo']) && !preg_match('/^\d{10}_/', $profile['photo']);
+        
+        if ($isGoogleDriveFile) {
+            log_message('debug', 'Photo found in Google Drive: ' . $profile['photo']);
+            
+            try {
+                $driveService = new \App\Libraries\GoogleDriveOAuthService();
+                
+                if ($driveService->isAuthenticated()) {
+                    // Get photo file URL from Google Drive
+                    $client = $driveService->getClient();
+                    $accessToken = $client->getAccessToken()['access_token'];
+                    
+                    // Get file metadata to verify it exists and get download URL
+                    $fileId = $profile['photo'];
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?fields=id,name,mimeType,webContentLink&supportsAllDrives=true');
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                        'Authorization: Bearer ' . $accessToken
+                    ]);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    
+                    $response = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    
+                    if ($httpCode == 200) {
+                        $fileData = json_decode($response, true);
+                        if (isset($fileData['id'])) {
+                            // Use direct download URL with access token
+                            $photoUrl = 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?alt=media';
+                            $hasGoogleDrivePhoto = true;
+                            log_message('info', 'Successfully retrieved Google Drive photo for user ' . $userId);
+                        }
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error fetching Google Drive photo: ' . $e->getMessage());
+                // Fallback to local file handling will occur naturally
+            }
+        }
     }
 
     // Family background functionality removed
@@ -135,7 +198,7 @@ public function personal()
 
     // ----------------- TRAININGS -----------------
     $trainingCategories = $trainingCategoryModel->findAll();
-
+    
     $trainingRecords = $trainingModel
         ->select('applicant_trainings.*, lib_training_category.training_category_name')
         ->join(
@@ -146,9 +209,9 @@ public function personal()
         ->where('user_id', $userId)
         ->orderBy('added_date','DESC')
         ->findAll();
-
+    
     $totalDurationSeconds = 0; // To accumulate all training durations
-
+    
     foreach ($trainingRecords as &$training) {
         $training['training_name']          = $training['training_name'] ?: 'N/A';
         $training['training_category_name'] = $training['training_category_name'] ?: 'N/A';
@@ -158,7 +221,7 @@ public function personal()
         $training['training_sponsor']       = $training['training_sponsor'] ?: 'N/A';
         $training['training_remarks']       = $training['training_remarks'] ?: 'N/A';
         $training['certificate_file']       = $training['certificate_file'] ?: '';
-
+    
         // Format dates
         $training['date_from_formatted'] = (!empty($training['date_from']) && $training['date_from'] !== '0000-00-00')
             ? date('F j, Y', strtotime($training['date_from']))
@@ -166,18 +229,18 @@ public function personal()
         $training['date_to_formatted'] = (!empty($training['date_to']) && $training['date_to'] !== '0000-00-00')
             ? date('F j, Y', strtotime($training['date_to']))
             : 'N/A';
-
+    
         // ----------------- Calculate Training Duration -----------------
         if(!empty($training['date_from']) && !empty($training['date_to']) && $training['date_from'] !== '0000-00-00' && $training['date_to'] !== '0000-00-00') {
             $from = new \DateTime($training['date_from']);
             $to   = new \DateTime($training['date_to']);
             $diff = $from->diff($to);
-
+    
             $training['training_duration'] = 
                 ($diff->y > 0 ? $diff->y . ' yr ' : '') .
                 ($diff->m > 0 ? $diff->m . ' mo ' : '') .
                 ($diff->d > 0 ? $diff->d . ' days' : '');
-
+    
             // Add to total duration (in seconds)
             $totalDurationSeconds += ($to->getTimestamp() - $from->getTimestamp());
         } else {
@@ -185,7 +248,7 @@ public function personal()
         }
     }
     unset($training);
-
+    
     // Convert total duration in seconds to years, months, days
     $totalDuration = '';
     if($totalDurationSeconds > 0) {
@@ -203,14 +266,141 @@ $civilCertificatesCount = $civilModel
     ->where('certificate IS NOT NULL')
     ->countAllResults();
 
+// ----------------- TRAINING CERTIFICATES COUNT -----------------
+$trainingModelForCount = new \App\Models\ApplicantTrainingModel();
+$trainingCertificatesCount = $trainingModelForCount
+    ->where('user_id', $userId)
+    ->where('certificate_file IS NOT NULL')
+    ->countAllResults();
+
 // ----------------- FILES -----------------
-$fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
-    'pds'                => '',
-    'performance_rating' => '',
-    'resume'             => '',
-    'tor'                => '',
-    'diploma'            => '',
-    'uploaded_at'        => '',
+// Get all document types
+$documentTypes = $documentTypeModel->getAllDocumentTypes();
+
+// Get user's documents
+$userDocuments = $fileModel->getDocumentsByUser($userId);
+
+// Create associative array for easy access
+$fileRecords = [];
+$latestUpdatedAt = null; // Track the most recent update time across all documents
+
+foreach ($userDocuments as $doc) {
+    $fileRecords[$doc['document_type_id']] = $doc['filename'];
+    
+    // Track the latest updated_at timestamp
+    $currentDocTime = null;
+    if (isset($doc['updated_at']) && !empty($doc['updated_at']) && $doc['updated_at'] != '0000-00-00 00:00:00') {
+        $currentDocTime = $doc['updated_at'];
+    } elseif (isset($doc['created_at']) && !empty($doc['created_at']) && $doc['created_at'] != '0000-00-00 00:00:00') {
+        $currentDocTime = $doc['created_at'];
+    }
+    
+    // Update latest timestamp if this document is more recent
+    if ($currentDocTime && (!$latestUpdatedAt || strtotime($currentDocTime) > strtotime($latestUpdatedAt))) {
+        $latestUpdatedAt = $currentDocTime;
+    }
+}
+
+// Store the latest timestamp
+if ($latestUpdatedAt) {
+    $fileRecords['uploaded_at'] = $latestUpdatedAt;
+}
+
+// Check if Google Drive is authenticated
+$googleDriveAuthenticated = false;
+$googleDriveFiles = [];
+$driveService = null;
+
+try {
+    $driveService = new \App\Libraries\GoogleDriveOAuthService();
+    $googleDriveAuthenticated = $driveService->isEnabled();
+    
+    if ($googleDriveAuthenticated) {
+        log_message('debug', 'Google Drive is authenticated for user ' . $userId);
+        
+        // Fetch files from Google Drive if available
+        try {
+            // Initialize Google Drive client
+            $client = $driveService->getClient();
+            $accessToken = $client->getAccessToken()['access_token'];
+            
+            // Search for files in the configured folder
+            $folderId = $_ENV['GOOGLE_DRIVE_FOLDER_ID'] ?? null;
+            
+            if ($folderId) {
+                // Build query to search for files by name pattern (user_id_timestamp_*)
+                $query = "'" . $folderId . "' in parents and name contains '" . $userId . "_'";
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files?q=' . urlencode($query) . '&fields=files(id,name,mimeType,createdTime,modifiedTime)&supportsAllDrives=true');
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $accessToken
+                ]);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($httpCode == 200) {
+                    $data = json_decode($response, true);
+                    $googleDriveFiles = $data['files'] ?? [];
+                    
+                    // Log found files for debugging
+                    log_message('debug', 'Found ' . count($googleDriveFiles) . ' files in Google Drive for user ' . $userId);
+                }
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error fetching Google Drive files: ' . $e->getMessage());
+        }
+    } else {
+        log_message('warning', 'Google Drive is not authenticated for user ' . $userId);
+    }
+} catch (\Exception $e) {
+    log_message('error', 'Error initializing Google Drive service: ' . $e->getMessage());
+    $googleDriveAuthenticated = false;
+}
+
+// Get current job application and its requirements
+$currentApplication = $jobApplicationModel
+    ->where('user_id', $userId)
+    ->where('application_status', 'draft')
+    ->orderBy('created_at', 'DESC')
+    ->first();
+
+$requiredDocuments = [];
+if ($currentApplication) {
+    $requiredDocuments = $jobPublicationReqModel->getRequirementsByVacancy($currentApplication['job_vacancy_id']);
+}
+
+// If no application or no requirements, show all document types
+if (empty($requiredDocuments)) {
+    $requiredDocuments = $documentTypes;
+}
+
+// Get certificates from trainings and civil service
+$trainingModel = new \App\Models\ApplicantTrainingModel();
+$civilServiceModel = new \App\Models\ApplicantCivilServiceModel();
+
+// Get training certificates
+$trainingCertificates = $trainingModel
+    ->where('user_id', $userId)
+    ->where('certificate_file IS NOT NULL')
+    ->where('certificate_file !=', '')
+    ->findAll();
+
+// Get civil service certificates
+$civilServiceCertificates = $civilServiceModel
+    ->where('user_id', $userId)
+    ->where('certificate IS NOT NULL')
+    ->where('certificate !=', '')
+    ->findAll();
+
+// Add certificate information to file records for display
+$certificateInfo = [
+    'training_certificates' => $trainingCertificates,
+    'civil_service_certificates' => $civilServiceCertificates
 ];
 
     return view('account/personal', [
@@ -223,9 +413,17 @@ $fileRecords = $fileModel->where('user_id', $userId)->first() ?? [
         'trainingCategories'    => $trainingCategories,
         'totalTrainingDuration' => $totalDuration, // pass total duration to view
         'fileRecords'           => $fileRecords,
+        'documentTypes'         => $documentTypes,
+        'requiredDocuments'     => $requiredDocuments,
+        'certificateInfo'       => $certificateInfo,
         'civilCertificatesCount'=> $civilCertificatesCount,
+        'trainingCertificatesCount'=> $trainingCertificatesCount,
         'libDegrees'            => $libDegrees,
         'libDegreeLevels'       => $libDegreeLevels,
+        'googleDriveFiles'      => $googleDriveFiles,
+        'googleDriveAuthenticated' => $googleDriveAuthenticated,
+        'photoUrl'              => $photoUrl,
+        'hasGoogleDrivePhoto'   => $hasGoogleDrivePhoto,
     ]);
 }
 
@@ -280,10 +478,33 @@ public function update()
         $applicantModel->insert($profileData);
     }
 
-    return $this->response->setJSON([
+    // Check if there's a pending redirect URL (user was filling profile to apply)
+    $pendingRedirect = $session->get('pending_redirect_url');
+    
+    // Extract vacancy ID from the redirect URL if it exists
+    $vacancyId = null;
+    if ($pendingRedirect && preg_match('#/applications/apply/(\d+)#', $pendingRedirect, $matches)) {
+        $vacancyId = $matches[1];
+    }
+    
+    // Prepare response data
+    $responseData = [
         'success' => true,
-        'message' => 'Personal Information updated successfully!'
-    ]);
+        'message' => 'Personal Information updated successfully!',
+        'vacancy_id' => $vacancyId // Extracted ID for form submission
+    ];
+    
+    // If there's a pending redirect (user was in the middle of applying), 
+    // redirect directly to dashboard instead of showing confirmation dialog
+    if ($pendingRedirect) {
+        $responseData['redirect_url'] = base_url('/dashboard');
+        $responseData['message'] = 'Successful. Personal Information completed!';
+    } else {
+        // If no pending redirect, redirect to home page
+        $responseData['redirect_url'] = base_url('/');
+    }
+    
+    return $this->response->setJSON($responseData);
 }
 
 // Family background functionality removed
@@ -311,25 +532,102 @@ public function updatePhoto()
         ]);
     }
 
-    $photoName = $photoFile->getRandomName();
-    $photoFile->move(FCPATH . 'uploads', $photoName);
+    try {
+        // Upload to Google Drive using service account
+        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+        
+        if ($driveService->isAuthenticated()) {
+            log_message('info', 'Uploading profile photo to Google Drive for user ' . $userId);
+            
+            // Get file content
+            $filePath = $photoFile->getTempName();
+            // Use consistent naming: {timestamp}_profile_photo.{ext}
+            $extension = $photoFile->getClientExtension();
+            $fileName = time() . '_profile_photo.' . $extension;
+            
+            // Upload to Google Drive
+            $googleFileId = $driveService->uploadFile($filePath, $fileName, $photoFile->getMimeType());
+            
+            // Make the photo publicly accessible
+            try {
+                $client = $driveService->getClient();
+                $accessToken = $client->getAccessToken()['access_token'];
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '/permissions?supportsAllDrives=true');
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                    'type' => 'anyone',
+                    'role' => 'reader'
+                ]));
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Authorization: Bearer ' . $accessToken,
+                    'Content-Type: ' => 'application/json'
+                ]);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($httpCode == 200) {
+                    log_message('info', 'Photo permissions set to public');
+                }
+            } catch (\Exception $e) {
+                log_message('warning', 'Could not set photo permissions: ' . $e->getMessage());
+            }
+            
+            // Update database with Google Drive file ID
+            $profile = $applicantModel->where('user_id', $userId)->first();
+            if ($profile) {
+                $applicantModel->update($profile['id'], ['photo' => $googleFileId]);
+            } else {
+                $applicantModel->insert([
+                    'user_id' => $userId,
+                    'photo' => $googleFileId
+                ]);
+            }
+            
+            log_message('info', 'Profile photo uploaded to Google Drive successfully. File ID: ' . $googleFileId);
+            
+            return $this->response->setJSON([
+                'success' => true,
+                'message' => 'Profile photo uploaded to Google Drive successfully!',
+                'photo'   => $googleFileId,
+                'photo_url' => 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '?alt=media'
+            ]);
+        } else {
+            throw new \Exception('Google Drive service not authenticated');
+        }
+    } catch (\Exception $e) {
+        log_message('error', 'Error uploading photo to Google Drive: ' . $e->getMessage());
+        
+        // Fallback to local upload if Google Drive fails
+        log_message('warning', 'Falling back to local photo upload');
+        
+        // Use consistent naming: {timestamp}_profile_photo.{ext}
+        $extension = $photoFile->getClientExtension();
+        $photoName = time() . '_profile_photo.' . $extension;
+        $photoFile->move(FCPATH . 'uploads', $photoName);
 
-    // Update only the photo column
-    $profile = $applicantModel->where('user_id', $userId)->first();
-    if ($profile) {
-        $applicantModel->update($profile['id'], ['photo' => $photoName]);
-    } else {
-        $applicantModel->insert([
-            'user_id' => $userId,
-            'photo' => $photoName
+        // Update only the photo column
+        $profile = $applicantModel->where('user_id', $userId)->first();
+        if ($profile) {
+            $applicantModel->update($profile['id'], ['photo' => $photoName]);
+        } else {
+            $applicantModel->insert([
+                'user_id' => $userId,
+                'photo' => $photoName
+            ]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Profile photo saved locally.',
+            'photo'   => $photoName
         ]);
     }
-
-    return $this->response->setJSON([
-        'success' => true,
-        'message' => 'Profile photo updated successfully!',
-        'photo'   => $photoName
-    ]);
 }
 
     public function changePassword()
@@ -402,7 +700,18 @@ public function updatePhoto()
         // Send email notification
         $this->sendPasswordChangeEmail($user['email'], $user['first_name']);
 
-        // Stay on the same page after successful update
+        // Check if there's a redirect URL stored (from first login flow)
+        $redirectAfterPasswordChange = $session->get('redirect_after_password_change');
+        
+        if ($redirectAfterPasswordChange) {
+            // Clear the session variable and redirect to profile to fill details first
+            $session->remove('redirect_after_password_change');
+            // Store the redirect URL for later use after profile completion
+            $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
+            return redirect()->to('/account/personal')->with('fill_details_required', true);
+        }
+
+        // Normal password change - stay on the same page
         return redirect()->back()->with('success', 'Password updated successfully!');
     }
     
@@ -737,8 +1046,12 @@ if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMov
         ]);
     }
 
-    // ✅ Generate secure filename
-    $certificateName = $userId . '_' . time() . '_' . $certificateFile->getRandomName();
+    // ✅ Use consistent naming: {timestamp}_{original_name}
+    $extension = $certificateFile->getClientExtension();
+    $baseName = pathinfo($certificateFile->getClientName(), PATHINFO_FILENAME);
+    // Sanitize filename: remove special characters but keep underscores
+    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+    $certificateName = time() . '_' . $sanitizedBaseName . '.' . $extension;
 
     // ✅ Move file safely
     $certificateFile->move(WRITEPATH . 'uploads/civil_service', $certificateName);
@@ -771,6 +1084,10 @@ if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMov
     // Add certificate if uploaded
     if ($certificateName) {
         $data['certificate'] = $certificateName;
+        
+        //✅ Automatically save to applicant_documents table
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 3, $certificateName); // document_type_id = 3 for Certificate of Eligibility
     }
 
     if ($id) {
@@ -811,9 +1128,26 @@ public function deleteCivilService($id = null)
         ]);
     }
 
+    $userId = session()->get('user_id');
     $civilModel = new \App\Models\ApplicantCivilServiceModel();
+    $fileModel = new \App\Models\ApplicantDocumentsModel();
+
+    // Get the certificate filename before deleting the record
+    $civilRecord = $civilModel->find($id);
+    $certificateFile = $civilRecord['certificate'] ?? null;
 
     if ($civilModel->delete($id)) {
+        //✅ Also delete from applicant_documents table
+        if ($certificateFile) {
+            $fileModel->deleteDocument($userId, 3); // document_type_id = 3 for Certificate of Eligibility
+            
+            // Delete physical file
+            $filePath = WRITEPATH . 'uploads/civil_service/' . $certificateFile;
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+        
         return $this->response->setJSON([
             'success' => true,
             'message' => 'Civil Service record deleted successfully.'
@@ -984,6 +1318,256 @@ public function viewTrainingCertificate($filename = null)
                 ->setBody(file_get_contents($filePath));
 }
 
+public function viewTrainingCertificates()
+{
+    $session = session();
+
+    if (!$session->get('logged_in')) {
+        return $this->response->setStatusCode(401)
+                              ->setJSON(['message' => 'Unauthorized']);
+    }
+
+    $userId = $session->get('user_id');
+
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+
+    $certificates = $trainingModel
+        ->where('user_id', $userId)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->findAll();
+
+    if (empty($certificates)) {
+        // Return a simple PDF with message when no certificates found
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Training Certificates Found', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'You have not uploaded any training certificates yet.', 0, 'C');
+        
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="No_Training_Certificates.pdf"')
+            ->setBody($pdf->Output('S'));
+    }
+
+    $pdf = new \setasign\Fpdi\Fpdi();
+    $hasValidCertificates = false;
+
+    foreach ($certificates as $cert) {
+        $filePath = WRITEPATH . 'uploads/trainings/' . $cert['certificate_file'];
+
+        if (file_exists($filePath) && is_readable($filePath)) {
+            try {
+                $pageCount = $pdf->setSourceFile($filePath);
+                
+                if ($pageCount > 0) {
+                    $hasValidCertificates = true;
+                    
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $pdf->importPage($pageNo);
+                        $size = $pdf->getTemplateSize($templateId);
+                        
+                        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        $pdf->useTemplate($templateId);
+                    }
+                }
+            } catch (\Exception $e) {
+                // Skip invalid PDF files
+                continue;
+            }
+        }
+    }
+
+    // If no valid certificates were found, return empty PDF
+    if (!$hasValidCertificates) {
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Valid Training Certificates', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'None of the uploaded certificate files are valid PDF documents.', 0, 'C');
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="Training_Certificates.pdf"')
+        ->setBody($pdf->Output('S'));
+}
+
+/**
+ * View combined training certificates for document type 7
+ */
+public function viewCombinedTrainingCertificates()
+{
+    $session = session();
+
+    if (!$session->get('logged_in')) {
+        return $this->response->setStatusCode(401)
+                              ->setJSON(['message' => 'Unauthorized']);
+    }
+
+    $userId = $session->get('user_id');
+
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+
+    // Get all training certificates for this user
+    $certificates = $trainingModel
+        ->where('user_id', $userId)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->orderBy('added_date', 'ASC')
+        ->findAll();
+
+    if (empty($certificates)) {
+        // Return a simple PDF with message when no certificates found
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Training Certificates Found', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'You have not uploaded any training certificates yet.', 0, 'C');
+        
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="Training_Certificates.pdf"')
+            ->setBody($pdf->Output('S'));
+    }
+
+    // Create combined PDF using FPDI
+    $pdf = new \setasign\Fpdi\Fpdi();
+    $hasValidCertificates = false;
+    $pageNumber = 0;
+
+    foreach ($certificates as $index => $cert) {
+        $filePath = WRITEPATH . 'uploads/trainings/' . $cert['certificate_file'];
+
+        if (file_exists($filePath) && is_readable($filePath)) {
+            try {
+                $pageCount = $pdf->setSourceFile($filePath);
+                
+                if ($pageCount > 0) {
+                    $hasValidCertificates = true;
+                    
+                    // Add separator page before each certificate (except first)
+                    if ($index > 0) {
+                        $pdf->AddPage();
+                        $pdf->SetFont('Arial', 'B', 14);
+                        $pdf->Cell(0, 10, '--- Certificate ' . ($index + 1) . ' ---', 0, 1, 'C');
+                        $pdf->Ln(5);
+                        $pdf->SetFont('Arial', '', 11);
+                        $pdf->MultiCell(0, 6, 'Training: ' . ($cert['training_name'] ?? 'N/A'), 0, 'L');
+                        $pdf->MultiCell(0, 6, 'Date: ' . (!empty($cert['date_from']) ? date('M j, Y', strtotime($cert['date_from'])) : 'N/A'), 0, 'L');
+                        $pdf->Ln(10);
+                    }
+                    
+                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
+                        $templateId = $pdf->importPage($pageNo);
+                        $size = $pdf->getTemplateSize($templateId);
+                        
+                        if ($index > 0 || $pageNo > 1) {
+                            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+                        }
+                        $pdf->useTemplate($templateId);
+                    }
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Error importing certificate: ' . $cert['certificate_file'] . ' - ' . $e->getMessage());
+                continue;
+            }
+        }
+    }
+
+    // If no valid certificates were found, return empty PDF
+    if (!$hasValidCertificates) {
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Valid Training Certificates', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'None of the uploaded certificate files are valid PDF documents.', 0, 'C');
+    }
+
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="All_Training_Certificates.pdf"')
+        ->setBody($pdf->Output('S'));
+}
+
+/**
+ * View multiple training certificates in sequence (actual files, NOT combined)
+ * Returns JSON list of certificates for modal viewing
+ */
+public function viewMultipleTrainingCertificates()
+{
+    $session = session();
+
+    if (!$session->get('logged_in')) {
+       return $this->response->setStatusCode(401)
+                              ->setJSON(['message' => 'Unauthorized']);
+    }
+
+    $userId = $session->get('user_id');
+
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+
+    // Get all training certificates for this user
+    $certificates = $trainingModel
+        ->where('user_id', $userId)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->orderBy('added_date', 'ASC')
+        ->findAll();
+
+    if (empty($certificates)) {
+       return $this->response
+            ->setStatusCode(404)
+            ->setJSON([
+                'status' => 'error',
+                'message' => 'No training certificates found.'
+            ]);
+    }
+
+    // Collect all certificate files
+    $certificateFiles = [];
+    foreach ($certificates as $cert) {
+        if (!empty($cert['certificate_file'])) {
+            $certificateFiles[] = [
+                'file' => $cert['certificate_file'],
+                'training_name' => $cert['training_name'] ?? 'Training',
+                'date_from' => !empty($cert['date_from']) ? date('F d, Y', strtotime($cert['date_from'])) : '-',
+                'date_to' => !empty($cert['date_to']) ? date('F d, Y', strtotime($cert['date_to'])) : '-',
+                'facilitator' => $cert['training_facilitator'] ?? '-',
+                'hours' => $cert['training_hours'] ?? '-',
+            ];
+        }
+    }
+
+    if (empty($certificateFiles)) {
+       return $this->response
+            ->setStatusCode(404)
+            ->setJSON([
+                'status' => 'warning',
+                'message' => 'No training certificates found.'
+            ]);
+    }
+
+    // Return list of certificate files for the modal to display
+   return $this->response
+        ->setHeader('Content-Type', 'application/json')
+        ->setJSON([
+            'status' => 'success',
+            'certificates' => $certificateFiles,
+            'count' => count($certificateFiles)
+        ]);
+}
+
+
 public function addApplicantTraining()
 {
     if (!$this->request->isAJAX()) {
@@ -1030,7 +1614,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
         ]);
     }
 
-    $fileName = $userId . '_' . time() . '_' . $file->getRandomName();
+    // Use consistent naming: {timestamp}_{original_name}
+    $extension = $file->getClientExtension();
+    $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+    // Sanitize filename: remove special characters but keep underscores
+    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+    $fileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
     $file->move($uploadPath, $fileName);
 }
 
@@ -1058,6 +1647,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
             'message' => 'Insert failed',
             'errors' => $trainingModel->errors()
         ]);
+    }
+
+    //✅ Automatically save to applicant_documents table
+    if ($fileName) {
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 7, $fileName); // document_type_id = 7 for Certificate of Trainings and Seminars
     }
 
     return $this->response->setJSON([
@@ -1126,7 +1721,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
         }
     }
 
-    $fileName = $userId . '_' . time() . '_' . $file->getRandomName();
+    // Use consistent naming: {timestamp}_{original_name}
+    $extension = $file->getClientExtension();
+    $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+    // Sanitize filename: remove special characters but keep underscores
+    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+    $fileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
     $file->move($uploadPath, $fileName);
 }
     // Update data
@@ -1145,6 +1745,12 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
 
     $trainingModel->update($id, $data);
 
+    //✅ Automatically save/update in applicant_documents table
+    if ($fileName) {
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        $fileModel->saveDocument($userId, 7, $fileName); // document_type_id = 7 for Certificate of Trainings and Seminars
+    }
+
     return $this->response->setJSON([
         'success' => true,
         'message' => 'Training updated successfully!'
@@ -1152,8 +1758,26 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
 }
     public function deleteTraining($id)
     {
+        $userId = session()->get('user_id');
         $trainingModel = new ApplicantTrainingModel();
+        $fileModel = new \App\Models\ApplicantDocumentsModel();
+        
+        // Get the certificate filename before deleting the record
+        $trainingRecord = $trainingModel->find($id);
+        $certificateFile = $trainingRecord['certificate_file'] ?? null;
+        
         if ($trainingModel->delete($id)) {
+            //✅ Also delete from applicant_documents table
+            if ($certificateFile) {
+                $fileModel->deleteDocument($userId, 7); // document_type_id = 7 for Certificate of Trainings and Seminars
+                
+                // Delete physical file
+                $filePath = WRITEPATH . 'uploads/trainings/' . $certificateFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                }
+            }
+            
             return $this->response->setJSON([
                 'success' => true,
                 'message' => 'Training deleted successfully!'
@@ -1168,19 +1792,97 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
     
 public function viewFile($filename)
 {
-    $path = WRITEPATH . 'uploads/files/' . $filename;
-
-    if (!file_exists($path)) {
+    // No filename provided
+    if (!$filename) {
         return $this->response->setJSON([
             'status'  => 'warning',
-            'message' => 'No file has been uploaded for this document.'
+            'message' => 'No file specified.'
         ])->setStatusCode(200);
     }
+    
+    $filename = urldecode($filename);
+    
+    // Check if the filename is a Google Drive file ID (typically 28-33 characters long)
+    // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+    
+    if ($isGoogleDriveFile) {
+        log_message('debug', 'Attempting to view Google Drive file: ' . $filename);
+        
+        // Handle Google Drive file
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            log_message('debug', 'Google Drive service initialized, attempting download...');
+            
+            // Download file content from Google Drive
+            $tempPath = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+            
+            try {
+                $downloadResult = $driveService->downloadFile($filename, $tempPath);
+                
+                if ($downloadResult && file_exists($tempPath)) {
+                    $content = file_get_contents($tempPath);
+                    unlink($tempPath); // Clean up temp file
+                    
+                    log_message('info', 'Successfully downloaded Google Drive file: ' . $filename);
+                    
+                    return $this->response
+                        ->setHeader('Content-Type', 'application/pdf')
+                        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'.pdf"')
+                        ->setHeader('Accept-Ranges', 'bytes')
+                        ->setBody($content);
+                } else {
+                    log_message('error', 'Failed to download file from Google Drive: ' . $filename);
+                    throw new \Exception('Failed to download file from Google Drive');
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Google Drive download error: ' . $e->getMessage());
+                log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to download file: ' . $e->getMessage()
+                ])->setStatusCode(500);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Google Drive service initialization error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Google Drive service error: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
+    } else {
+        log_message('debug', 'Viewing local file: ' . $filename);
+        
+        // Handle local file (fallback for existing files)
+        $possiblePaths = [
+            WRITEPATH . 'uploads/files/' . $filename,  // Main document uploads
+            FCPATH . 'uploads/' . $filename,           // Legacy uploads
+            WRITEPATH . 'uploads/' . $filename         // Training/civil service certificates
+        ];
+        
+        $path = null;
+        foreach ($possiblePaths as $possiblePath) {
+            if (file_exists($possiblePath)) {
+                $path = $possiblePath;
+                break;
+            }
+        }
 
-    return $this->response
-        ->setHeader('Content-Type', mime_content_type($path))
-        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
-        ->setBody(file_get_contents($path));
+        if (!$path) {
+            log_message('warning', 'Local file not found: ' . $filename);
+            return $this->response->setJSON([
+                'status'  => 'warning',
+                'message' => 'No file has been uploaded for this document.'
+            ])->setStatusCode(200);
+        }
+
+        return $this->response
+            ->setHeader('Content-Type', mime_content_type($path))
+            ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'"')
+            ->setHeader('Accept-Ranges', 'bytes')
+            ->setBody(file_get_contents($path));
+    }
 }
 
 public function updateFile()
@@ -1198,14 +1900,23 @@ public function updateFile()
     $userId = $session->get('user_id');
 
     $fileModel = new \App\Models\ApplicantDocumentsModel();
+    $documentTypeModel = new \App\Models\DocumentTypeModel();
 
-    $field = $this->request->getPost('file_field'); // e.g., 'pds', 'performance_rating', 'resume', 'tor', 'diploma'
-    $allowedFields = ['pds','performance_rating','resume','tor','diploma'];
-
-    if (!$field || !in_array($field, $allowedFields)) {
+    $documentTypeId = $this->request->getPost('document_type_id');
+    
+    // Validate document type ID
+    if (!$documentTypeId) {
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Invalid file field.'
+            'message' => 'Document type is required.'
+        ]);
+    }
+
+    $documentType = $documentTypeModel->find($documentTypeId);
+    if (!$documentType) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid document type.'
         ]);
     }
 
@@ -1217,6 +1928,96 @@ public function updateFile()
         ]);
     }
 
+    // Check file type (PDF only)
+    $allowedTypes = ['application/pdf'];
+    if (!in_array($file->getMimeType(), $allowedTypes)) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Only PDF files are allowed.'
+        ]);
+    }
+
+    // Check file size (5MB limit)
+    $maxFileSize = 5 * 1024 * 1024; // 5MB
+    if ($file->getSize() > $maxFileSize) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'File size must not exceed 5 MB.'
+        ]);
+    }
+
+    // Initialize Google Drive service using OAuth
+    $driveService = new \App\Libraries\GoogleDriveOAuthService();
+    
+    // Log authentication status for debugging
+    log_message('debug', 'Google Drive OAuth enabled: ' . ($driveService->isEnabled() ? 'YES' : 'NO'));
+    
+    if ($driveService->isEnabled()) {
+        // Use Google Drive for file storage
+        try {
+            // Create temporary file with the content
+            $tempDir = WRITEPATH . 'temp/';
+            if (!is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            
+            // Generate a consistent filename: {timestamp}_{original_name}
+            $extension = $file->getClientExtension();
+            $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+            // Sanitize filename: remove special characters but keep underscores
+            $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+            $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+            
+            $tempFileName = $googleDriveFileName;
+            $tempPath = $tempDir . $tempFileName;
+            
+            // Get the file content and write it directly
+            $fileContent = file_get_contents($file->getTempName());
+            file_put_contents($tempPath, $fileContent);
+            
+            log_message('debug', 'Uploading file to Google Drive: ' . $googleDriveFileName);
+            
+            // Upload to Google Drive with consistent naming
+            $driveFileId = $driveService->uploadFile(
+                $tempPath,
+                $googleDriveFileName,
+                $file->getMimeType()
+            );
+            
+            // Clean up temporary file
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+            
+            log_message('info', 'File uploaded to Google Drive successfully. File ID: ' . $driveFileId);
+            
+            // Save Google Drive file ID to database instead of local filename
+            $result = $fileModel->saveDocument($userId, $documentTypeId, $driveFileId);
+            
+            if ($result) {
+                return $this->response->setJSON([
+                    'status' => 'success',
+                    'message' => $documentType['document_type_name'].' updated successfully!',
+                    'file_id' => $driveFileId,
+                    'file_url' => $driveService->getFileUrl($driveFileId)
+                ]);
+            } else {
+                log_message('error', 'Failed to save document record in database');
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to save document in database.'
+                ]);
+            }
+        } catch (Exception $e) {
+            log_message('error', 'Google Drive upload error: ' . $e->getMessage());
+            log_message('debug', 'Exception trace: ' . $e->getTraceAsString());
+            
+            // Fallback to local storage on error
+            log_message('warning', 'Falling back to local storage due to Google Drive error');
+        }
+    }
+    
+    // Fallback to local storage if Google Drive is not available or failed
     helper('filesystem');
 
     $newName = $file->getRandomName();
@@ -1226,31 +2027,22 @@ public function updateFile()
 
     $file->move($uploadPath, $newName);
 
-    $uploaded = $fileModel->where('user_id', $userId)->first();
+    // Save or update document using the new model method
+    $result = $fileModel->saveDocument($userId, $documentTypeId, $newName);
 
-    // Philippine time
-    $manilaTime = new \DateTime('now', new \DateTimeZone('Asia/Manila'));
-
-    $data = [
-        $field => $newName,
-        'uploaded_at' => $manilaTime->format('Y-m-d H:i:s'),
-        'updated_at'  => $manilaTime->format('Y-m-d H:i:s')
-    ];
-
-    if ($uploaded) {
-        $fileModel->update($uploaded['id'], $data);
+    if ($result) {
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $documentType['document_type_name'].' updated successfully!',
+            'file_name' => $newName,
+            'file_url'  => base_url('writable/uploads/files/'.$newName)
+        ]);
     } else {
-        $data['user_id'] = $userId;
-        $data['created_at'] = $manilaTime->format('Y-m-d H:i:s');
-        $fileModel->insert($data);
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to save document.'
+        ]);
     }
-
-    return $this->response->setJSON([
-        'status' => 'success',
-        'message' => ucfirst(str_replace('_',' ',$field)).' updated successfully!',
-        'file_name' => $newName,
-        'file_url'  => base_url('writable/uploads/files/'.$newName)
-    ]);
 }
 
 public function deleteFile()
@@ -1267,43 +2059,72 @@ public function deleteFile()
     
     $userId = $session->get('user_id');
 
-    $fileField = $this->request->getPost('file_field');
-
-    // Allow all your uploaded file fields
-    $allowedFields = ['pds', 'performance_rating', 'resume', 'tor', 'diploma', 'certificate'];
-    if (!$fileField || !in_array($fileField, $allowedFields)) {
+    $documentTypeId = $this->request->getPost('document_type_id');
+    
+    if (!$documentTypeId) {
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Invalid file field.'
+            'message' => 'Document type is required.'
         ]);
     }
 
     $fileModel = new \App\Models\ApplicantDocumentsModel();
-    $uploaded = $fileModel->where('user_id', $userId)->first();
-
-    if (!$uploaded || empty($uploaded[$fileField])) {
+    $documentTypeModel = new \App\Models\DocumentTypeModel();
+    
+    $document = $fileModel->getDocumentByType($userId, $documentTypeId);
+    
+    if (!$document) {
         return $this->response->setJSON([
             'status' => 'error',
             'message' => 'No file to delete.'
         ]);
     }
-
-    // Delete file from server
-    $filePath = FCPATH . 'uploads/' . $uploaded[$fileField];
-    if (is_file($filePath)) {
-        unlink($filePath);
+    
+    $documentType = $documentTypeModel->find($documentTypeId);
+    if (!$documentType) {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Invalid document type.'
+        ]);
     }
 
-    // Update DB
-    $fileModel->update($uploaded['id'], [
-        $fileField => null,
-        'updated_at' => date('Y-m-d H:i:s')
-    ]);
+    // Check if file is stored in Google Drive (by checking if filename looks like a drive ID)
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $document['filename']);
+    
+    if ($isGoogleDriveFile) {
+        // Delete from Google Drive
+        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+        
+        if ($driveService->isEnabled()) {
+            try {
+                $driveService->deleteFile($document['filename']);
+            } catch (\Exception $e) {
+                // Log the error but continue with DB deletion
+                log_message('error', 'Could not delete file from Google Drive: ' . $e->getMessage());
+            }
+        }
+    } else {
+        // Delete local file
+        $filePath = WRITEPATH . 'uploads/files/' . $document['filename'];
+        if (is_file($filePath)) {
+            unlink($filePath);
+        }
+    }
 
-    return $this->response->setJSON([
-        'status' => 'success',
-        'message' => ucfirst($fileField).' deleted successfully!'
-    ]);
+    // Delete from DB
+    $result = $fileModel->deleteDocument($userId, $documentTypeId);
+
+    if ($result) {
+        return $this->response->setJSON([
+            'status' => 'success',
+            'message' => $documentType['document_type_name'].' deleted successfully!'
+        ]);
+    } else {
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to delete document.'
+        ]);
+    }
 }
 
 }

@@ -210,6 +210,7 @@
 </div>
 
 <div class="step hidden" id="step-2">
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt (Yellow) -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -243,6 +244,7 @@
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Personal Information Details (2-Row Format) -->
     <div class="space-y-3 text-xs">
@@ -260,7 +262,7 @@
     <div>
         <p class="text-[10px] font-semibold text-gray-600">Full Name</p>
         <p class="font-medium text-gray-800">
-            <?= esc(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ?? '') . ' ' . ($profile['last_name'] ?? '') . ($profile['suffix'] ? ' ' . $profile['suffix'] : '')) ?: '-' ?>
+            <?= esc(trim(($profile['first_name'] ?? '') . ' ' . ($profile['middle_name'] ?? '') . ' ' . ($profile['last_name'] ?? '') . (($profile['suffix'] ?? '') ? ' ' . ($profile['suffix'] ?? '') : '')) ?: '-') ?>
         </p>
     </div>
 
@@ -400,6 +402,7 @@ foreach($libDegreeLevels as $levelObj){
 
 <!-- Step 3: Educational Background -->
 <div class="step hidden" id="step-3">
+<?php if(empty($createdBy)): ?>
     <!-- Verification & Edit Prompt for Educational Background -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -433,6 +436,7 @@ foreach($libDegreeLevels as $levelObj){
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -488,6 +492,7 @@ foreach($libDegreeLevels as $levelObj){
 <div class="step hidden" id="step-4">
 
 <!-- Verification & Edit Prompt for Work Experience -->
+<?php if(empty($createdBy)): ?>
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
         <!-- Icon -->
@@ -520,6 +525,7 @@ foreach($libDegreeLevels as $levelObj){
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     
     <!-- Section Header with Icon -->
@@ -614,6 +620,7 @@ $civil_services = $db->table('applicant_civil_service')
 
 <div class="step hidden" id="step-5">
     
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt for Civil Service -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -647,6 +654,7 @@ $civil_services = $db->table('applicant_civil_service')
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     
     <!-- Section Header with Icon -->
@@ -894,6 +902,7 @@ $trainings = $db->table('applicant_trainings at')
 ?>
 
 <div class="step hidden" id="step-6">
+<?php if(empty($createdBy)): ?>
 <!-- Verification & Edit Prompt for Trainings -->
 <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 mb-4 rounded">
     <div class="flex items-start">
@@ -927,6 +936,7 @@ $trainings = $db->table('applicant_trainings at')
         </div>
     </div>
 </div>
+<?php endif; ?>
 
     <!-- Section Header with Icon -->
     <div class="px-3 py-2 mb-4 flex items-center">
@@ -1198,13 +1208,41 @@ $documents = $documents ?? [
 </div>
 
     <?php
-    $docLabels = [
-        'pds'               => '1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
-        'performance_rating' => '2. Latest Performance Rating in the Present Position (Most Recent Rating Period)',
-        'resume'            => '3. Updated Resume / Curriculum Vitae',
-        'tor'               => '4. Official Transcript of Records (TOR) Issued by the School',
-        'diploma'           => '5. Copy of Diploma or Proof of Graduation'
-    ];
+    // Use position-specific requirements if available, otherwise fallback to default
+    if (!empty($requirements)) {
+        $docLabels = [];
+        $displayIndex = 1;
+        
+        foreach ($requirements as $req) {
+            $requirementText = $req['requirement_text'];
+            
+            // Check if this is a combined requirement that needs to be split
+            if (strpos($requirementText, 'Transcript of Records, Diploma, Certificate of Employment and Certificate of Trainings and Seminars') !== false) {
+                // Split into individual requirements
+                $docLabels['requirement_' . $req['id_requirement'] . '_tor'] = $displayIndex . '. Official Transcript of Records (TOR) Issued by the School';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_diploma'] = $displayIndex . '. Copy of Diploma or Proof of Graduation';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_employment'] = $displayIndex . '. Certificate of Employment';
+                $displayIndex++;
+                $docLabels['requirement_' . $req['id_requirement'] . '_trainings'] = $displayIndex . '. Certificate of Trainings and Seminars';
+                $displayIndex++;
+            } else {
+                // Regular requirement
+                $docLabels['requirement_' . $req['id_requirement']] = $displayIndex . '. ' . $requirementText;
+                $displayIndex++;
+            }
+        }
+    } else {
+        // Fallback to default requirements
+        $docLabels = [
+            'pds'               => '1. Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
+            'performance_rating' => '2. Latest Performance Rating in the Present Position (Most Recent Rating Period)',
+            'resume'            => '3. Updated Resume / Curriculum Vitae',
+            'tor'               => '4. Official Transcript of Records (TOR) Issued by the School',
+            'diploma'           => '5. Copy of Diploma or Proof of Graduation'
+        ];
+    }
     ?>
 
     <div class="overflow-x-auto mb-5">
@@ -1216,11 +1254,38 @@ $documents = $documents ?? [
         <?= esc($label) ?>
     </th>
     <td class="px-3 py-2 border-b border-gray-200 flex items-center gap-2">
-        <?php if (!empty($documents[$key])): ?>
+        <?php 
+        // For dynamic requirements, we don't have existing documents to show by default
+        // For default requirements, show existing documents
+        // For split requirements, handle special cases
+        $hasExistingDoc = false;
+        $fileValue = '';
+        
+        if (strpos($key, 'requirement_') === false && !empty($documents[$key])) {
+            // Default requirements with existing documents
+            $hasExistingDoc = true;
+            $fileValue = $documents[$key];
+        } elseif (strpos($key, '_tor') !== false) {
+            // Split TOR requirement
+            $fileValue = $documents['tor'] ?? '';
+            $hasExistingDoc = !empty($fileValue);
+        } elseif (strpos($key, '_diploma') !== false) {
+            // Split Diploma requirement
+            $fileValue = $documents['diploma'] ?? '';
+            $hasExistingDoc = !empty($fileValue);
+        } elseif (strpos($key, '_employment') !== false) {
+            // Employment certificate - would need to check work experience certificates
+            $hasExistingDoc = false; // No existing employment certificates in current structure
+        } elseif (strpos($key, '_trainings') !== false) {
+            // Training certificates - would need to check training certificates
+            $hasExistingDoc = false; // No existing training certificates in current structure
+        }
+        ?>
+        <?php if ($hasExistingDoc): ?>
             <button 
                 type="button"
                 class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
-                data-file="<?= base_url('file/viewFile/' . $documents[$key]) ?>">
+                data-file="<?= base_url('file/viewFile/' . $fileValue) ?>">
                 <i class="fa-regular fa-eye mr-1"></i> View Document
             </button>
         <?php else: ?>
@@ -1234,7 +1299,7 @@ $documents = $documents ?? [
                class="fileUpload border px-2 py-1 text-xs rounded text-gray-700" />
 
         <!-- Hidden existing file -->
-        <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($documents[$key] ?? '') ?>">
+        <input type="hidden" name="existing_<?= $key ?>" value="<?= esc($fileValue ?? '') ?>">
     </td>
 </tr>
 
@@ -1323,6 +1388,20 @@ document.addEventListener('DOMContentLoaded', function(){
                 showConfirmButton: false,
                 timer: 1000
             });
+            return;
+        }
+
+        // Check if this is a Google Drive file ID (28-33 characters, no timestamp prefix)
+        const fileName = fileUrl.split('/').pop();
+        const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(fileName) && !/^\d{10}_/.test(fileName);
+
+        if(isGoogleDriveFile) {
+            // For Google Drive files, show in modal with iframe
+            const googleDriveUrl = `https://drive.google.com/file/d/${fileName}/preview`;
+            Swal.close();
+            frame.src = googleDriveUrl;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
             return;
         }
 

@@ -89,10 +89,8 @@ window.onclick = function(event) {
             </nav>
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
-                    <?php 
-                    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-                    if(!empty($profile['photo']) && file_exists($photoPath)): ?>
-                        <img src="<?= base_url('uploads/' . $profile['photo']) ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover">
+                    <?php if(!empty($profilePhoto)): ?>
+                        <img src="<?= esc($profilePhoto) ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover">
                     <?php else: ?>
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
@@ -142,10 +140,8 @@ window.onclick = function(event) {
 
 <div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
     <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-hidden flex items-center justify-center mb-4">
-        <?php
-        $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-        if(!empty($profile['photo']) && file_exists($photoPath)): ?>
-            <img src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
+        <?php if(!empty($profilePhoto)): ?>
+            <img src="<?= esc($profilePhoto) ?>" class="w-full h-full object-cover rounded-full">
         <?php else: ?>
             <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
@@ -389,8 +385,7 @@ window.onclick = function(event) {
     
     <?php if (!empty($app['education_display'])): ?>
         <!-- Labels Row (shown only once at the top) -->
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-1">
-            <div><p class="text-xs font-bold text-gray-700">LEVEL</p></div>
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-1">
             <div><p class="text-xs font-bold text-gray-700">SCHOOL NAME</p></div>
             <div><p class="text-xs font-bold text-gray-700">DEGREE / COURSE</p></div>
             <div><p class="text-xs font-bold text-gray-700">PERIOD</p></div>
@@ -418,8 +413,7 @@ window.onclick = function(event) {
                     $degreeCourseDisplay = '-';
                 }
                 ?>
-                <div class="grid grid-cols-1 md:grid-cols-7 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                    <div><p class="text-xs text-gray-800"><?= !empty($edu['level']) && $edu['level'] !== '-' ? esc($edu['level']) : '' ?></p></div>
+                <div class="grid grid-cols-1 md:grid-cols-6 gap-2 mb-2 p-2 bg-gray-50 rounded">
                     <div><p class="text-xs text-gray-800"><?= esc($edu['school_name']) ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= $degreeCourseDisplay ?></p></div>
                     <div><p class="text-xs text-gray-800"><?= esc($edu['period_from']) ?> - <?= esc($edu['period_to']) ?></p></div>
@@ -524,9 +518,14 @@ window.onclick = function(event) {
                 </p></div>
                 <div>
                     <?php if (!empty($cs['certificate'])): ?>
+                        <?php 
+                        // Check if certificate is a Google Drive file ID
+                        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $cs['certificate']) && !preg_match('/^\d{10}_/', $cs['certificate']);
+                        ?>
                         <button type="button" 
                                 class="view-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
-                                data-file="<?= site_url('applications/viewCivilCertificate/'.$cs['certificate']) ?>">
+                                data-file-id="<?= $isGoogleDriveFile ? esc($cs['certificate']) : '' ?>"
+                                data-file="<?= !$isGoogleDriveFile ? site_url('applications/viewCivilCertificate/'.$cs['certificate']) : '' ?>">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -591,15 +590,24 @@ window.onclick = function(event) {
                 <div><p class="text-xs text-gray-800"><?= esc($tr['training_sponsor'] ?? '-') ?></p></div>
                 <div><p class="text-xs text-gray-800"><?= esc($tr['training_remarks'] ?? '-') ?></p></div>
                 <div>
-                    <button type="button" 
-                            class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
-                            data-file="<?= !empty($tr['certificate_file']) ? site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) : '' ?>">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        View Certificate
-                    </button>
+                    <?php if (!empty($tr['certificate_file'])): ?>
+                        <?php 
+                        // Check if certificate is a Google Drive file ID
+                        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $tr['certificate_file']) && !preg_match('/^\d{10}_/', $tr['certificate_file']);
+                        ?>
+                        <button type="button" 
+                                class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                                data-file-id="<?= $isGoogleDriveFile ? esc($tr['certificate_file']) : '' ?>"
+                                data-file="<?= !$isGoogleDriveFile ? site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) : '' ?>">
+                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                            </svg>
+                            View Certificate
+                        </button>
+                    <?php else: ?>
+                        <span class="text-gray-500 text-xs">-</span>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -626,64 +634,129 @@ window.onclick = function(event) {
     </div>
     
     <?php
-    // List of document fields in the database
-    $docs = [
-        'pds' => 'Fully accomplished Personal Data Sheet (PDS) with recent passport-sized picture (CS Form No. 212, Revised 2017)',
-        'performance_rating' => 'Latest Performance Rating in the Present Position (Most Recent Rating Period)',
-        'resume' => 'Updated Resume / Curriculum Vitae',
-        'tor' => 'Official Transcript of Records (TOR) Issued by the School',
-        'diploma' => 'Copy of Diploma or Proof of Graduation'
-    ];
-
-    $hasDocuments = false;
-    foreach ($docs as $key => $label) {
-        if (!empty($app['documents'][$key])) {
-            $hasDocuments = true;
-            break;
+    // Get user ID for file matching
+    $currentUserId = $profile['user_id'] ?? $app['user_id'] ?? null;
+    
+    // Debug: Log what we have
+    log_message('debug', '=== VIEW: Rendering documents section ===');
+    log_message('debug', 'View - currentUserId: ' . ($currentUserId ?? 'NULL'));
+    log_message('debug', 'View - googleDriveFiles count: ' . count($googleDriveFiles ?? []));
+    
+    if (!empty($googleDriveFiles)) {
+        foreach ($googleDriveFiles as $gFile) {
+            log_message('debug', 'View - File: ' . ($gFile['name'] ?? 'NO NAME') . ', Type ID: ' . ($gFile['document_type_id'] ?? 'NULL'));
         }
     }
+    
+    // Group Google Drive files by document_type_id (from database)
+    $filesByType = [];
+    if (!empty($googleDriveFiles)) {
+        log_message('debug', 'Processing ' . count($googleDriveFiles) . ' Google Drive files from database');
+        foreach ($googleDriveFiles as $gFile) {
+            $docTypeId = $gFile['document_type_id'] ?? null;
+            
+            if ($docTypeId) {
+                log_message('debug', 'Adding file with doc_type_id ' . $docTypeId . ': ' . ($gFile['name'] ?? 'Unknown'));
+                
+                if (!isset($filesByType[$docTypeId])) {
+                    $filesByType[$docTypeId] = [];
+                }
+                $filesByType[$docTypeId][] = $gFile;
+            }
+        }
+        
+        log_message('debug', 'Files grouped by type: ' . print_r(array_keys($filesByType), true));
+    } else {
+        log_message('error', 'VIEW ERROR: No googleDriveFiles available in view!');
+        log_message('error', 'Check controller - documents not being fetched properly');
+    }
+    
+    // Define document labels
+    $documentLabels = [
+        1 => 'Personal Data Sheet (PDS)',
+        2 => 'Performance Rating',
+        3 => 'Certificate of Eligibility/Rating/License',
+        4 => 'Transcript of Records (TOR)',
+        5 => 'Diploma or Proof of Graduation',
+        6 => 'Certificate of Employment',
+        7 => 'Certificate of Trainings and Seminars'
+    ];
     ?>
     
-    <?php if ($hasDocuments): ?>
-        <!-- Labels Row (shown only once at the top) -->
+    <?php if (!empty($filesByType)): ?>
+        <!-- Labels Row -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-1">
             <div><p class="text-xs font-bold text-gray-700">DOCUMENT</p></div>
             <div><p class="text-xs font-bold text-gray-700">UPLOADS</p></div>
         </div>
         
-        <!-- Data Rows -->
-        <?php foreach ($docs as $key => $label): 
-            $file = $app['documents'][$key] ?? null;
-            if (!empty($file)):
+        <!-- Data Rows - Show ONLY ONE entry per document type -->
+        <?php foreach ($filesByType as $docTypeId => $files): 
+            $docLabel = $documentLabels[$docTypeId] ?? 'Document';
+            // Get only the first file for this document type to avoid duplicates
+            $file = reset($files);
         ?>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 p-2 bg-gray-50 rounded">
-                <div>
-                    <p class="text-xs text-gray-800"><?= ucfirst(str_replace('_', ' ', $key)) ?></p>
-                    <p class="text-xs text-gray-600 mt-1"><?= esc($label) ?></p>
+                <?php
+                // Check if this is a Google Drive file ID or a local combined PDF
+                $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $file['id']) && !preg_match('/^\d{10}_/', $file['id']);
+                
+                // For local files (including combined PDFs), construct the proper URL
+                if (!$isGoogleDriveFile) {
+                    // Local file - construct URL using controller endpoint
+                    if ($docTypeId == 7) { // Training certificates (could be combined PDF)
+                        $fileUrl = site_url('applications/viewTrainingCertificate/' . ($app['id_job_application'] ?? '') . '/' . $file['id']);
+                    } else {
+                        // Other documents (shouldn't happen with current logic, but fallback)
+                        $fileUrl = site_url('applications/viewDocument/' . ($app['id_job_application'] ?? '') . '/' . urlencode($file['name']));
+                    }
+                    $fileIdAttr = '';
+                    $fileDataAttr = 'data-file="' . esc($fileUrl) . '"';
+                } else {
+                    // Google Drive file
+                    $fileIdAttr = 'data-file-id="' . esc($file['id']) . '"';
+                    $fileDataAttr = '';
+                }
+                ?>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                    <div>
+                        <p class="text-xs text-gray-800"><?= esc($docLabel) ?></p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                       <?php if ($docTypeId == 7 && !empty($trainings)): ?>
+                            <!-- Button for viewing ALL training certificates -->
+                           <button type="button" 
+                                   class="view-all-trainings-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                                   data-application-id="<?= esc($app['id_job_application']) ?>">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View All (<?= count($trainings) ?>)
+                            </button>
+                       <?php else: ?>
+                           <button type="button" 
+                                   class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
+                                   <?= $fileIdAttr ?>
+                                   <?= $fileDataAttr ?>
+                                   data-file-name="<?= esc($file['name']) ?>">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                </svg>
+                                View Document
+                            </button>
+                       <?php endif; ?>
+                    </div>
                 </div>
-                <div>
-                    <button type="button" 
-                            class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
-                            data-file="<?= site_url('file/viewDocument/'.$app['id_job_application'].'/'.$key) ?>">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        View Document
-                    </button>
-                </div>
-            </div>
-        <?php 
-            endif;
-        endforeach; ?>
+        <?php endforeach; ?>
         
- <?php else: ?>
-    <div class="bg-gray-50 rounded p-2">
-        <p class="text-xs text-gray-600">
-            No documents records found.
-        </p>
-    </div>
-<?php endif; ?>
+    <?php else: ?>
+        <div class="bg-gray-50 rounded p-2">
+            <p class="text-xs text-gray-600">
+                No documents records found.
+            </p>
+        </div>
+    <?php endif; ?>
 
 </div>
 
@@ -741,6 +814,44 @@ window.onclick = function(event) {
 <div id="document-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[60] flex items-center justify-center p-4">
     <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
         <iframe id="document-frame" class="flex-1 w-full h-full border-none"></iframe>
+    </div>
+</div>
+
+<!-- Multiple Training Certificates Modal -->
+<div id="multiple-training-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[70] flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-5xl h-[85vh] flex flex-col shadow-lg">
+        <!-- Compact Header -->
+        <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b rounded-t-xl">
+            <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="text-sm font-bold text-gray-800 truncate max-w-md" id="cert-training-name">GitHub Seminar</h3>
+                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded border mx-2">
+                    <span id="current-cert-num">1</span> / <span id="total-cert-count">2</span>
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="prev-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button type="button" id="next-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+                <button type="button" id="close-training-multi-btn" class="text-gray-500 hover:text-red-600 transition-colors ml-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <iframe id="training-multiple-frame" class="flex-1 w-full h-full border-none rounded-b-xl"></iframe>
     </div>
 </div>
 
@@ -1011,7 +1122,48 @@ document.addEventListener('click', function(e) {
     const btn = e.target.closest('.view-document-btn');
     if (!btn) return;
 
+    // Check if this is a Google Drive file ID (new approach)
+    const fileId = btn.getAttribute('data-file-id');
+    const fileName = btn.getAttribute('data-file-name');
+    
+    if (fileId) {
+        // Google Drive file - open directly in viewer
+        const googleDriveUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+        Swal.close();
+        
+        // Open document viewer modal (overlays on top of edit modal)
+        const modal = document.getElementById('document-modal');
+        const frame = document.getElementById('document-frame');
+        frame.src = googleDriveUrl;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        return;
+    }
+    
+    // Fallback to old approach (data-file URL)
     const fileUrl = btn.getAttribute('data-file');
+    if (!fileUrl) return;
+    
+    // Extract filename from URL to check if it's a Google Drive file
+    const urlParts = fileUrl.split('/');
+    const filename = urlParts[urlParts.length - 1];
+    const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(filename) && !/^\d{10}_/.test(filename);
+
+    if(isGoogleDriveFile) {
+        // For Google Drive files, show in modal with iframe
+        const googleDriveUrl = `https://drive.google.com/file/d/${filename}/preview`;
+        Swal.close();
+        
+        // Open document viewer modal (overlays on top of edit modal)
+        const modal = document.getElementById('document-modal');
+        const frame = document.getElementById('document-frame');
+        frame.src = googleDriveUrl;
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        return;
+    }
     
     // Show loading first
     Swal.fire({
@@ -1033,6 +1185,149 @@ document.addEventListener('click', function(e) {
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }, 1000);
+});
+
+// ===== VIEW MULTIPLE TRAINING CERTIFICATES (NOT COMBINED - ACTUAL FILES) =====
+let trainingCertificates = [];
+let currentCertIndex = 0;
+
+document.addEventListener('click', async function(e) {
+    const viewAllTrainingsBtn = e.target.closest('.view-all-trainings-btn');
+    
+  if (!viewAllTrainingsBtn) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const applicationId = viewAllTrainingsBtn.getAttribute('data-application-id');
+    
+  if (!applicationId) {
+       Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Application ID not found.'
+        });
+       return;
+    }
+    
+    // Show loading
+   Swal.fire({
+        title: 'Loading Certificates...',
+        text: 'Please wait while we fetch all training certificates.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+    
+    try {
+        // Fetch list of all training certificates
+        const response = await fetch(`<?= site_url('training-documents/view-multiple/') ?>${applicationId}`);
+        const data = await response.json();
+        
+      if (!response.ok || data.status !== 'success') {
+            throw new Error(data.message || 'Failed to fetch certificates');
+        }
+        
+      if (data.count === 0) {
+          Swal.fire({
+                icon: 'warning',
+                title: 'No Certificates',
+                text: 'No training certificates found for this application.',
+                showConfirmButton: false,
+                timer: 2000
+            });
+          return;
+        }
+        
+        // Store certificates and initialize viewer
+        trainingCertificates = data.certificates;
+        currentCertIndex = 0;
+        
+        // Update UI
+        document.getElementById('total-cert-count').textContent = trainingCertificates.length;
+        updateTrainingCertificateViewer();
+        
+        // Show modal
+        const modal = document.getElementById('multiple-training-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+       Swal.close();
+        
+    } catch (err) {
+       Swal.close();
+       Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'Unable to load training certificates.'
+        });
+        console.error(err);
+    }
+});
+
+function updateTrainingCertificateViewer() {
+  if (trainingCertificates.length === 0) return;
+    
+    const cert = trainingCertificates[currentCertIndex];
+    const frame = document.getElementById('training-multiple-frame');
+    
+    // Update info bar
+    document.getElementById('current-cert-num').textContent = currentCertIndex + 1;
+    document.getElementById('cert-training-name').textContent = cert.training_name;
+    
+    // Load certificate file
+  if (cert.file) {
+        // Check if it's a Google Drive file or local file
+       const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
+        
+      if (isGoogleDrive) {
+            // Google Drive - use direct preview
+           frame.src = `https://drive.google.com/file/d/${cert.file}/preview`;
+        } else {
+            // Local file - use controller endpoint
+           frame.src = `<?= site_url('training-documents/get-certificate/') ?>${encodeURIComponent(cert.file)}`;
+        }
+    }
+    
+    // Update button states
+    document.getElementById('prev-cert-btn').disabled = (currentCertIndex === 0);
+    document.getElementById('next-cert-btn').disabled = (currentCertIndex === trainingCertificates.length - 1);
+}
+
+// Navigation buttons for multiple training certificates
+document.getElementById('prev-cert-btn')?.addEventListener('click', function() {
+  if (currentCertIndex > 0) {
+        currentCertIndex--;
+        updateTrainingCertificateViewer();
+    }
+});
+
+document.getElementById('next-cert-btn')?.addEventListener('click', function() {
+  if (currentCertIndex < trainingCertificates.length - 1) {
+        currentCertIndex++;
+        updateTrainingCertificateViewer();
+    }
+});
+
+document.getElementById('close-training-multi-btn')?.addEventListener('click', function() {
+    const modal = document.getElementById('multiple-training-modal');
+    const frame = document.getElementById('training-multiple-frame');
+    frame.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    trainingCertificates = [];
+    currentCertIndex = 0;
+});
+
+// Close multiple training modal when clicking outside
+document.getElementById('multiple-training-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+        const frame = document.getElementById('training-multiple-frame');
+        frame.src = '';
+        this.classList.add('hidden');
+        this.classList.remove('flex');
+        trainingCertificates = [];
+        currentCertIndex = 0;
+    }
 });
 
 document.addEventListener('change', function(e) {
@@ -1089,6 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.stopPropagation();
         
         const btn = civilBtn || trainingBtn;
+        const fileId = btn.dataset.fileId?.trim();
         const fileUrl = btn.dataset.file?.trim();
 
         // Show loading first
@@ -1103,7 +1399,25 @@ document.addEventListener('DOMContentLoaded', () => {
             // Short delay to simulate loading
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            // If no file URL, still show loading briefly then show warning
+            // Check if it's a Google Drive file
+            if (fileId) {
+                // For Google Drive files, use the controller endpoint
+                const driveUrl = civilBtn 
+                    ? '<?= site_url('applications/viewCivilCertificate/') ?>' + fileId
+                    : '<?= site_url('applications/viewTrainingCertificate/' . ($app['id_job_application'] ?? '') . '/') ?>' + fileId;
+                
+                Swal.close();
+                if (civilBtn) {
+                    certIframe.src = driveUrl;
+                    certModal.classList.remove('hidden');
+                } else {
+                    trainingIframe.src = driveUrl;
+                    trainingModal.classList.remove('hidden');
+                }
+                return;
+            }
+
+            // If no file URL and no file ID, show warning
             if (!fileUrl) {
                 Swal.close();
 

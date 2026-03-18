@@ -1,13 +1,3 @@
-<?php
-// Connect to database
-$db = \Config\Database::connect();
-
-// Fetch only posted jobs
-$builder = $db->table('job_vacancies');
-$builder->where('is_posted', 1);
-$jobs = $builder->get()->getResultArray();
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,30 +57,39 @@ $jobs = $builder->get()->getResultArray();
 
                     <!-- Job Description -->
                     <p class="text-xs text-gray-700 mb-3 leading-relaxed">
-                        <?= esc($job['description']) ?>
+                        <?= esc($job['description'] ?? 'No description available') ?>
                     </p>
 
                     <!-- Job Info -->
                     <div class="text-xs text-gray-600 mb-5 space-y-1">
+                        <!-- <div class="flex gap-2">
+                            <span class="font-medium text-gray-800">Status:</span>
+                            <?php if ($job['vacancy_status'] === 'Active'): ?>
+                                <span class="text-green-600 font-semibold">Active</span>
+                            <?php else: ?>
+                                <span class="text-red-600 font-semibold">Closed</span>
+                            <?php endif; ?>
+                        </div> -->
+
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Office:</span>
-                            <span class="text-gray-700"><?= esc($job['office']) ?></span>
+                            <span class="text-gray-700"><?= esc($job['office'] ?? 'N/A') ?></span>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Item No:</span>
-                            <span class="text-gray-700"><?= esc($job['plantilla_item_no']) ?></span>
+                            <span class="text-gray-700"><?= esc($job['plantilla_item_no'] ?? 'N/A') ?></span>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Salary Grade:</span>
-                            <span class="text-gray-700"><?= esc($job['salary_grade']) ?></span>
+                            <span class="text-gray-700"><?= esc($job['salary_grade'] ?? 'N/A') ?></span>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Monthly Salary:</span>
-                            <span class="text-gray-700">₱<?= number_format($job['monthly_salary'], 2) ?></span>
+                            <span class="text-gray-700">₱<?= number_format($job['monthly_salary'] ?? 0, 2) ?></span>
                         </div>
                         <div class="flex gap-2">
                             <span class="font-medium text-gray-800">Deadline:</span>
-                            <span class="text-red-600 font-semibold"><?= date('F j, Y', strtotime($job['application_deadline'])) ?></span>
+                            <span class="text-red-600 font-semibold"><?= !empty($job['application_deadline']) ? date('F j, Y', strtotime($job['application_deadline'])) : 'N/A' ?></span>
                         </div>
                     </div>
 
@@ -273,17 +272,17 @@ function openJobModal(jobId) {
     // Populate modal data
     document.getElementById('modalJobTitle').textContent = job.position_title;
     document.getElementById('modalJobTitle').dataset.jobId = job.id;  // Store job ID
-    document.getElementById('modalOfficeText').textContent = job.office;
-    document.getElementById('modalOffice').textContent = job.office;
-    document.getElementById('modalSalaryGrade').textContent = job.salary_grade;
-    document.getElementById('modalItemNo').textContent = job.plantilla_item_no;
-    document.getElementById('modalSalary').textContent = '₱' + parseFloat(job.monthly_salary).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('modalOfficeText').textContent = job.office || 'N/A';
+    document.getElementById('modalOffice').textContent = job.office || 'N/A';
+    document.getElementById('modalSalaryGrade').textContent = job.salary_grade || 'N/A';
+    document.getElementById('modalItemNo').textContent = job.plantilla_item_no || 'N/A';
+    document.getElementById('modalSalary').textContent = '₱' + parseFloat(job.monthly_salary || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     
     document.getElementById('modalPosted').textContent = job.created_at 
         ? new Date(job.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
         : 'N/A';
         
-    document.getElementById('modalDeadline').textContent = new Date(job.application_deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('modalDeadline').textContent = job.application_deadline ? new Date(job.application_deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
     
     document.getElementById('modalDescription').textContent = job.description || 'N/A';
     document.getElementById('modalEducation').textContent = job.education || 'N/A';
@@ -332,13 +331,12 @@ function closeJobModal() {
 
 // Apply for job function (smart logic)
 function applyForJobModal() {
+
     const jobId = document.getElementById('modalJobTitle').dataset.jobId;
-    
-    // Check if user is logged in (by checking if session data exists)
+
     const isLoggedIn = <?= session()->get('logged_in') ? 'true' : 'false' ?>;
-    
+
     if (!isLoggedIn) {
-        // Show login required alert for logged out users
         Swal.fire({
             icon: 'warning',
             title: 'Login Required',
@@ -347,15 +345,14 @@ function applyForJobModal() {
             confirmButtonText: 'Go to Login'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Redirect to apply page - the controller will handle the redirect to login
                 window.location.href = `<?= base_url('applications/apply/') ?>${jobId}`;
             }
         });
     } else {
-        // User is logged in - redirect directly to apply
         window.location.href = `<?= base_url('applications/apply/') ?>${jobId}`;
     }
 }
+
 
 // Close modal when clicking outside
 document.getElementById('jobModal').addEventListener('click', function(e) {
@@ -367,15 +364,6 @@ document.getElementById('jobModal').addEventListener('click', function(e) {
 // Load jobs data on page load
 document.addEventListener('DOMContentLoaded', function() {
     // Fetch jobs data for modal use
-    fetch('<?= base_url('jobs/getAllPosted') ?>')
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                jobsData = data.jobs;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading jobs data:', error);
-        });
+    jobsData = <?php echo json_encode($jobs); ?>;
 });
 </script>

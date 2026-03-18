@@ -30,8 +30,19 @@ public function loginPost()
                 'first_name' => $user['first_name'],
                 'email' => $user['email'],
                 'logged_in' => true,
-                'first_login' => $user['first_login']
+                'first_login' => $user['first_login'],
+                'created_by' => $user['created_by'] ?? 0
             ]);
+
+            // If first login, always redirect to dashboard to change password
+            if ($user['first_login'] == 1) {
+                // Store redirect URL if exists (for after password change)
+                $redirectUrl = $session->get('redirect_after_login');
+                if ($redirectUrl) {
+                    $session->set('redirect_after_password_change', $redirectUrl);
+                }
+                return redirect()->to('/dashboard')->with('first_login', true);
+            }
 
             // Check if there's a redirect URL stored (for job application)
             $redirectUrl = $session->get('redirect_after_login');
@@ -40,11 +51,6 @@ public function loginPost()
                 // Clear the redirect URL from session
                 $session->remove('redirect_after_login');
                 return redirect()->to($redirectUrl);
-            }
-
-            // If first login, redirect to dashboard with flashdata
-            if ($user['first_login'] == 1) {
-                return redirect()->to('/dashboard')->with('first_login', true);
             }
 
             // Normal login

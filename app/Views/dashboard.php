@@ -91,10 +91,20 @@ window.onclick = function(event) {
             <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
                     <?php 
-                    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-                    if(!empty($profile['photo']) && file_exists($photoPath)): ?>
+                    // Check if photo is from Google Drive or local storage
+                    if (!empty($profile['photo']) && isset($isGoogleDrivePhoto) && $isGoogleDrivePhoto): ?>
+                        <!-- Google Drive Photo -->
+                        <img src="<?= base_url('account/getProfilePhoto') ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    <?php elseif(!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+                        <!-- Local Photo -->
                         <img src="<?= base_url('uploads/' . $profile['photo']) ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover">
                     <?php else: ?>
+                        <!-- No Photo -->
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
@@ -142,13 +152,21 @@ window.onclick = function(event) {
 <div class="w-full min-h-screen flex flex-col lg:flex-row gap-2 p-4 mx-auto flex-1">
 
 <div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
-    <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-hidden flex items-center justify-center mb-4">
+    <div class="profile-pic w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-visible flex items-center justify-center mb-4">
         <?php
-        $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-        if(!empty($profile['photo']) && file_exists($photoPath)): ?>
-            <img src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
+        // Check if photo is from Google Drive or local storage
+        if (!empty($profile['photo']) && isset($isGoogleDrivePhoto) && $isGoogleDrivePhoto): ?>
+            <!-- Google Drive Photo -->
+            <img id="profilePhoto" src="<?= base_url('account/getProfilePhoto') ?>" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <svg id="profilePhotoPlaceholder" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500 hidden" fill="currentColor" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+            </svg>
+        <?php elseif(!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+            <!-- Local Photo -->
+            <img id="profilePhoto" src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
         <?php else: ?>
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+            <!-- No Photo -->
+            <svg id="profilePhoto" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
             </svg>
         <?php endif; ?>
@@ -178,6 +196,7 @@ window.onclick = function(event) {
                     <th class="border-b p-2 text-left font-semibold">Date Applied</th>
                     <th class="border-b p-2 text-left font-semibold">Interview</th>
                     <th class="border-b p-2 text-left font-semibold">Status</th>
+                    <th class="border-b p-2 text-left font-semibold">Remarks</th>
                     <th class="border-b p-2 text-left font-semibold">Actions</th>
                 </tr>
             </thead>
@@ -196,7 +215,14 @@ window.onclick = function(event) {
                         <td class="p-2 border-b font-medium"><?= esc($app['position_title']) ?></td>
                         <td class="p-2 border-b text-gray-600"><?= esc($app['department']) ?></td>
                         <td class="p-2 border-b"><?= !empty($app['applied_at']) ? date('M d, Y', strtotime($app['applied_at'])) : '-' ?></td>
-                        <td class="p-2 border-b"><?= '-' ?></td>
+                     <td class="p-2 border-b">
+    <?php if(($app['application_status'] ?? '') === 'Scheduled for Interview' && !empty($app['interview_date'])): ?>
+        <?= date('M d, Y', strtotime($app['interview_date'])) ?>
+    <?php else: ?>
+        -
+    <?php endif; ?>
+</td>
+
                         <td class="p-2 border-b">
                             <?php
                                 $status = $app['application_status'] ?? 'Submitted';
@@ -222,6 +248,15 @@ window.onclick = function(event) {
                             <span class="px-2 py-1 rounded-full text-xs font-medium <?= $badgeClass ?>">
                                 <?= esc($displayText) ?>
                             </span>
+                        </td>
+                        <td class="p-2 border-b">
+                            <?php if (!empty($app['remarks'])): ?>
+                                <span class="text-xs text-gray-700 bg-gray-100 px-2 py-1 rounded">
+                                    <?= esc($app['remarks']) ?>
+                                </span>
+                            <?php else: ?>
+                                <span class="text-xs text-gray-400 italic">-</span>
+                            <?php endif; ?>
                         </td>
                         <td class="p-2 border-b">
                             <div class="flex gap-1">
@@ -304,20 +339,19 @@ window.onclick = function(event) {
         </h4>
         <p class="text-sm text-gray-500 mt-1">
             <?= esc($vac['office'] ?? 'No Office') ?>
-            <?php if(!empty($vac['posted_at']) && $vac['posted_at'] != '0000-00-00 00:00:00'): ?>
-                • Posted on <?= date('M d, Y', strtotime($vac['posted_at'])) ?>
+            <?php if(!empty($vac['date_posted']) && $vac['date_posted'] != '0000-00-00'): ?>
+                • Posted on <?= date('M d, Y', strtotime($vac['date_posted'])) ?>
             <?php endif; ?>
         </p>
     </div>
     <div class="text-right text-clsuGreen font-semibold text-base">
-        <?= isset($vac['monthly_salary']) ? '₱' . number_format($vac['monthly_salary'], 2) : '₱0.00' ?>
+       <?= isset($vac['monthly_salary']) ? '₱' . number_format($vac['monthly_salary'], 2) : '₱0.00' ?>
     </div>
 </div>
 
-
         <p class="text-sm text-gray-700 mt-2">
-            <?= esc($vac['description']) ?> 
-            <button onclick="openModal(<?= $vac['id'] ?>)" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+            <?= esc($vac['description'] ?? 'No description available') ?> 
+            <button onclick="openModal(<?= $vac['id_vacancy'] ?? $vac['id'] ?>)" class="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
@@ -328,11 +362,10 @@ window.onclick = function(event) {
 
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mt-3">
             <p class="text-sm text-red-600 font-semibold">
-                Deadline: <?= date('F j, Y', strtotime($vac['application_deadline'])) ?>
+                Deadline: <?= !empty($vac['application_deadline']) ? date('F j, Y', strtotime($vac['application_deadline'])) : 'N/A' ?>
             </p>
 
-
-   <?php 
+<?php 
 // Define inactive statuses
 $inactiveStatuses = [
     'Not qualified',
@@ -341,35 +374,60 @@ $inactiveStatuses = [
     'Not selected.',
     'Rejected job offer.'
 ];
+
 $applied = false;
 $appStatus = null;
 
-// Use allApplications (non-paginated) for checking applied status
+// Find the latest application for this vacancy
+$latestApp = null;
 foreach ($allApplications as $app) {
-    if ($app['job_vacancy_id'] == $vac['id']) {
-
-        // Normalize status
-        $status = trim($app['application_status']);
-        if ($status === 'Submitted. For Evaluation') {
-            $status = 'Submitted';
-        }
-
-        // If status is ACTIVE, mark as applied
-        if (!in_array($status, $inactiveStatuses)) {
-            $applied = true;
-            $appStatus = $status;
-            break; // stop ONLY when active found
+    if ($app['job_vacancy_id'] == ($vac['id_vacancy'] ?? $vac['id'])) {
+        // Compare applied_at or created_at to get the latest
+        if (!$latestApp || strtotime($app['applied_at'] ?? $app['created_at']) > strtotime($latestApp['applied_at'] ?? $latestApp['created_at'])) {
+            $latestApp = $app;
         }
     }
 }
 
+if ($latestApp) {
+    // Normalize status
+    $status = trim($latestApp['application_status']);
+    if ($status === 'Submitted. For Evaluation') {
+        $status = 'Submitted';
+    }
+
+    // If status is ACTIVE, mark as applied
+    if (!in_array($status, $inactiveStatuses)) {
+        $applied = true;
+        $appStatus = $status;
+    }
+}
 ?>
+
 <?php if($applied && !in_array($appStatus, $inactiveStatuses)): ?>
-    <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-lg bg-yellow-400 text-black cursor-not-allowed">
-        Submitted
-    </span>
+    <?php
+$statusClasses = [
+    'Submitted' => 'bg-yellow-100 text-yellow-800',
+    'Under Evaluation' => 'bg-blue-100 text-blue-800',
+    'Not qualified' => 'bg-red-100 text-red-800',
+    'Shortlisted' => 'bg-blue-100 text-blue-800',
+    'Scheduled for Interview' => 'bg-purple-100 text-purple-800',
+    'Withdrawn application' => 'bg-gray-100 text-gray-800',
+    'Did not attend interview' => 'bg-red-100 text-red-800',
+    'Interviewed. Awaiting Result' => 'bg-yellow-100 text-yellow-800',
+    'Not selected' => 'bg-red-100 text-red-800',
+    'Job offered' => 'bg-green-100 text-green-800',
+    'Rejected job offer' => 'bg-red-100 text-red-800',
+    'ACCEPTED' => 'bg-green-100 text-green-800',
+];
+$badgeClass = $statusClasses[$appStatus] ?? 'bg-gray-100 text-gray-800';
+?>
+<span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-lg <?= $badgeClass ?> cursor-not-allowed">
+    <?= esc($appStatus) ?>
+</span>
+
 <?php else: ?>
-    <form method="GET" action="<?= base_url('applications/apply/' . $vac['id']) ?>">
+    <form method="GET" action="<?= base_url('applications/apply/' . ($vac['id_vacancy'] ?? $vac['id'])) ?>">
         <button class="inline-flex items-center px-3 py-1 text-xs font-medium bg-clsuGreen text-white rounded-lg hover:bg-green-800 transition-colors">
             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
@@ -744,32 +802,32 @@ function openModal(id){
     if(!job) return;
 
     // Populate data
-    document.getElementById('modalTitle').textContent = job.position_title;
-    document.getElementById('modalOfficeText').textContent = job.office;
-    document.getElementById('modalOffice').textContent = job.office;
-    document.getElementById('modalSalaryGrade').textContent = job.salary_grade;
-    document.getElementById('modalItemNo').textContent = job.plantilla_item_no;
-    document.getElementById('modalSalary').textContent = '₱' + parseFloat(job.monthly_salary).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('modalTitle').textContent = job.position_title || 'N/A';
+    document.getElementById('modalOfficeText').textContent = job.office || 'N/A';
+    document.getElementById('modalOffice').textContent = job.office || 'N/A';
+    document.getElementById('modalSalaryGrade').textContent = job.salary_grade || 'N/A';
+    document.getElementById('modalItemNo').textContent = job.plantilla_item_no || 'N/A';
+    document.getElementById('modalSalary').textContent = '₱' + parseFloat(job.monthly_salary || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
    document.getElementById('modalPosted').textContent =
-    new Date(job.created_at).toLocaleDateString('en-US', { 
+    job.created_at ? new Date(job.created_at).toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
-    });
+    }) : 'N/A';
 
 document.getElementById('modalDeadline').textContent =
-    new Date(job.application_deadline).toLocaleDateString('en-US', { 
+    job.application_deadline ? new Date(job.application_deadline).toLocaleDateString('en-US', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
-    });
-    document.getElementById('modalDescription').textContent = job.description;
-    document.getElementById('modalEducation').textContent = job.education;
-    document.getElementById('modalTraining').textContent = job.training;
-    document.getElementById('modalExperience').textContent = job.experience;
-    document.getElementById('modalEligibility').textContent = job.eligibility;
-    document.getElementById('modalDuties').textContent = job.duties_responsibilities;
-    document.getElementById('modalRequirements').textContent = job.application_requirements;
+    }) : 'N/A';
+    document.getElementById('modalDescription').textContent = job.description || 'No description available';
+    document.getElementById('modalEducation').textContent = job.education || 'N/A';
+    document.getElementById('modalTraining').textContent = job.training || 'N/A';
+    document.getElementById('modalExperience').textContent = job.experience || 'N/A';
+    document.getElementById('modalEligibility').textContent = job.eligibility || 'N/A';
+    document.getElementById('modalDuties').textContent = job.duties_responsibilities || 'N/A';
+    document.getElementById('modalRequirements').textContent = job.application_requirements || 'N/A';
 
     const modal = document.getElementById('jobModal');
     const card  = document.getElementById('modalCard');

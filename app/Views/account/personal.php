@@ -88,10 +88,20 @@ window.onclick = function(event) {
              <div class="account-menu relative mt-1">
                 <button onclick="toggleDropdown()" class="flex items-center gap-1 leading-none focus:outline-none">
                     <?php 
-                    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-                    if(!empty($profile['photo']) && file_exists($photoPath)): ?>
+                    // Check if photo is from Google Drive or local
+                    if (!empty($profile['photo']) && preg_match('/^[a-zA-Z0-9_-]{20,}$/', $profile['photo']) && !preg_match('/^\d{10}_/', $profile['photo'])): ?>
+                        <!-- Google Drive Photo -->
+                        <img src="<?= base_url('account/getProfilePhoto') ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
+                                <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                    <?php elseif(!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+                        <!-- Local Photo -->
                         <img src="<?= base_url('uploads/' . $profile['photo']) ?>" class="w-8 h-8 rounded-full border-2 border-white object-cover">
                     <?php else: ?>
+                        <!-- No Photo -->
                         <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center border-2 border-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                                 <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
@@ -141,10 +151,18 @@ window.onclick = function(event) {
 <div class="left bg-white p-6 rounded-lg text-center shadow-md self-start flex-shrink-0 lg:basis-[220px]">
 <div class="profile-pic relative w-32 h-32 mx-auto rounded-full bg-gray-200 overflow-visible flex items-center justify-center mb-4">
     <?php
-    $photoPath = FCPATH . 'uploads/' . ($profile['photo'] ?? '');
-    if (!empty($profile['photo']) && file_exists($photoPath)): ?>
+    // Check if photo is from Google Drive or local
+    if (!empty($profile['photo']) && preg_match('/^[a-zA-Z0-9_-]{20,}$/', $profile['photo']) && !preg_match('/^\d{10}_/', $profile['photo'])): ?>
+        <!-- Google Drive Photo -->
+        <img id="profilePhoto" src="<?= base_url('account/getProfilePhoto') ?>" class="w-full h-full object-cover rounded-full" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+        <svg id="profilePhotoPlaceholder" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500 hidden" fill="currentColor" viewBox="0 0 24 24">
+            <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
+        </svg>
+    <?php elseif (!empty($profile['photo']) && file_exists(FCPATH . 'uploads/' . $profile['photo'])): ?>
+        <!-- Local Photo -->
         <img id="profilePhoto" src="<?= base_url('uploads/' . esc($profile['photo'])) ?>" class="w-full h-full object-cover rounded-full">
     <?php else: ?>
+        <!-- No Photo -->
         <svg id="profilePhoto" xmlns="http://www.w3.org/2000/svg" class="w-16 h-16 text-gray-500" fill="currentColor" viewBox="0 0 24 24">
             <path fill-rule="evenodd" d="M12 2a5 5 0 100 10 5 5 0 000-10zm-7 18a7 7 0 0114 0H5z" clip-rule="evenodd"/>
         </svg>
@@ -431,6 +449,19 @@ window.onclick = function(event) {
   </div>
 </div>
 <script>
+// Flag to track if user is forced to fill profile
+let forceProfileFill = false;
+
+// Function to open personal modal programmatically
+function openPersonalModal() {
+    const personalModal = document.getElementById('personalModal');
+    personalModal.classList.remove('opacity-0','pointer-events-none');
+    personalModal.querySelector('div').classList.remove('scale-95','opacity-0');
+    
+    // Set flag to prevent closing
+    forceProfileFill = true;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const personalModal = document.getElementById('personalModal');
     const editBtn = document.getElementById('editPersonalInfoBtn');
@@ -446,10 +477,23 @@ document.addEventListener('DOMContentLoaded', () => {
     editBtn.addEventListener('click', () => {
         personalModal.classList.remove('opacity-0','pointer-events-none');
         personalModal.querySelector('div').classList.remove('scale-95','opacity-0');
+        forceProfileFill = false; // User opened it manually, allow closing
     });
 
-    // Cancel → reset
+    // Cancel → reset (only if not forced)
     cancelBtn.addEventListener('click', () => {
+        if (forceProfileFill) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Required!',
+                text: 'You must complete your profile before continuing.',
+                confirmButtonColor: '#0B6B3A',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            });
+            return;
+        }
+        
         for (let id in originalValues) {
             document.getElementById(id).value = originalValues[id];
         }
@@ -457,9 +501,20 @@ document.addEventListener('DOMContentLoaded', () => {
         personalModal.querySelector('div').classList.add('scale-95','opacity-0');
     });
 
-    // Click outside → close
+    // Click outside → close (only if not forced)
     personalModal.addEventListener('click', e => {
         if (e.target === personalModal) {
+            if (forceProfileFill) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Required!',
+                    text: 'You must complete your profile before continuing.',
+                    confirmButtonColor: '#0B6B3A',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
+                return;
+            }
             personalModal.classList.add('opacity-0','pointer-events-none');
             personalModal.querySelector('div').classList.add('scale-95','opacity-0');
         }
@@ -490,7 +545,56 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             if (data.success) {
-                Swal.fire({icon:'success',title:'Saved!',text:data.message,timer:1000,showConfirmButton:false,willClose:()=>location.reload()});
+                // Reset force flag - user can now navigate freely
+                forceProfileFill = false;
+                
+                // Re-enable all navigation
+                const navLinks = document.querySelectorAll('nav a');
+                navLinks.forEach(link => {
+                    link.style.pointerEvents = 'auto';
+                    link.style.opacity = '1';
+                    link.style.cursor = 'pointer';
+                    link.removeAttribute('title');
+                });
+                
+                const dropdownItems = document.querySelectorAll('#accountDropdown a');
+                dropdownItems.forEach(item => {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
+                    item.style.cursor = 'pointer';
+                });
+                
+                // Close modal first
+                personalModal.classList.add('opacity-0','pointer-events-none');
+                personalModal.querySelector('div').classList.add('scale-95','opacity-0');
+                
+                if (data.redirect_url) {
+                    // Show success message first, then redirect after a delay
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Saved!',
+                        text: data.message,
+                        timer: 2000,  // Increased timer to ensure message is visible
+                        showConfirmButton: false,
+                        confirmButtonColor: '#0B6B3A'
+                    });
+                    // Redirect after the timer completes automatically
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url;
+                    }, 2000);
+                } else {
+                    // No redirect, just show success
+                    Swal.fire({
+                        icon:'success',
+                        title:'Saved!',
+                        text:data.message,
+                        timer:1500,
+                        showConfirmButton:true,
+                        confirmButtonColor: '#0B6B3A'
+                    }).then(() => {
+                        location.reload();
+                    });
+                }
             } else {
                 Swal.fire({icon:'error',title:'Error',text:data.message,timer:2500,showConfirmButton:false});
             }
@@ -2543,225 +2647,229 @@ if (viewBtn) {
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
-                    <!-- 1. PDS -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            1. Fully accomplished Personal Data Sheet (PDS) <br> with recent passport-sized picture (CS Form No. 212, Revised 2017)
-                        </td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['pds'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['pds']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="pds" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 2. Performance Rating -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">
-                            2. Latest Performance Rating in the Present Position (Most Recent Rating Period)
-
-                        </td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['performance_rating'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['performance_rating']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="performance_rating" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 3. Resume -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">3. Updated Resume / Curriculum Vitae</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['resume'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['resume']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="resume" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 4. TOR -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">4. Official Transcript of Records (TOR) Issued by the School</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['tor'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['tor']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                    View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="tor" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 5. Diploma -->
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-3 py-2 border-b text-gray-800 font-medium">5. Copy of Diploma or Proof of Graduation</td>
-                        <td class="px-3 py-2 border-b text-gray-700 view-mode">
-                            <?php if (!empty($fileRecords['diploma'])): ?>
-                                <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                                        data-file="<?= esc($fileRecords['diploma']) ?>">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                    </svg>
-                                   View Document
-                                </button>
-                            <?php else: ?>
-                                <span class="text-gray-400 italic">No file available</span>
-                            <?php endif; ?>
-                            <input type="file" name="diploma" accept=".pdf" class="w-full text-xs edit-mode hidden">
-                        </td>
-                        <td class="px-3 py-2 border-b text-center">
-                            <div class="flex justify-center gap-1">
-                                <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                    Edit
-                                </button>
-                                <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                    Delete
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- 6. Civil Service Eligibility Certificates -->
-<tr class="hover:bg-gray-50 transition-colors">
-    <td class="px-3 py-2 border-b text-gray-800 font-medium">
-        6. Civil Service Eligibility Certificates
-    </td>
-
-    <td class="px-3 py-2 border-b text-gray-700">
-        <?php if (!empty($civilCertificatesCount) && $civilCertificatesCount > 0): ?>
-            <button class="viewEligibilityBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
-                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                </svg>
-                    View All Certificates (<?= $civilCertificatesCount ?>)
-            </button>
-        <?php else: ?>
-            <span class="text-gray-400 italic">No certificates available</span>
-        <?php endif; ?>
-    </td>
-
-    <td class="px-3 py-2 border-b text-center">
-        —
-    </td>
-</tr>
+                    <?php $index = 1; ?>
+                    <?php foreach ($requiredDocuments as $docType): ?>
+                        <?php 
+                        // Get document type ID and name
+                        $docTypeId = isset($docType['id']) ? $docType['id'] : $docType['document_type_id'];
+                        $docTypeName = isset($docType['document_type_name']) ? $docType['document_type_name'] : $docType['requirement_text'];
+                        $filename = isset($fileRecords[$docTypeId]) ? $fileRecords[$docTypeId] : '';
+                        
+                        // Check if this is a certificate-related document type
+                        $isCertificateType = false;
+                        $certificateList = [];
+                        
+                        // Certificate of Eligibility / Rating / License (document type ID 3)
+                        if ($docTypeId == 3) {
+                            $isCertificateType = true;
+                            $certificateList = $certificateInfo['civil_service_certificates'] ?? [];
+                        }
+                        // Certificate of Trainings and Seminars (document type ID 7)
+                        elseif ($docTypeId == 7) {
+                            $isCertificateType = true;
+                            $certificateList = $certificateInfo['training_certificates'] ?? [];
+                        }
+                        
+                        // Find matching Google Drive files for this document type
+                        $googleDriveFileList = [];
+                        if (!empty($googleDriveFiles)) {
+                            // Map document type names to file name patterns
+                            $fileNamePatterns = [
+                                1 => ['personal_data_sheet', 'pds'],
+                                2 => ['performance_rating'],
+                                3 => ['certificate_of_eligibility', 'eligibility', 'rating', 'license'],
+                                4 => ['transcript_of_records', 'tor'],
+                                5 => ['diploma'],
+                                6 => ['certificate_of_employment'],
+                                7 => ['certificate_of_trainings', 'trainings', 'seminars']
+                            ];
+                            
+                            $patterns = $fileNamePatterns[$docTypeId] ?? [];
+                            
+                            foreach ($googleDriveFiles as $gFile) {
+                                $gFileName = strtolower($gFile['name']);
+                                
+                                // Check if filename matches any pattern for this document type
+                                foreach ($patterns as $pattern) {
+                                    if (strpos($gFileName, $pattern) !== false) {
+                                        $googleDriveFileList[] = $gFile;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // For document type 7, check if we should show combined view button
+                        $showCombinedView = ($docTypeId == 7 && !empty($certificateList));
+                        ?>
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-3 py-2 border-b text-gray-800 font-medium">
+                                <?= $index ?>. <?= esc($docTypeName) ?>
+                                <?php if ($isCertificateType && !empty($certificateList)): ?>
+                                    <br><span class="text-xs text-gray-500 italic">(Includes <?= count($certificateList) ?> existing certificate<?= count($certificateList) > 1 ? 's' : '' ?> from your records)</span>
+                                <?php endif; ?>
+                                <?php if (!empty($googleDriveFileList)): ?>
+                                    <br><span class="text-xs text-green-600 font-medium">(Found <?= count($googleDriveFileList) ?> file<?= count($googleDriveFileList) > 1 ? 's' : '' ?> in Google Drive)</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="px-3 py-2 border-b text-gray-700 view-mode">
+                                <?php if ($docTypeId == 7 && !empty($certificateList)): ?>
+                                    <!-- Special handling for Certificate of Trainings and Seminars -->
+                                    <button class="viewCombinedTrainingBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View All Certificates (<?= count($certificateList) ?>)
+                                    </button>
+                                <?php elseif (!empty($filename)): ?>
+                                    <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                            data-file="<?= esc($filename) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View Document
+                                    </button>
+                                <?php elseif ($isCertificateType && !empty($certificateList)): ?>
+                                    <div class="text-xs">
+                                        <span class="text-gray-600">Existing certificates:</span>
+                                        <?php foreach ($certificateList as $cert): ?>
+                                            <?php 
+                                            $certName = '';
+                                            if (isset($cert['certificate_file'])) {
+                                                $certName = $cert['training_name'] ?? 'Training Certificate';
+                                            } elseif (isset($cert['certificate'])) {
+                                                $certName = $cert['eligibility'] ?? 'Civil Service Certificate';
+                                            }
+                                            $certFile = $cert['certificate_file'] ?? $cert['certificate'] ?? '';
+                                            ?>
+                                            <?php if (!empty($certFile)): ?>
+                                                <div class="mt-1">
+                                                    <button class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                                            data-file="<?= esc($certFile) ?>">
+                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                                        </svg>
+                                                        <?= esc($certName) ?>
+                                                    </button>
+                                                </div>
+                                            <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-gray-400 italic">No file available</span>
+                                <?php endif; ?>
+                                <input type="file" name="document_<?= $docTypeId ?>" data-doc-type="<?= $docTypeId ?>" accept=".pdf" class="w-full text-xs edit-mode hidden">
+                            </td>
+                            <td class="px-3 py-2 border-b text-center">
+                                <div class="flex justify-center gap-1">
+                                    <button class="edit-file inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                        </svg>
+                                        Edit
+                                    </button>
+                                    <button class="delete-file inline-flex items-center px-2 py-1 text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors" data-doc-type="<?= $docTypeId ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        <?php $index++; ?>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
     </div>
 
+    <!-- Google Drive Files Section -->
+    <?php if (!empty($googleDriveFiles)): ?>
+    <div class="mt-4">
+        <h3 class="text-sm font-bold text-clsuGreen mb-2">Files from Google Drive</h3>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-3 py-2 border-b font-semibold text-gray-700">File Name</th>
+                            <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Type</th>
+                            <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Uploaded</th>
+                            <th class="px-3 py-2 border-b font-semibold text-gray-700 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        <?php foreach ($googleDriveFiles as $gFile): ?>
+                            <?php 
+                            // Extract user ID and timestamp from filename
+                            $fileNameParts = explode('_', $gFile['name'], 2);
+                            $fileUserId = $fileNameParts[0] ?? '';
+                            
+                            // Only show files for current user
+                            if ($fileUserId != $userId) continue;
+                            
+                            // Format upload date
+                            $uploadDate = isset($gFile['createdTime']) ? date('M j, Y', strtotime($gFile['createdTime'])) : 'N/A';
+                            
+                            // Determine file type icon
+                            $mimeType = $gFile['mimeType'] ?? '';
+                            $fileIcon = '📄';
+                            if (strpos($mimeType, 'image') !== false) {
+                                $fileIcon = '🖼️';
+                            } elseif (strpos($mimeType, 'pdf') !== false) {
+                                $fileIcon = '📕';
+                            } elseif (strpos($mimeType, 'word') !== false || strpos($mimeType, 'document') !== false) {
+                                $fileIcon = '📘';
+                            }
+                            ?>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-3 py-2 border-b text-gray-800">
+                                    <?= esc($gFile['name']) ?>
+                                </td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center">
+                                    <?= $fileIcon ?>
+                                </td>
+                                <td class="px-3 py-2 border-b text-gray-700 text-center">
+                                    <?= $uploadDate ?>
+                                </td>
+                                <td class="px-3 py-2 border-b text-center">
+                                    <button class="viewGoogleDriveFile inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                                            data-file-id="<?= esc($gFile['id']) ?>">
+                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                                        </svg>
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                        
+                        <?php if (empty(array_filter($googleDriveFiles, fn($f) => strpos($f['name'], $userId . '_') === 0))): ?>
+                            <tr>
+                                <td class="px-3 py-4 text-center text-gray-500 italic" colspan="4">
+                                    No files found in Google Drive for your account
+                                </td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <p class="text-xs text-gray-500 mt-2">
         <?php
         if (!empty($fileRecords['uploaded_at']) && $fileRecords['uploaded_at'] != '0000-00-00 00:00:00') {
-            $dt = new DateTime($fileRecords['uploaded_at'], new DateTimeZone('Asia/Manila'));
-            echo 'Uploaded on: ' . $dt->format('F j, Y h:i A');
+            // Database stores in UTC, convert to Philippine Time
+            $dt = new DateTime($fileRecords['uploaded_at'], new DateTimeZone('UTC'));
+            $dt->setTimezone(new DateTimeZone('Asia/Manila'));
+            echo 'Updated on: ' . $dt->format('F j, Y g:i A');
         } else {
             echo 'Upload date not available';
         }
@@ -2769,16 +2877,88 @@ if (viewBtn) {
     </p>
 </div>
 
+<!-- File Viewer Modal -->
 <div id="fileViewerModal"
-     class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-6xl h-full flex flex-col shadow-lg">
+     class="hidden fixed inset-0 bg-gray-800 bg-opacity-90 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-6xl h-full relative flex flex-col shadow-lg">
         <iframe id="fileViewerFrame"
-                class="flex-1 w-full h-full border-none"></iframe>
+                src="" class="flex-1 w-full h-full border-none"></iframe>
     </div>
 </div>
 
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // Show message if user needs to fill out profile before applying
+    <?php if(session()->getFlashdata('fill_details_required')): ?>
+    // Disable ALL navigation buttons including Home and Profile
+    const navLinks = document.querySelectorAll('nav a');
+    navLinks.forEach(link => {
+        link.style.pointerEvents = 'none';
+        link.style.opacity = '0.5';
+        link.style.cursor = 'not-allowed';
+        link.title = 'Complete your profile first';
+    });
+    
+    // Also disable account dropdown menu items except Change Password
+    const dropdownItems = document.querySelectorAll('#accountDropdown a');
+    dropdownItems.forEach(item => {
+        if (!item.href.includes('changePassword')) {
+            item.style.pointerEvents = 'none';
+            item.style.opacity = '0.5';
+            item.style.cursor = 'not-allowed';
+        }
+    });
+    
+    // Show warning message first
+    Swal.fire({
+        icon: 'warning',
+        title: 'Profile Incomplete!',
+        text: 'You need to fill out everything in your Profile before applying for a job position.',
+        confirmButtonColor: '#0B6B3A',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+    }).then(() => {
+        // Automatically open the Edit Personal Information modal
+        openPersonalModal();
+    });
+    <?php endif; ?>
+
+    // Show success message after updating profile
+    <?php if(session()->getFlashdata('profile_updated')): ?>
+    Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: '<?= session()->getFlashdata('profile_updated') ?>',
+        confirmButtonColor: '#0B6B3A'
+    }).then(() => {
+        // Check if there's a pending redirect URL
+        <?php if(session()->get('pending_redirect_url')): ?>
+        // Ask user if they want to continue to application
+        Swal.fire({
+            icon: 'question',
+            title: 'Continue Application?',
+            text: 'Your profile is now complete. Would you like to continue with your job application?',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, continue!',
+            cancelButtonText: 'No, stay here',
+            confirmButtonColor: '#0B6B3A',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirect to the stored URL
+                window.location.href = '<?= session()->get('pending_redirect_url') ?>';
+            }
+        });
+        <?php else: ?>
+        // No pending redirect, just reload
+        window.location.reload();
+        <?php endif; ?>
+    });
+    <?php endif; ?>
+
     const table = document.querySelector('#tab-files table tbody');
     const modal = document.getElementById('fileViewerModal');
     const iframe = document.getElementById('fileViewerFrame');
@@ -2787,8 +2967,159 @@ document.addEventListener('DOMContentLoaded', () => {
 
     table.addEventListener('click', async (e) => {
 
- const viewBtn = e.target.closest('.viewFileBtn');
- if (viewBtn) {
+// ===== VIEW GOOGLE DRIVE FILE FROM FILES SECTION =====
+const viewGoogleDriveBtn = e.target.closest('.viewGoogleDriveFile');
+if (viewGoogleDriveBtn) {
+    const fileId = viewGoogleDriveBtn.dataset.fileId;
+    
+    if (!fileId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'No File ID',
+            text: 'File ID is missing.',
+            showConfirmButton: false,
+            timer: 1000
+        });
+        return;
+    }
+    
+    Swal.fire({
+        title: 'Loading...',
+        text: 'Please wait while the file loads.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+    
+    try {
+        // Use backend endpoint to get Google Drive file
+        const response = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(fileId)}`);
+        const contentType = response.headers.get('content-type') || '';
+        
+        // Check if JSON error was returned
+        if (contentType.includes('application/json')) {
+            const data = await response.json();
+            Swal.close();
+            
+            // Show generic error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to load file.',
+                showConfirmButton: false,
+                timer: 3000
+            });
+            return;
+        }
+        
+        // Get file blob and display in modal
+        const blob = await response.blob();
+        const fileURL = URL.createObjectURL(blob);
+        
+        iframe.src = fileURL;
+        modal.classList.remove('hidden');
+        
+        Swal.close();
+        
+    } catch (err) {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to load file.',
+            showConfirmButton: false,
+            timer: 2000
+        });
+        console.error(err);
+    }
+    
+    return;
+}
+
+// ===== VIEW COMBINED TRAINING CERTIFICATES (DOCUMENT TYPE 7) =====
+const viewCombinedTrainingBtn = e.target.closest('.viewCombinedTrainingBtn');
+if (viewCombinedTrainingBtn) {
+    Swal.fire({
+        title: 'Loading Certificates...',
+        text: 'Please wait while we combine all your training certificates.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        // Fetch list of all training certificates
+    const response = await fetch('<?= base_url("account/view-multiple-training-certificates") ?>');
+    const data = await response.json();
+        
+    if (!response.ok || data.status !== 'success') {
+        Swal.close();
+        Swal.fire({
+                icon: 'warning',
+                title: 'No Certificates',
+                text: 'No training certificates found for your records.',
+                showConfirmButton: false,
+                timer: 2000
+            });
+        return;
+        }
+        
+        // Store certificates and initialize viewer
+        window.trainingCertificates = data.certificates;
+        window.currentCertIndex = 0;
+        
+        // Update UI
+        document.getElementById('total-cert-count').textContent = window.trainingCertificates.length;
+        
+        // Initialize first certificate
+    const cert = window.trainingCertificates[window.currentCertIndex];
+    const frame = document.getElementById('training-multiple-frame');
+    
+    // Update training name
+    document.getElementById('cert-training-name').textContent = cert.training_name;
+    document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
+    
+    // Load certificate file
+    if (cert.file) {
+            // Check if it's a Google Drive file or local file
+        const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
+            
+        if (isGoogleDrive) {
+                // Google Drive - use direct preview
+            frame.src= `https://drive.google.com/file/d/${cert.file}/preview`;
+            } else {
+                // Local file- use controller endpoint
+            frame.src= `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
+            }
+        }
+        
+        // Update button states
+        document.getElementById('prev-cert-btn').disabled = (window.currentCertIndex === 0);
+        document.getElementById('next-cert-btn').disabled = (window.currentCertIndex === window.trainingCertificates.length - 1);
+        
+        // Show modal
+    const modal = document.getElementById('multiple-training-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        
+    Swal.close();
+        
+    } catch (err) {
+    Swal.close();
+    Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || 'Unable to load training certificates.',
+            showConfirmButton: false,
+            timer: 1200
+        });
+    console.error(err);
+    }
+
+    return;
+}
+
+// ===== VIEW FILE (EXISTING HANDLER) =====
+const viewBtn = e.target.closest('.viewFileBtn');
+if (viewBtn) {
     (async () => {
         const filename = viewBtn.dataset.file;
 
@@ -2812,32 +3143,98 @@ document.addEventListener('DOMContentLoaded', () => {
             didOpen: () => Swal.showLoading()
         });
 
+        // Check if this is a Google Drive file ID (28-33 characters, no timestamp prefix)
+        const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(filename) && !/^\d{10}_/.test(filename);
+
+        if(isGoogleDriveFile) {
+            // For Google Drive files, fetch as blob and show in modal (same as local files)
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while the file loads.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    
+                    setTimeout(() => {
+                        // Use backend endpoint to get Google Drive file
+                        fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`)
+                            .then(async res => {
+                                const contentType = res.headers.get('content-type') || '';
+                                
+                                // JSON returned → file missing
+                                if (contentType.includes('application/json')) {
+                                    const data = await res.json();
+                                    Swal.close();
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No File Available',
+                                        text: data.message || 'No file has been uploaded for this document.',
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    });
+                                    throw new Error('File not available');
+                                }
+                                
+                                return res.blob(); // File exists
+                            })
+                            .then(blob => {
+                                const url = URL.createObjectURL(blob);
+                                iframe.src = url;
+                                modal.classList.remove('hidden');
+                                Swal.close(); // close loading
+                            })
+                            .catch(err => {
+                                console.warn(err);
+                            });
+                    }, 1000); // delay before fetch
+                }
+            });
+            return;
+        }
+
         try {
-            // Simulate a small delay for loading effect
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            const res = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`);
-            const contentType = res.headers.get('content-type') || '';
-
-            // JSON returned → file missing
-            if (contentType.includes('application/json')) {
-                const data = await res.json();
-                Swal.close();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'No File Available',
-                    text: data.message || 'No file has been uploaded for this document.',
-                    showConfirmButton: false,
-                    timer: 1000
-                });
-                return;
-            }
-
-            // File exists → show in modal
-            Swal.close();
-            iframe.src = `<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`;
-            modal.classList.remove('hidden');
-
+            // Show loading first with setTimeout delay (same as training certificates)
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while the file loads.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    
+                    setTimeout(() => {
+                        fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(filename)}`)
+                            .then(async res => {
+                                const contentType = res.headers.get('content-type') || '';
+                                
+                                // JSON returned → file missing
+                                if (contentType.includes('application/json')) {
+                                    const data = await res.json();
+                                    Swal.close();
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No File Available',
+                                        text: data.message || 'No file has been uploaded for this document.',
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    });
+                                    throw new Error('File not available');
+                                }
+                                
+                                return res.blob(); // File exists
+                            })
+                            .then(blob => {
+                                const url = URL.createObjectURL(blob);
+                                iframe.src = url;
+                                modal.classList.remove('hidden');
+                                Swal.close(); // close loading
+                            })
+                            .catch(err => {
+                                console.warn(err);
+                            });
+                    }, 1000); // delay before fetch
+                }
+            });
+            
         } catch (err) {
             Swal.close();
             Swal.fire({
@@ -2850,6 +3247,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(err);
         }
     })();
+    return; // Important to prevent other handlers from running
 }
 // ===== VIEW ALL CIVIL SERVICE ELIGIBILITY CERTIFICATES =====
 const viewEligibilityBtn = e.target.closest('.viewEligibilityBtn');
@@ -2885,6 +3283,40 @@ if (viewEligibilityBtn) {
     return; // important so it doesn't continue to other handlers
 }
 
+// ===== VIEW ALL TRAINING CERTIFICATES =====
+const viewTrainingBtn = e.target.closest('.viewTrainingBtn');
+if (viewTrainingBtn) {
+
+    Swal.fire({
+        title: 'Loading Certificates...',
+        text: 'Please wait while we prepare your documents.',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        iframe.src = '<?= base_url("account/viewTrainingCertificates") ?>';
+        modal.classList.remove('hidden');
+
+        Swal.close();
+
+    } catch (err) {
+        Swal.close();
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to load certificates.',
+            showConfirmButton: false,
+            timer: 1200
+        });
+        console.error(err);
+    }
+
+    return; // important so it doesn't continue to other handlers
+}
+
         // ===== EDIT FILE =====
         const editBtn = e.target.closest('.edit-file');
         if (editBtn) {
@@ -2895,9 +3327,30 @@ if (viewEligibilityBtn) {
             fileInput.addEventListener('change', async () => {
                 if (!fileInput.files[0]) return;
 
+                // Check file size (5MB limit)
+                const maxFileSize = 5 * 1024 * 1024; // 5MB in bytes
+                if (fileInput.files[0].size > maxFileSize) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'File size must not exceed 5 MB.',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                    return;
+                }
+
+                // Show loading message
+                Swal.fire({
+                    title: 'Loading...',
+                    text: 'Please wait while the file loads.',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+
                 const formData = new FormData();
                 formData.append('file', fileInput.files[0]);
-                formData.append('file_field', fileInput.name);
+                formData.append('document_type_id', fileInput.dataset.docType);
 
                 try {
                     const res = await fetch('<?= base_url("account/updateFile") ?>', {
@@ -2905,6 +3358,9 @@ if (viewEligibilityBtn) {
                         body: formData
                     });
                     const data = await res.json();
+
+                    // Close loading first
+                    Swal.close();
 
                     if(data.status==='success'){
                         Swal.fire({
@@ -2924,6 +3380,8 @@ if (viewEligibilityBtn) {
                         });
                     }
                 } catch(err){
+                    // Close loading on error
+                    Swal.close();
                     Swal.fire({
                         icon: 'error',
                         title: 'Error',
@@ -2941,9 +3399,9 @@ if (viewEligibilityBtn) {
         if(deleteBtn){
             const row = deleteBtn.closest('tr');
             const fileInput = row.querySelector('input[type="file"]');
-            const fileField = fileInput.name;
+            const documentTypeId = deleteBtn.dataset.docType;
             const fileLink = row.querySelector('.view-mode .viewFileBtn');
-            const fileName = fileLink?.textContent;
+            const fileName = fileLink?.dataset.file;
 
             if(!fileName){
                 Swal.fire({
@@ -2969,7 +3427,7 @@ if (viewEligibilityBtn) {
 
             try{
                 const formData = new FormData();
-                formData.append('file_field', fileField);
+                formData.append('document_type_id', documentTypeId);
 
                 const res = await fetch('<?= base_url("account/deleteFile") ?>',{
                     method:'POST',
@@ -3015,6 +3473,44 @@ if (viewEligibilityBtn) {
     });
 });
 </script>
+</div>
+
+<!-- Multiple Training Certificates Modal -->
+<div id="multiple-training-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[70] flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl w-full max-w-5xl h-[85vh] flex flex-col shadow-lg">
+        <!-- Compact Header -->
+        <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b rounded-t-xl">
+            <div class="flex items-center gap-3">
+                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="text-sm font-bold text-gray-800 truncate max-w-md" id="cert-training-name">GitHub Seminar</h3>
+                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded border mx-2">
+                    <span id="current-cert-num">1</span> / <span id="total-cert-count">2</span>
+                </span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="button" id="prev-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                    </svg>
+                </button>
+                <button type="button" id="next-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+                <button type="button" id="close-training-multi-btn" class="text-gray-500 hover:text-red-600 transition-colors ml-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <iframe id="training-multiple-frame" class="flex-1 w-full h-full border-none rounded-b-xl"></iframe>
+    </div>
 </div>
 
 </div>
@@ -3149,6 +3645,85 @@ photoInput.addEventListener('change', () => {
             });
             console.error(err);
         });
+    }
+});
+
+// ===== NAVIGATION FOR MULTIPLE TRAINING CERTIFICATES MODAL =====
+document.getElementById('prev-cert-btn')?.addEventListener('click', function() {
+  if (window.currentCertIndex> 0) {
+        window.currentCertIndex--;
+        
+        const cert = window.trainingCertificates[window.currentCertIndex];
+        const frame = document.getElementById('training-multiple-frame');
+        
+        // Update training name
+        document.getElementById('cert-training-name').textContent = cert.training_name;
+        document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
+        
+        // Load certificate file
+        if (cert.file) {
+            const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
+            
+            if (isGoogleDrive) {
+            frame.src = `https://drive.google.com/file/d/${cert.file}/preview`;
+            } else {
+            frame.src = `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
+            }
+        }
+        
+        // Update button states
+        this.disabled = (window.currentCertIndex === 0);
+        document.getElementById('next-cert-btn').disabled = (window.currentCertIndex === window.trainingCertificates.length -1);
+    }
+});
+
+document.getElementById('next-cert-btn')?.addEventListener('click', function() {
+  if (window.currentCertIndex < window.trainingCertificates.length -1) {
+        window.currentCertIndex++;
+        
+        const cert = window.trainingCertificates[window.currentCertIndex];
+        const frame = document.getElementById('training-multiple-frame');
+        
+        // Update training name
+        document.getElementById('cert-training-name').textContent = cert.training_name;
+        document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
+        
+        // Load certificate file
+        if (cert.file) {
+            const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
+            
+            if (isGoogleDrive) {
+            frame.src= `https://drive.google.com/file/d/${cert.file}/preview`;
+            } else {
+            frame.src= `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
+            }
+        }
+        
+        // Update button states
+        this.disabled = (window.currentCertIndex === window.trainingCertificates.length -1);
+        document.getElementById('prev-cert-btn').disabled = (window.currentCertIndex === 0);
+    }
+});
+
+document.getElementById('close-training-multi-btn')?.addEventListener('click', function() {
+    const modal = document.getElementById('multiple-training-modal');
+    const frame = document.getElementById('training-multiple-frame');
+  frame.src = '';
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    window.trainingCertificates = [];
+    window.currentCertIndex = 0;
+});
+
+// Close multiple training modal when clicking outside
+document.getElementById('multiple-training-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) {
+        const frame = document.getElementById('training-multiple-frame');
+     frame.src = '';
+        this.classList.add('hidden');
+        this.classList.remove('flex');
+        window.trainingCertificates = [];
+        window.currentCertIndex = 0;
     }
 });
 </script>

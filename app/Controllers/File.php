@@ -37,22 +37,44 @@ class File extends Controller
         }
 
         $filename = basename($filename);
-        $filePath = WRITEPATH . 'uploads/files/' . $filename;
+        
+        // Check if the filename is a Google Drive file ID (typically 28-33 characters long)
+        // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+        
+        if ($isGoogleDriveFile) {
+            // File is stored in Google Drive
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if ($driveService->isEnabled()) {
+                // Redirect to Google Drive public URL instead of downloading
+                $publicUrl = $driveService->getFileUrl($filename);
+                return redirect()->to($publicUrl);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Google Drive service not available.'
+                ])->setStatusCode(500);
+            }
+        } else {
+            // File is stored locally (fallback for existing files)
+            $filePath = WRITEPATH . 'uploads/files/' . $filename;
 
-        if (!file_exists($filePath)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'No file has been uploaded for this document.'
-            ])->setStatusCode(404);
+            if (!file_exists($filePath)) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'No file has been uploaded for this document.'
+                ])->setStatusCode(404);
+            }
+
+            return $this->response
+                        ->setHeader('Content-Type', mime_content_type($filePath))
+                        ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                        ->setHeader('Accept-Ranges', 'bytes')
+                        ->setBody(file_get_contents($filePath));
         }
-
-        return $this->response
-                    ->setHeader('Content-Type', 'application/pdf')
-                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                    ->setBody(file_get_contents($filePath));
     }
 
-    // Application documents (PDS, Performance, Resume, TOR, Diploma)
     public function viewDocument($applicationId, $docType)
     {
         $db = \Config\Database::connect();
@@ -69,18 +91,37 @@ class File extends Controller
         }
 
         $filename = $record[$docType];
-        $filePath = WRITEPATH . 'uploads/files/' . $filename;
+        
+        // Check if this is a Google Drive file ID
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+        
+        if ($isGoogleDriveFile) {
+            // Redirect to Google Drive public URL
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            if ($driveService->isEnabled()) {
+                $publicUrl = $driveService->getFileUrl($filename);
+                return redirect()->to($publicUrl);
+            } else {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Google Drive service not available.'
+                ])->setStatusCode(500);
+            }
+        } else {
+            // Handle local file (fallback for existing files)
+            $filePath = WRITEPATH . 'uploads/files/' . $filename;
 
-        if (!file_exists($filePath)) {
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'No file has been uploaded for this document.'
-            ])->setStatusCode(404);
+            if (!file_exists($filePath)) {
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'No file has been uploaded for this document.'
+                ])->setStatusCode(404);
+            }
+
+            return $this->response
+                        ->setHeader('Content-Type', 'application/pdf')
+                        ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                        ->setBody(file_get_contents($filePath));
         }
-
-        return $this->response
-                    ->setHeader('Content-Type', 'application/pdf')
-                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                    ->setBody(file_get_contents($filePath));
     }
 }

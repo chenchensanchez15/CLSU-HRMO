@@ -5,8 +5,11 @@ use CodeIgniter\Exceptions\PageNotFoundException; // make sure this is at the to
 
 use App\Controllers\BaseController;
 use App\Models\JobApplicationModel;
-use App\Models\JobPositionModel;
+use App\Models\JobVacancyModel;
+use App\Models\PlantillaItemModel;
+use App\Models\JobPublicationModel;
 use App\Models\ApplicantModel;
+use App\Models\JobPublicationRequirementsModel;
 
 use App\Models\ApplicantEducationModel;
 use App\Models\ApplicantWorkExperienceModel;
@@ -16,17 +19,22 @@ use App\Models\ApplicationCivilServiceModel;
 
 class Applications extends BaseController
 {
-    protected $jobPositions;
+    protected $jobVacancyModel;
+    protected $plantillaItemModel;
+    protected $jobPublicationModel;
     protected $jobApplications;
     protected $applicantPersonal;
     protected $educationModel;
     protected $workModel;
     protected $documentModel; 
-    protected $civilServiceModel; 
+    protected $civilServiceModel;
+    protected $jobPublicationRequirementsModel; 
 
     public function __construct()
     {
-        $this->jobPositions = new JobPositionModel();          
+        $this->jobVacancyModel = new JobVacancyModel();          
+        $this->plantillaItemModel = new PlantillaItemModel();          
+        $this->jobPublicationModel = new JobPublicationModel();          
         $this->jobApplications = new JobApplicationModel();   
         $this->applicantPersonal = new ApplicantModel();      
         // Family background functionality removed
@@ -34,14 +42,50 @@ class Applications extends BaseController
         $this->workModel = new ApplicantWorkExperienceModel();
         $this->documentModel = new ApplicantDocumentsModel(); 
         $this->civilServiceModel = new ApplicationCivilServiceModel();
+        $this->jobPublicationRequirementsModel = new JobPublicationRequirementsModel();
     }
     
     public function apply($id = null)
 {
     if (!$id) return redirect()->to('/jobs');
 
-    $job = $this->jobPositions->find($id);
+    // Get job vacancy with related details
+    $builder = $this->jobVacancyModel->db->table('job_vacancies jv');
+    $builder->select([
+        'jv.id_vacancy as id',
+        'jv.plantilla_item_id',
+        'jv.date_posted',
+        'jv.created_at',
+        'jp.interview_date',
+        'jp.interview_venue',
+        'jp.publication_status',
+        'jp.type as publication_type',
+        'jp.hr_head',
+        'jp.application_deadline',
+        'jp.remarks',
+        'pi.item_number as plantilla_item_no',
+        'pi.xItemTitle as position_title',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'o.office_name',
+        'd.division_name as department',
+        'pi.ItemStatus as status',
+
+    ]);
+    $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $builder->where('jv.id_vacancy', $id);
+    $builder->where('jp.publication_status', 1); // Only show published jobs
+    
+    $job = $builder->get()->getRowArray();
+    
     if (!$job) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound('Job not found');
+
+    // Add monthly salary calculation
+    $job['monthly_salary'] = $this->get_monthly_salary($job['id']);
 
     $user_id = session()->get('user_id');
     if (!$user_id) {
@@ -50,6 +94,9 @@ class Applications extends BaseController
         return redirect()->to('/login');
     }
 
+    // Check if user was created by admin (has pre-filled data)
+    $createdBy = session()->get('created_by') ?? 0;
+    
     // Check if user already applied for this job
     $db = \Config\Database::connect();
     $existingApplication = $db->table('job_applications')
@@ -69,16 +116,94 @@ class Applications extends BaseController
     }
 
     $profile = $this->applicantPersonal->where('user_id', $user_id)->first();
+    
+    // Ensure profile is not null, provide default values if needed
+    if (!$profile) {
+        $profile = [
+            'first_name' => '',
+            'middle_name' => '',
+            'last_name' => '',
+            'suffix' => '',
+            'sex' => '',
+            'date_of_birth' => '',
+            'civil_status' => '',
+            'email' => '',
+            'phone' => '',
+            'citizenship' => '',
+            'residential_address' => '',
+            'permanent_address' => ''
+        ];
+    }
+    
+    // Get position-specific document requirements
+    $requirements = $this->jobPublicationRequirementsModel->getRequirementsByVacancy($id);
+    
+    // Fetch user's uploaded documents from applicant_documents
+    $userDocs = $db->table('applicant_documents')
+        ->where('user_id', $user_id)
+        ->get()
+        ->getResultArray();
+    
+    // Map documents by type for easy access in view
+    $documentsMap = [];
+    foreach ($userDocs as $doc) {
+        $docTypeId = $doc['document_type_id'];
+        $filename = $doc['filename'];
+        
+        // Map document types to field names used in apply form
+        if ($docTypeId == 1) $documentsMap['pds'] = $filename;              // PDS
+        if ($docTypeId == 2) $documentsMap['performance_rating'] = $filename; // Performance Rating
+        if ($docTypeId == 3) $documentsMap['eligibility'] = $filename;      // Eligibility/Rating/License
+        if ($docTypeId == 4) $documentsMap['tor'] = $filename;              // TOR
+        if ($docTypeId == 5) $documentsMap['diploma'] = $filename;          // Diploma
+        if ($docTypeId == 6) $documentsMap['employment'] = $filename;       // Certificate of Employment
+        if ($docTypeId == 7) $documentsMap['trainings'] = $filename;        // Trainings
+    }
 
     return view('apply', [
-        'job'     => $job,
-        'profile' => $profile
+        'job'         => $job,
+        'profile'     => $profile,
+        'requirements'=> $requirements,
+        'createdBy'   => $createdBy,
+        'documents'   => $documentsMap
     ]);
 }
 
 public function submit($id = null)
 {
-    $job = $this->jobPositions->find($id);
+    // Get job vacancy with related details
+    $builder = $this->jobVacancyModel->db->table('job_vacancies jv');
+    $builder->select([
+        'jv.id_vacancy as id',
+        'jv.plantilla_item_id',
+        'jv.date_posted',
+        'jv.created_at',
+        'jp.interview_date',
+        'jp.interview_venue',
+        'jp.publication_status',
+        'jp.type as publication_type',
+        'jp.hr_head',
+        'jp.application_deadline',
+        'jp.remarks',
+        'pi.item_number as plantilla_item_no',
+        'pi.xItemTitle as position_title',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'o.office_name',
+        'd.division_name as department',
+        'pi.ItemStatus as status',
+
+    ]);
+    $builder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $builder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $builder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $builder->where('jv.id_vacancy', $id);
+    $builder->where('jp.publication_status', 1); // Only show published jobs
+    
+    $job = $builder->get()->getRowArray();
+    
     if (!$job) {
         return $this->response->setStatusCode(404)->setBody('Job not found');
     }
@@ -95,7 +220,7 @@ public function submit($id = null)
     // =========================
     $this->jobApplications->insert([
         'user_id' => $user_id,
-        'job_vacancy_id' => $job['id'],
+        'job_vacancy_id' => $id, // Use the original vacancy ID directly
         'application_status' => 'Submitted',
         'applied_at' => date('Y-m-d H:i:s'),
         'created_at' => date('Y-m-d H:i:s'),
@@ -171,7 +296,6 @@ public function submit($id = null)
             'job_application_id' => $application_id,
             'degree_level_id' => $edu['degree_level_id'] ?? null,
             'degree_id' => $edu['degree_id'] ?? null,
-            'level' => '', // Will be populated from lib_degree_level
             'school_name' => $edu['school_name'] ?? 'N/A',
             'degree_course' => $edu['degree_course'] ?? 'N/A',
             'course' => $edu['course'] ?? 'N/A',
@@ -282,7 +406,12 @@ for ($i = 0; $i < $totalRows; $i++) {
         $uploadedFiles[$i]->isValid() &&
         !$uploadedFiles[$i]->hasMoved()
     ) {
-        $certificateFile = $uploadedFiles[$i]->getRandomName();
+        // Use consistent naming: {timestamp}_{original_name}
+        $extension = $uploadedFiles[$i]->getClientExtension();
+        $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
+        // Sanitize filename: remove special characters but keep underscores
+        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $certificateFile = time() . '_' . $sanitizedBaseName . '.' . $extension;
         $uploadedFiles[$i]->move($writablePath, $certificateFile);
     }
 
@@ -324,82 +453,9 @@ for ($i = 0; $i < $totalRows; $i++) {
     ]);
 }
 // =========================
-// FILE UPLOADS: application_documents (FINAL FIX)
+// DOCUMENTS: Now handled via applicant_documents (per-user, not per-application)
+// Documents are uploaded via profile/account and linked by user_id
 // =========================
-$files = ['pds','performance_rating','resume','tor','diploma'];
-
-$writablePath = WRITEPATH . 'uploads/files/';
-$publicPath   = FCPATH . 'uploads/';
-
-$docData = [
-    'pds' => null,
-    'performance_rating' => null,
-    'resume' => null,
-    'tor' => null,
-    'diploma' => null
-];
-
-// Handle existing files first (READ-ONLY scenario)
-foreach ($files as $fileInput) {
-    $oldFile = $this->request->getPost('existing_' . $fileInput);
-    
-    if (!empty($oldFile)) {
-        // Check if file exists in writable directory
-        if (file_exists($writablePath . $oldFile)) {
-            if ($fileInput === 'pds') {
-                $docData['pds'] = $oldFile;
-            } elseif ($fileInput === 'performance_rating') {
-                $docData['performance_rating'] = $oldFile;
-            } else {
-                $docData[$fileInput] = $oldFile;
-            }
-        }
-        // Check if file exists in public directory and copy it
-        elseif (file_exists($publicPath . $oldFile)) {
-            copy($publicPath . $oldFile, $writablePath . $oldFile);
-            if ($fileInput === 'pds') {
-                $docData['pds'] = $oldFile;
-            } elseif ($fileInput === 'performance_rating') {
-                $docData['performance_rating'] = $oldFile;
-            } else {
-                $docData[$fileInput] = $oldFile;
-            }
-        }
-    }
-}
-
-// Handle new file uploads (if any)
-foreach ($files as $fileInput) {
-    $file = $this->request->getFile($fileInput);
-    
-    // Only process if it's a valid new upload
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-        $newName = time() . '_' . $file->getRandomName();
-        $file->move($writablePath, $newName);
-        
-        // Map to correct database field names
-        if ($fileInput === 'pds') {
-            $docData['pds'] = $newName;
-        } elseif ($fileInput === 'performance_rating') {
-            $docData['performance_rating'] = $newName;
-        } else {
-            $docData[$fileInput] = $newName;
-        }
-    }
-}
-
-// INSERT PER-APPLICATION SNAPSHOT
-$db->table('application_documents')->insert([
-    'job_application_id' => $application_id,
-    'pds'              => $docData['pds'],
-    'performance_rating' => $docData['performance_rating'],
-    'resume'           => $docData['resume'],
-    'tor'              => $docData['tor'],
-    'diploma'          => $docData['diploma'],
-    'uploaded_at'      => date('Y-m-d H:i:s'),
-    'created_at'       => date('Y-m-d H:i:s'),
-    'updated_at'       => date('Y-m-d H:i:s')
-]);
 
     return $this->response->setJSON([
         'success' => true,
@@ -485,7 +541,7 @@ public function view($application_id = null)
         if (!empty($educationByLevel[$levelName])) {
             foreach ($educationByLevel[$levelName] as $index => $edu) {
                 $app['education_display'][] = [
-                    'level' => $index === 0 ? $levelName : '', // Show level name only on first row
+                    'level_name' => $index === 0 ? $levelName : '', // Show level name only on first row,
                     'school_name' => !empty($edu['school_name']) && strtoupper($edu['school_name']) !== 'N/A' ? $edu['school_name'] : '-',
                     'degree_course' => !empty($edu['degree_name']) ? $edu['degree_name'] : (!empty($edu['degree_course']) && strtoupper($edu['degree_course']) !== 'N/A' ? $edu['degree_course'] : '-'),
                     'course' => !empty($edu['course']) && strtoupper($edu['course']) !== 'N/A' ? $edu['course'] : '-',
@@ -499,7 +555,7 @@ public function view($application_id = null)
         } else {
             // Add empty row for level with no records
             $app['education_display'][] = [
-                'level' => $levelName,
+                'level_name' => $levelName,
                 'school_name' => '-',
                 'degree_course' => '-',
                 'period_from' => '-',
@@ -556,32 +612,200 @@ foreach ($app['work'] as &$work) {
 unset($work);
 
     // -------------------------
-    // Fetch uploaded documents
+    // Fetch trainings (BEFORE documents section so it's available for combination)
     // -------------------------
-    $app['documents'] = $db->table('application_documents')
-                           ->where('job_application_id', $application_id)
-                           ->get()
-                           ->getRowArray() ?? [
-                               'resume'      => null,
-                               'tor'         => null,
-                               'diploma'     => null,
-                               'certificate' => null,
-                               'uploaded_at' => null
-                           ];
+    $trainings = [];
+    $user_id = $profile['user_id'] ?? $app['user_id'] ?? null;
+   if ($user_id) {
+        $trainings = $db->table('application_trainings at')
+                        ->join('lib_training_category tc', 'at.training_category_id = tc.id_training_category', 'left')
+                        ->select('at.id_application_trainings, at.training_name, at.date_from, at.date_to, at.training_facilitator, at.training_hours, at.training_sponsor, at.training_remarks, at.certificate_file, tc.training_category_name')
+                        ->where(['at.job_application_id' => $application_id]) // filter by application
+                        ->orderBy('at.date_from', 'DESC')
+                        ->get()
+                        ->getResultArray();
+
+        // Format dates
+        foreach ($trainings as &$tr) {
+            $tr['date_from'] = !empty($tr['date_from']) ? date('F d, Y', strtotime($tr['date_from'])) : '-';
+            $tr['date_to']   = !empty($tr['date_to']) ? date('F d, Y', strtotime($tr['date_to'])) : '-';
+        }
+    }
+
+    // -------------------------
+    // Fetch uploaded documents - From applicant_documents table + Google Drive metadata
+    // -------------------------
+    $userId = $app['user_id'] ?? null;
+    $googleDriveFiles = [];
+    
+    log_message('debug', '=== START: Fetching documents for application view ===');
+    log_message('debug', 'User ID from application: ' . ($userId ?? 'NULL'));
+    log_message('debug', 'Application ID: ' . ($app['id_job_application'] ?? 'NULL'));
+    log_message('debug', 'Trainings count available: ' . count($trainings));
+    
+    if ($userId) {
+        log_message('debug', 'Fetching documents from applicant_documents for user ID: ' . $userId);
+        
+        // Get documents from applicant_documents table
+        $docs = $db->table('applicant_documents')
+                   ->where('user_id', $userId)
+                   ->get()
+                   ->getResultArray();
+        
+        log_message('debug', 'SQL Query: SELECT * FROM applicant_documents WHERE user_id = ' . $userId);
+        log_message('debug', 'Found ' . count($docs) . ' documents in database');
+        
+        if (empty($docs)) {
+            log_message('warning', 'NO DOCUMENTS FOUND in applicant_documents for user ' . $userId);
+        } else {
+            // Log all document records
+            foreach ($docs as $doc) {
+                log_message('debug', '  DB Record: id=' . $doc['id'] . ', type=' . $doc['document_type_id'] . ', filename=' . $doc['filename']);
+            }
+        }
+        
+        // For each document, get Google Drive file metadata
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            log_message('debug', 'Google Drive service initialized');
+            log_message('debug', 'Is Enabled: ' . ($driveService->isEnabled() ? 'YES' : 'NO'));
+            
+            if ($driveService->isEnabled()) {
+                log_message('debug', 'Google Drive service is enabled');
+                
+                $client = $driveService->getClient();
+                $token = $client->getAccessToken();
+                
+                // Handle both string and array tokens
+                if (is_string($token)) {
+                    $token = json_decode($token, true);
+                }
+                
+                $accessToken = $token['access_token'] ?? null;
+                
+                log_message('debug', 'Access token obtained: ' . (empty($accessToken) ? 'EMPTY' : 'OK'));
+                
+                foreach ($docs as $doc) {
+                    $fileId = $doc['filename']; // This is the Google Drive file ID
+                    $docTypeId = $doc['document_type_id'];
+                                    
+                    // Use document type label as filename (cleaner display)
+                    $docLabels = [
+                        1 => 'Personal Data Sheet (PDS)',
+                        2 => 'Performance Rating',
+                        3 => 'Certificate of Eligibility/Rating/License',
+                        4 => 'Transcript of Records (TOR)',
+                        5 => 'Diploma or Proof of Graduation',
+                        6 => 'Certificate of Employment',
+                        7 => 'Certificate of Trainings and Seminars'
+                    ];
+                                    
+                    $fileName = $docLabels[$docTypeId] ?? 'Document';
+                    
+                    // Special handling for trainings (document_type_id = 7)
+                    // Combine multiple training certificates into one PDF
+                    if ($docTypeId == 7 && !empty($trainings)) {
+                        log_message('debug', 'Processing training certificates combination...');
+                        log_message('debug', 'Number of trainings found: ' . count($trainings));
+                        
+                        // Log each training
+                        foreach ($trainings as $idx => $training) {
+                            log_message('debug', 'Training #' . ($idx + 1) . ': ' . ($training['training_name'] ?? 'N/A') . ', Certificate: ' . ($training['certificate_file'] ?? 'NONE'));
+                        }
+                        
+                        $combiner = new \App\Libraries\TrainingCertificateCombiner();
+                        $combinedFile = $combiner->getCombinedCertificatePath($application_id, $trainings);
+                        
+                        if ($combinedFile) {
+                            // Use the combined PDF file path instead
+                            $fileId = $combinedFile;
+                            log_message('debug', 'Using combined training certificate: ' . $combinedFile);
+                            
+                            // Verify the file was created
+                            $fullPath = WRITEPATH . 'uploads/trainings/' . $combinedFile;
+                            if (file_exists($fullPath)) {
+                                log_message('debug', 'Combined PDF exists at: ' . $fullPath . ', Size: ' . filesize($fullPath) . ' bytes');
+                            } else {
+                                log_message('error', 'Combined PDF NOT FOUND at: ' . $fullPath);
+                            }
+                        } else {
+                            log_message('error', 'Failed to generate combined training certificate');
+                        }
+                    }
+                                    
+                    // Add file entry with document type label
+                    $googleDriveFiles[] = [
+                        'id' => $fileId,
+                        'name' => $fileName,
+                        'document_type_id' => $docTypeId,
+                        'mimeType' => 'application/pdf'
+                    ];
+                                    
+                    log_message('debug', '  Added document: ' . $fileName . ' (ID: ' . $fileId . ')');
+                }
+                                
+                log_message('debug', 'Total files after processing: ' . count($googleDriveFiles));
+                
+                log_message('debug', 'Total files collected: ' . count($googleDriveFiles));
+            } else {
+                log_message('error', 'Google Drive service NOT ENABLED');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception fetching Google Drive metadata: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+        }
+    } else {
+        log_message('error', 'No user_id available for fetching documents');
+    }
+    
+    log_message('debug', 'Final googleDriveFiles count: ' . count($googleDriveFiles));
+    
+    // Store Google Drive files in app data
+    $app['google_drive_files'] = $googleDriveFiles;
 
     // -------------------------
     // Fetch job details
     // -------------------------
-    $job = $db->table('job_vacancies')
-              ->where('id', $app['job_vacancy_id'])
-              ->get()
-              ->getRowArray() ?? [
-                  'position_title' => '-',
-                  'office'         => '-',
-                  'department'     => '-',
-                  'monthly_salary' => 0,
-                  'application_deadline' => null
-              ];
+    $jobBuilder = $db->table('job_vacancies jv');
+    $jobBuilder->select([
+        'pi.xItemTitle as position_title',
+        'o.office_name as office',
+        'd.division_name as department',
+        'jp.application_deadline',
+        'pi.item_number as plantilla_item_no',
+        'pi.ItemSalaryGrade as salary_grade',
+        'pos.position_name',
+        'pi.ItemStatus as status'
+    ]);
+    $jobBuilder->join('job_publications jp', 'jv.publication_id = jp.id_publication', 'left');
+    $jobBuilder->join('`hrmis-template`.plantilla_items pi', 'jv.plantilla_item_id = pi.id_plantilla_item', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_positions pos', 'pi.position_id = pos.id_position', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
+    $jobBuilder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
+    $jobBuilder->where('jv.id_vacancy', $app['job_vacancy_id']);
+    
+    $job = $jobBuilder->get()->getRowArray() ?? [
+        'position_title' => '-',
+        'office'         => '-',
+        'department'     => '-',
+        'application_deadline' => null,
+        'plantilla_item_no' => '-',
+        'salary_grade' => '-',
+        'position_name' => '-',
+        'status' => '-',
+        'description' => '-',
+        'education' => '-',
+        'training' => '-',
+        'experience' => '-',
+        'eligibility' => '-',
+        'competency' => '-',
+        'duties_responsibilities' => '-',
+        'application_requirements' => '-'
+    ];
+    
+    // Compute monthly salary using the same logic as in Home controller
+    $job['monthly_salary'] = $this->get_monthly_salary($app['job_vacancy_id']);
 
     // -------------------------
     // Fetch applicant profile
@@ -589,35 +813,30 @@ unset($work);
     $profileModel = new \App\Models\ApplicantModel();
     $profile = $profileModel->where('user_id', $app['user_id'])->first() ?? [];
 
-// -------------------------
-// Fetch trainings
-// -------------------------
-$trainings = [];
-$user_id = $profile['user_id'] ?? $app['user_id'] ?? null;
-if ($user_id) {
-    $trainings = $db->table('application_trainings at')
-                    ->join('lib_training_category tc', 'at.training_category_id = tc.id_training_category', 'left')
-                    ->select('at.training_name, at.date_from, at.date_to, at.training_facilitator, at.training_hours, at.training_sponsor, at.training_remarks, at.certificate_file, tc.training_category_name')
-                    ->where(['at.job_application_id' => $application_id]) // filter by application
-                    ->orderBy('at.date_from', 'DESC')
-                    ->get()
-                    ->getResultArray();
-
-    // Format dates
-    foreach ($trainings as &$tr) {
-        $tr['date_from'] = !empty($tr['date_from']) ? date('F d, Y', strtotime($tr['date_from'])) : '-';
-        $tr['date_to']   = !empty($tr['date_to']) ? date('F d, Y', strtotime($tr['date_to'])) : '-';
-    }
-}
-
     // -------------------------
-    // Profile photo
+    // Profile photo - Support both Google Drive and local storage
     // -------------------------
     $profilePhoto = null;
+    $isGoogleDrivePhoto = false;
+    
     if (!empty($profile['photo'])) {
-        $photoPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $profile['photo'];
-        if (file_exists($photoPath)) {
-            $profilePhoto = $profile['photo'];
+        // Check if it's a Google Drive file ID (alphanumeric, 20+ chars, no timestamp prefix)
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $profile['photo']) && !preg_match('/^\d{10}_/', $profile['photo']);
+        
+        if ($isGoogleDriveFile) {
+            log_message('debug', 'Profile has Google Drive photo: ' . $profile['photo']);
+            
+            // Use the Photo controller endpoint which handles Google Drive authentication properly
+            $profilePhoto = site_url('account/getProfilePhoto/' . $userId);
+            $isGoogleDrivePhoto = true;
+            
+            log_message('info', 'Using Photo controller endpoint for profile photo');
+        } else {
+            // Local file - check if exists
+            $photoPath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . $profile['photo'];
+            if (file_exists($photoPath)) {
+                $profilePhoto = base_url('uploads/' . $profile['photo']);
+            }
         }
     }
 
@@ -625,11 +844,13 @@ if ($user_id) {
     // Pass all data to the view
     // -------------------------
     return view('applications/view', [
-        'app'          => $app,
-        'job'          => $job,
-        'profile'      => $profile,
-        'profilePhoto' => $profilePhoto,
-        'trainings'    => $trainings
+        'app'                => $app,
+        'job'                => $job,
+        'profile'            => $profile,
+        'profilePhoto'       => $profilePhoto,
+        'isGoogleDrivePhoto' => $isGoogleDrivePhoto,
+        'trainings'          => $trainings,
+        'googleDriveFiles'   => $googleDriveFiles
     ]);
 }
 
@@ -689,15 +910,16 @@ $db->table('application_personal')
     // Update Educational Background
     // -------------------
     $eduLevels = [
-        'Elementary'         => 'elementary',
-        'Secondary'          => 'secondary',
-        'Vocational / Trade' => 'vocational',
-        'College'            => 'college',
-        'Graduate Studies'   => 'graduate'
+        'Elementary'         => ['key' => 'elementary', 'id' => 1],
+        'Secondary'          => ['key' => 'secondary', 'id' => 2],
+        'Vocational / Trade' => ['key' => 'vocational', 'id' => 3],
+        'College'            => ['key' => 'college', 'id' => 4],
+        'Graduate Studies'   => ['key' => 'graduate', 'id' => 5]
     ];
     $eduTable = $db->table('application_education');
 
-    foreach ($eduLevels as $level => $key) {
+    foreach ($eduLevels as $level => $levelData) {
+        $key = $levelData['key'];
         $data = [
             'school_name'         => $this->request->getPost($key.'_school') ?: '-',
             'degree_course'       => $this->request->getPost($key.'_degree') ?: '-',
@@ -710,7 +932,7 @@ $db->table('application_personal')
         ];
 
         $existing = $eduTable->where('job_application_id', $job_application_id)
-                             ->where('level', $level)
+                             ->where('degree_level_id', $levelData['id'])
                              ->get()
                              ->getRowArray();
 
@@ -719,7 +941,7 @@ $db->table('application_personal')
                      ->update($data);
         } else {
             $data['job_application_id'] = $job_application_id;
-            $data['level'] = $level;
+            $data['degree_level_id'] = $levelData['id'];
             $data['created_at'] = $currentDate;
             $eduTable->insert($data);
         }
@@ -826,7 +1048,12 @@ for ($i = 0; $i < $totalRows; $i++) {
     $certificateFile = $existingFiles[$i] ?? null;
 
     if (isset($uploadedFiles[$i]) && $uploadedFiles[$i]->isValid() && !$uploadedFiles[$i]->hasMoved()) {
-        $certificateFile = time() . '_' . $uploadedFiles[$i]->getRandomName();
+        // Use consistent naming: {timestamp}_{original_name}
+        $extension = $uploadedFiles[$i]->getClientExtension();
+        $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
+        // Sanitize filename: remove special characters but keep underscores
+        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $certificateFile = time() . '_' . $sanitizedBaseName . '.' . $extension;
         $uploadedFiles[$i]->move($writablePath, $certificateFile);
     }
 
@@ -863,45 +1090,10 @@ if (!empty($deletedTrainings)) {
 }
 
     // -------------------
-    // Update Documents
+    // Update Documents - REMOVED
+    // Documents are now managed via applicant_documents (per-user) through Account controller
     // -------------------
-   // Include PDS and Performance Rating
-$files = ['pds', 'performance_rating', 'resume', 'tor', 'diploma', 'certificate'];
-$uploadPath = WRITEPATH . 'uploads/files/'; // ensure correct path
-$docTable = $db->table('application_documents');
-
-$existingDocs = $docTable->where('job_application_id', $job_application_id)->get()->getRowArray() ?? [];
-$docData = [];
-$currentDate = date('Y-m-d H:i:s');
-
-foreach ($files as $fileInput) {
-    $file = $this->request->getFile($fileInput);
-    $oldFile = $this->request->getPost('existing_' . $fileInput);
-
-    if ($file && $file->isValid() && !$file->hasMoved()) {
-        $newName = time() . '_' . $file->getRandomName();
-        $file->move($uploadPath, $newName);
-        $docData[$fileInput] = $newName;
-        $docData['uploaded_at'] = $currentDate;
-    } elseif (!empty($oldFile)) {
-        $docData[$fileInput] = $oldFile;
-    } else {
-        $docData[$fileInput] = null;
-    }
-}
-
-$docData['updated_at'] = $currentDate;
-
-if ($existingDocs) {
-    $docTable->where('job_application_id', $job_application_id)->update($docData);
-} else {
-    $docData['job_application_id'] = $job_application_id;
-    $docData['created_at'] = $currentDate;
-    $docTable->insert($docData);
-}
-
-
-    return redirect()->to('dashboard')->with('success', 'Application updated successfully!');
+    return redirect()->back()->with('error', 'Document updates are now handled through your profile page.');
 }
 
 
@@ -973,11 +1165,29 @@ public function viewDocument($application_id, $doc)
         ])->setStatusCode(403);
     }
 
-    // Get document record
-    $record = $db->table('application_documents')
-                 ->where('job_application_id', $application_id)
+    // Get document record from applicant_documents by user_id
+    $record = $db->table('applicant_documents')
+                 ->where('user_id', $current_user_id)
                  ->get()
-                 ->getRowArray();
+                 ->getResultArray();
+    
+    // Convert to format expected by view (map document_type_id to field names)
+    if ($record) {
+        $docMap = [];
+        foreach ($record as $docRecord) {
+            $docTypeId = $docRecord['document_type_id'];
+            $filename = $docRecord['filename'];
+            
+            // Map document types to field names
+            if ($docTypeId == 1) $docMap['pds'] = $filename;              // PDS
+            if ($docTypeId == 2) $docMap['performance_rating'] = $filename; // Performance Rating
+            if ($docTypeId == 4) $docMap['tor'] = $filename;              // TOR
+            if ($docTypeId == 5) $docMap['diploma'] = $filename;          // Diploma
+            if ($docTypeId == 6) $docMap['certificate'] = $filename;      // Certificate of Employment
+            if ($docTypeId == 7) $docMap['trainings'] = $filename;        // Trainings
+        }
+        $record = $docMap;
+    }
     
     log_message('debug', "Viewing document: application_id={$application_id}, doc={$doc}");
     log_message('debug', "Record data: " . print_r($record, true));
@@ -990,21 +1200,42 @@ public function viewDocument($application_id, $doc)
         ])->setStatusCode(404);
     }
 
-    // File path
+    // File path or Google Drive ID
     $file = $record[$doc];
-    $filePath = WRITEPATH . 'uploads/files/' . $file;
     
-    log_message('debug', "Checking file: {$filePath}");
-    log_message('debug', "File exists: " . (file_exists($filePath) ? 'YES' : 'NO'));
+    // Check if this is a Google Drive file ID
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $file) && !preg_match('/^\d{10}_/', $file);
+    
+    if ($isGoogleDriveFile) {
+        // File is stored in Google Drive
+        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+        
+        if ($driveService->isEnabled()) {
+            // Redirect to Google Drive public URL
+            $publicUrl = $driveService->getFileUrl($file);
+            return redirect()->to($publicUrl);
+        } else {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Google Drive service not available.'
+            ])->setStatusCode(500);
+        }
+    } else {
+        // File is stored locally (fallback for existing files)
+        $filePath = WRITEPATH . 'uploads/files/' . $file;
+        
+        log_message('debug', "Checking file: {$filePath}");
+        log_message('debug', "File exists: " . (file_exists($filePath) ? 'YES' : 'NO'));
 
-    if (!file_exists($filePath)) {
-        return $this->response->setJSON([
-            'status' => 'warning',
-            'message' => 'File does not exist on server.'
-        ])->setStatusCode(404);
+        if (!file_exists($filePath)) {
+            return $this->response->setJSON([
+                'status' => 'warning',
+                'message' => 'File does not exist on server.'
+            ])->setStatusCode(404);
+        }
+
+        // Stream the file inline
     }
-
-    // Stream the file inline
     $mime = mime_content_type($filePath) ?: 'application/octet-stream';
     return $this->response->setHeader('Content-Type', $mime)
                           ->setHeader('Content-Disposition', 'inline; filename="' . basename($file) . '"')
@@ -1127,76 +1358,10 @@ public function updateFiles()
         }
     }
     
-    // Check if directory is writable
-    if (!is_writable($uploadPath)) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Upload directory is not writable.'
-        ]);
-    }
-    
-    // Get existing documents
-    $existingDocs = $db->table('application_documents')
-        ->where('job_application_id', $application_id)
-        ->get()
-        ->getRowArray();
-    
-    $docData = [];
-    $currentDate = date('Y-m-d H:i:s');
-    $filesUpdated = false;
-    
-    // Handle file uploads
-    $fileFields = ['pds', 'performance_rating', 'resume', 'tor', 'diploma'];
-    
-    log_message('debug', 'Checking file fields: ' . print_r($fileFields, true));
-    
-    foreach ($fileFields as $field) {
-        $file = $this->request->getFile($field);
-        log_message('debug', "Field {$field}: " . ($file ? 'FILE FOUND' : 'NO FILE'));
-        
-        if ($file && $file->isValid() && !$file->hasMoved()) {
-            log_message('debug', "Processing file for {$field}: " . $file->getName());
-            // Validate PDF only
-            if ($file->getClientExtension() !== 'pdf') {
-                continue;
-            }
-            
-            // Validate max size 5MB
-            if ($file->getSize() > 5242880) {
-                continue;
-            }
-            
-            $newName = time() . '_' . $file->getRandomName();
-            $file->move($uploadPath, $newName);
-            
-            $docData[$field] = $newName;
-            $filesUpdated = true;
-        } elseif ($existingDocs && isset($existingDocs[$field])) {
-            // Keep existing file
-            $docData[$field] = $existingDocs[$field];
-        }
-    }
-    
-    // Always update timestamps
-    $docData['updated_at'] = $currentDate;
-    if ($filesUpdated) {
-        $docData['uploaded_at'] = $currentDate;
-    }
-    
-    // Update or insert
-    if ($existingDocs) {
-        $db->table('application_documents')
-           ->where('job_application_id', $application_id)
-           ->update($docData);
-    } else {
-        $docData['job_application_id'] = $application_id;
-        $docData['created_at'] = $currentDate;
-        $db->table('application_documents')->insert($docData);
-    }
-    
+    // Documents are now managed via applicant_documents (per-user) through Account controller
     return $this->response->setJSON([
-        'success' => true,
-        'message' => $filesUpdated ? 'Files updated successfully!' : 'Changes saved successfully!'
+        'success' => false,
+        'message' => 'Document management is now handled through your profile page.'
     ]);
 }
 public function getFiles($id)
@@ -1204,10 +1369,39 @@ public function getFiles($id)
     log_message('debug', 'getFiles called with ID: ' . $id);
     
     $db = \Config\Database::connect();
-    $files = $db->table('application_documents')
-        ->where('job_application_id', $id)
+    
+    // Get user_id from application
+    $application = $db->table('job_applications')
+        ->select('user_id')
+        ->where('id_job_application', $id)
         ->get()
         ->getRowArray();
+    
+    if (!$application) {
+        return $this->response->setJSON([
+            'pds' => null,
+            'performance_rating' => null,
+            'resume' => null,
+            'tor' => null,
+            'diploma' => null
+        ]);
+    }
+    
+    // Get documents from applicant_documents by user_id
+    $docs = $db->table('applicant_documents')
+        ->where('user_id', $application['user_id'])
+        ->get()
+        ->getResultArray();
+    
+    // Map to expected format
+    $files = [];
+    foreach ($docs as $doc) {
+        $docTypeId = $doc['document_type_id'];
+        if ($docTypeId == 1) $files['pds'] = $doc['filename'];
+        if ($docTypeId == 2) $files['performance_rating'] = $doc['filename'];
+        if ($docTypeId == 4) $files['tor'] = $doc['filename'];
+        if ($docTypeId == 5) $files['diploma'] = $doc['filename'];
+    }
     
     log_message('debug', 'Files found: ' . print_r($files, true));
     
@@ -1245,10 +1439,50 @@ public function viewCivilCertificate($filename = null)
     // Decode filename from URL
     $filename = urldecode($filename);
 
-    // Path to your civil service files
+    // Check if it's a Google Drive file ID
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+    
+    if ($isGoogleDriveFile) {
+        log_message('debug', 'Viewing civil service certificate from Google Drive: ' . $filename);
+        
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if ($driveService->isEnabled()) {
+                // Create temp file path
+                $tempPath = sys_get_temp_dir() . '/civil_cert_' . $filename;
+                
+                // Download file from Google Drive
+                $result = $driveService->downloadFile($filename, $tempPath);
+                
+                if ($result && file_exists($tempPath)) {
+                    $mime = mime_content_type($tempPath);
+                    
+                    return $this->response
+                        ->setHeader('Content-Type', $mime)
+                        ->setHeader('Content-Disposition', 'inline; filename="certificate.pdf"')
+                        ->setBody(file_get_contents($tempPath));
+                } else {
+                    log_message('error', 'Failed to download civil service certificate from Google Drive');
+                }
+            } else {
+                log_message('error', 'Google Drive service not enabled');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error viewing civil service certificate from Google Drive: ' . $e->getMessage());
+        }
+        
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status'  => 'warning',
+                                  'message' => 'Unable to retrieve civil service certificate.'
+                              ]);
+    }
+
+    // Local file handling
     $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
-    // If file doesn't exist, return JSON warning
+    // If file doesn't exist locally, return JSON warning
     if (!file_exists($filePath)) {
         return $this->response->setStatusCode(404)
                               ->setJSON([
@@ -1270,6 +1504,73 @@ public function viewCivilCertificate($filename = null)
 
 public function viewTrainingCertificate($id, $filename)
 {
+    // Check if it's a combined PDF file (generated by TrainingCertificateCombiner)
+    $isCombinedPdf = strpos($filename, 'combined_training_') === 0;
+    
+    if ($isCombinedPdf) {
+        log_message('debug', 'Viewing combined training certificate PDF: ' . $filename);
+        
+        // Local combined PDF file handling
+        $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
+        
+        if (!file_exists($filePath)) {
+            return $this->response
+                ->setStatusCode(404)
+                ->setJSON([
+                    'status'  => 'warning',
+                    'message' => 'Combined training certificate not found.'
+                ]);
+        }
+        
+        $mime = mime_content_type($filePath) ?: 'application/pdf';
+        
+        return $this->response
+            ->setHeader('Content-Type', $mime)
+            ->setHeader('Content-Disposition', 'inline; filename="combined_training_certificates.pdf"')
+            ->setBody(file_get_contents($filePath));
+    }
+    
+    // Check if it's a Google Drive file ID
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+    
+    if ($isGoogleDriveFile) {
+        log_message('debug', 'Viewing training certificate from Google Drive: ' . $filename);
+        
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if ($driveService->isEnabled()) {
+                // Create temp file path
+                $tempPath = sys_get_temp_dir() . '/training_cert_' . $filename;
+                
+                // Download file from Google Drive
+                $result = $driveService->downloadFile($filename, $tempPath);
+                
+                if ($result && file_exists($tempPath)) {
+                    $mime = mime_content_type($tempPath);
+                    
+                    return $this->response
+                        ->setHeader('Content-Type', $mime)
+                        ->setHeader('Content-Disposition', 'inline; filename="training_certificate.pdf"')
+                        ->setBody(file_get_contents($tempPath));
+                } else {
+                    log_message('error', 'Failed to download training certificate from Google Drive');
+                }
+            } else {
+                log_message('error', 'Google Drive service not enabled');
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Error viewing training certificate from Google Drive: ' . $e->getMessage());
+        }
+        
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status'  => 'warning',
+                                  'message' => 'Unable to retrieve training certificate.'
+                              ]);
+    }
+
+    // Local file handling
     $filename = basename($filename);
     $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
 
@@ -1288,5 +1589,48 @@ public function viewTrainingCertificate($id, $filename)
         ->setBody(file_get_contents($filePath));
 }
 
+private function get_monthly_salary($job_vacancy_id)
+{
+    $db = \Config\Database::connect();
+    
+    // First get the plantilla_item_id from the job_vacancies table
+    $vacancy = $db->table('job_vacancies')
+                ->select('plantilla_item_id')
+                ->where('id_vacancy', $job_vacancy_id)
+                ->get()
+                ->getRowArray();
+    
+    if (!$vacancy || !$vacancy['plantilla_item_id']) {
+        return null;
+    }
+    
+    $plantilla_item_id = $vacancy['plantilla_item_id'];
+    
+    // ✅ Use hrmis-template database explicitly
+    $schedule = $db->query("SELECT *
+        FROM `hrmis-template`.lib_salary_schedules
+        WHERE schedule_forpermanent = 1
+        AND schedule_effectivity <= CURDATE()
+        ORDER BY schedule_effectivity DESC
+        LIMIT 1")->getRow();
+
+    if (!$schedule) return null;
+
+    $item = $db->query("SELECT pi.id_plantilla_item, lp.salary_grade
+        FROM `hrmis-template`.plantilla_items pi
+        LEFT JOIN `hrmis-template`.lib_positions lp 
+            ON pi.position_id = lp.id_position
+        WHERE pi.id_plantilla_item = ?", [$plantilla_item_id])->getRow();
+
+    if (!$item || !$item->salary_grade) return null;
+
+    $salary = $db->query("SELECT sg_sin1
+        FROM `hrmis-template`.lib_salaries
+        WHERE salary_grade = ?
+        AND salary_schedule_id = ?
+        LIMIT 1", [$item->salary_grade, $schedule->id_salary_schedule])->getRow();
+
+    return $salary ? $salary->sg_sin1 : null;
+}
 
 }
