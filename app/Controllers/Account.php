@@ -86,17 +86,16 @@ public function personal()
         
         if ($isGoogleDriveFile) {
             log_message('debug', 'Photo found in Google Drive: ' . $profile['photo']);
+            $fileId = $profile['photo'];
             
+            // Try 1: OAuth method (primary)
             try {
                 $driveService = new \App\Libraries\GoogleDriveOAuthService();
                 
                 if ($driveService->isAuthenticated()) {
-                    // Get photo file URL from Google Drive
                     $client = $driveService->getClient();
                     $accessToken = $client->getAccessToken()['access_token'];
                     
-                    // Get file metadata to verify it exists and get download URL
-                    $fileId = $profile['photo'];
                     $ch = curl_init();
                     curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?fields=id,name,mimeType,webContentLink&supportsAllDrives=true');
                     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -112,16 +111,53 @@ public function personal()
                     if ($httpCode == 200) {
                         $fileData = json_decode($response, true);
                         if (isset($fileData['id'])) {
-                            // Use direct download URL with access token
                             $photoUrl = 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?alt=media';
                             $hasGoogleDrivePhoto = true;
-                            log_message('info', 'Successfully retrieved Google Drive photo for user ' . $userId);
+                            log_message('info', 'Successfully retrieved Google Drive photo (OAuth) for user ' . $userId);
                         }
                     }
                 }
             } catch (\Exception $e) {
-                log_message('error', 'Error fetching Google Drive photo: ' . $e->getMessage());
-                // Fallback to local file handling will occur naturally
+                log_message('warning', 'OAuth photo retrieval failed: ' . $e->getMessage());
+            }
+            
+            // Try 2: Service account fallback if OAuth fails
+            if (!$hasGoogleDrivePhoto) {
+                try {
+                    $serviceAccountPath = WRITEPATH . 'credentials/google_credentials.json';
+                    if (file_exists($serviceAccountPath)) {
+                        $client = new \Google\Client();
+                        $client->setAuthConfig($serviceAccountPath);
+                        $client->addScope([\Google\Service\Drive::DRIVE]);
+                        
+                        $accessToken = $client->fetchAccessTokenWithAssertion();
+                        
+                        if (isset($accessToken['access_token'])) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?fields=id,name,mimeType&supportsAllDrives=true');
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                'Authorization: Bearer ' . $accessToken['access_token']
+                            ]);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            
+                            $response = curl_exec($ch);
+                            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+                            
+                            if ($httpCode == 200) {
+                                $fileData = json_decode($response, true);
+                                if (isset($fileData['id'])) {
+                                    $photoUrl = 'https://www.googleapis.com/drive/v3/files/' . $fileId . '?alt=media';
+                                    $hasGoogleDrivePhoto = true;
+                                    log_message('info', 'Successfully retrieved Google Drive photo (Service Account) for user ' . $userId);
+                                }
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Service account photo retrieval failed: ' . $e->getMessage());
+                }
             }
         }
     }
@@ -500,8 +536,8 @@ public function update()
         $responseData['redirect_url'] = base_url('/dashboard');
         $responseData['message'] = 'Successful. Personal Information completed!';
     } else {
-        // If no pending redirect, redirect to home page
-        $responseData['redirect_url'] = base_url('/');
+        // If no pending redirect, redirect to dashboard (not home) so user can see full system
+        $responseData['redirect_url'] = base_url('/dashboard');
     }
     
     return $this->response->setJSON($responseData);
@@ -532,101 +568,115 @@ public function updatePhoto()
         ]);
     }
 
+    // Upload to Google Drive using service account - NO LOCAL FALLBACK
+    $driveService = new \App\Libraries\GoogleDriveOAuthService();
+    
+    if (!$driveService->isAuthenticated()) {
+        log_message('warning', 'Google Drive not authenticated for photo upload, user ID: ' . $userId);
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Google Drive authentication required. Please connect your Google Drive account first.',
+            'auth_required' => true,
+            'auth_url' => site_url('google/drive')
+        ])->setStatusCode(401);
+    }
+    
     try {
-        // Upload to Google Drive using service account
-        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+        log_message('info', 'Uploading profile photo to Google Drive for user ' . $userId);
         
-        if ($driveService->isAuthenticated()) {
-            log_message('info', 'Uploading profile photo to Google Drive for user ' . $userId);
-            
-            // Get file content
-            $filePath = $photoFile->getTempName();
-            // Use consistent naming: {timestamp}_profile_photo.{ext}
-            $extension = $photoFile->getClientExtension();
-            $fileName = time() . '_profile_photo.' . $extension;
-            
-            // Upload to Google Drive
-            $googleFileId = $driveService->uploadFile($filePath, $fileName, $photoFile->getMimeType());
-            
-            // Make the photo publicly accessible
-            try {
-                $client = $driveService->getClient();
-                $accessToken = $client->getAccessToken()['access_token'];
-                
-                $ch = curl_init();
-                curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '/permissions?supportsAllDrives=true');
-                curl_setopt($ch, CURLOPT_POST, true);
-                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
-                    'type' => 'anyone',
-                    'role' => 'reader'
-                ]));
-                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-                curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                    'Authorization: Bearer ' . $accessToken,
-                    'Content-Type: ' => 'application/json'
-                ]);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-                
-                $response = curl_exec($ch);
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                curl_close($ch);
-                
-                if ($httpCode == 200) {
-                    log_message('info', 'Photo permissions set to public');
-                }
-            } catch (\Exception $e) {
-                log_message('warning', 'Could not set photo permissions: ' . $e->getMessage());
-            }
-            
-            // Update database with Google Drive file ID
-            $profile = $applicantModel->where('user_id', $userId)->first();
-            if ($profile) {
-                $applicantModel->update($profile['id'], ['photo' => $googleFileId]);
-            } else {
-                $applicantModel->insert([
-                    'user_id' => $userId,
-                    'photo' => $googleFileId
-                ]);
-            }
-            
-            log_message('info', 'Profile photo uploaded to Google Drive successfully. File ID: ' . $googleFileId);
-            
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Profile photo uploaded to Google Drive successfully!',
-                'photo'   => $googleFileId,
-                'photo_url' => 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '?alt=media'
-            ]);
-        } else {
-            throw new \Exception('Google Drive service not authenticated');
-        }
-    } catch (\Exception $e) {
-        log_message('error', 'Error uploading photo to Google Drive: ' . $e->getMessage());
+        // Get existing photo before uploading new one
+        $existingProfile = $applicantModel->where('user_id', $userId)->first();
+        $oldPhotoFileId = $existingProfile['photo'] ?? null;
         
-        // Fallback to local upload if Google Drive fails
-        log_message('warning', 'Falling back to local photo upload');
-        
+        // Get file content
+        $filePath = $photoFile->getTempName();
         // Use consistent naming: {timestamp}_profile_photo.{ext}
         $extension = $photoFile->getClientExtension();
-        $photoName = time() . '_profile_photo.' . $extension;
-        $photoFile->move(FCPATH . 'uploads', $photoName);
-
-        // Update only the photo column
-        $profile = $applicantModel->where('user_id', $userId)->first();
-        if ($profile) {
-            $applicantModel->update($profile['id'], ['photo' => $photoName]);
+        $fileName = time() . '_profile_photo.' . $extension;
+        
+        // Upload to Google Drive
+        $googleFileId = $driveService->uploadFile($filePath, $fileName, $photoFile->getMimeType());
+        
+        // Make the photo publicly accessible
+        try {
+            $client = $driveService->getClient();
+            $accessToken = $client->getAccessToken()['access_token'];
+            
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '/permissions?supportsAllDrives=true');
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+                'type' => 'anyone',
+                'role' => 'reader'
+            ]));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $accessToken,
+                'Content-Type: application/json'
+            ]);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            if ($httpCode == 200) {
+                log_message('info', 'Photo permissions set to public');
+            }
+        } catch (\Exception $e) {
+            log_message('warning', 'Could not set photo permissions: ' . $e->getMessage());
+        }
+        
+        // Delete old photo from Google Drive if exists
+        if (!empty($oldPhotoFileId)) {
+            // Check if it's a Google Drive file ID
+            $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $oldPhotoFileId) 
+                                 && !preg_match('/^\d{10}_/', $oldPhotoFileId);
+            
+            if ($isGoogleDriveFile) {
+                try {
+                    $driveService->deleteFile($oldPhotoFileId);
+                    log_message('info', 'Old profile photo deleted from Google Drive: ' . $oldPhotoFileId);
+                } catch (\Exception $e) {
+                    log_message('warning', 'Could not delete old photo from Google Drive: ' . $e->getMessage());
+                }
+            } else {
+                // Delete local file (legacy support)
+                $localPath = WRITEPATH . 'uploads/' . $oldPhotoFileId;
+                if (file_exists($localPath)) {
+                    unlink($localPath);
+                    log_message('info', 'Old profile photo deleted from local storage: ' . $oldPhotoFileId);
+                }
+            }
+        }
+        
+        // Update database with Google Drive file ID
+        if ($existingProfile) {
+            $applicantModel->update($existingProfile['id'], ['photo' => $googleFileId]);
         } else {
             $applicantModel->insert([
                 'user_id' => $userId,
-                'photo' => $photoName
+                'photo' => $googleFileId
             ]);
         }
-
+        
+        log_message('info', 'Profile photo uploaded to Google Drive successfully. File ID: ' . $googleFileId);
+        
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Profile photo saved locally.',
-            'photo'   => $photoName
+            'message' => 'Profile photo uploaded to Google Drive successfully!',
+            'photo'   => $googleFileId,
+            'photo_url' => 'https://www.googleapis.com/drive/v3/files/' . $googleFileId . '?alt=media'
         ]);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Error uploading photo to Google Drive: ' . $e->getMessage());
+        log_message('debug', 'Exception trace: ' . $e->getTraceAsString());
+        
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to upload photo to Google Drive: ' . $e->getMessage()
+        ])->setStatusCode(500);
     }
 }
 
@@ -700,14 +750,23 @@ public function updatePhoto()
         // Send email notification
         $this->sendPasswordChangeEmail($user['email'], $user['first_name']);
 
+        // Check if this was a first-login password change (from Auth controller)
+        $profileCompletionRequired = $session->get('profile_completion_required');
+        
         // Check if there's a redirect URL stored (from first login flow)
         $redirectAfterPasswordChange = $session->get('redirect_after_password_change');
         
-        if ($redirectAfterPasswordChange) {
-            // Clear the session variable and redirect to profile to fill details first
-            $session->remove('redirect_after_password_change');
-            // Store the redirect URL for later use after profile completion
-            $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
+        if ($profileCompletionRequired || $redirectAfterPasswordChange) {
+            // Clear session flags
+            if ($profileCompletionRequired) {
+                $session->remove('profile_completion_required');
+            }
+            if ($redirectAfterPasswordChange) {
+                // Clear the session variable and redirect to profile to fill details first
+                $session->remove('redirect_after_password_change');
+                // Store the redirect URL for later use after profile completion
+                $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
+            }
             return redirect()->to('/account/personal')->with('fill_details_required', true);
         }
 
@@ -1046,15 +1105,57 @@ if ($certificateFile && $certificateFile->isValid() && !$certificateFile->hasMov
         ]);
     }
 
-    // ✅ Use consistent naming: {timestamp}_{original_name}
-    $extension = $certificateFile->getClientExtension();
-    $baseName = pathinfo($certificateFile->getClientName(), PATHINFO_FILENAME);
-    // Sanitize filename: remove special characters but keep underscores
-    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-    $certificateName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+    // Upload to Google Drive ONLY (no local storage)
+    $driveService = new \App\Libraries\GoogleDriveOAuthService();
+    
+    if (!$driveService->isAuthenticated()) {
+        log_message('warning', 'Google Drive not authenticated for user ID: ' . $userId);
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Google Drive authentication required. Please connect your Google Drive account first.',
+            'auth_required' => true,
+            'auth_url' => site_url('google/drive')
+        ])->setStatusCode(401);
+    }
 
-    // ✅ Move file safely
-    $certificateFile->move(WRITEPATH . 'uploads/civil_service', $certificateName);
+    try {
+        // Create temporary file
+        $tempDir = WRITEPATH . 'temp/';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        
+        // Use consistent naming: {timestamp}_{original_name}
+        $extension = $certificateFile->getClientExtension();
+        $baseName = pathinfo($certificateFile->getClientName(), PATHINFO_FILENAME);
+        // Sanitize filename: remove special characters but keep underscores
+        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+        
+        $tempPath = $tempDir . $googleDriveFileName;
+        $fileContent = file_get_contents($certificateFile->getTempName());
+        file_put_contents($tempPath, $fileContent);
+        
+        log_message('debug', 'Uploading civil service certificate to Google Drive: ' . $googleDriveFileName);
+        
+        // Upload to Google Drive
+        $googleFileId = $driveService->uploadFile($tempPath, $googleDriveFileName, $certificateFile->getMimeType());
+        
+        // Clean up temp file
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+        
+        $certificateName = $googleFileId;
+        log_message('info', 'Civil service certificate uploaded to Google Drive. File ID: ' . $googleFileId);
+        
+    } catch (\Exception $e) {
+        log_message('error', 'Civil service certificate upload failed: ' . $e->getMessage());
+        return $this->response->setJSON([
+            'success' => false,
+            'message' => 'Failed to upload certificate to Google Drive: ' . $e->getMessage()
+        ])->setStatusCode(500);
+    }
 }
 
 
@@ -1141,10 +1242,31 @@ public function deleteCivilService($id = null)
         if ($certificateFile) {
             $fileModel->deleteDocument($userId, 3); // document_type_id = 3 for Certificate of Eligibility
             
-            // Delete physical file
-            $filePath = WRITEPATH . 'uploads/civil_service/' . $certificateFile;
-            if (file_exists($filePath)) {
-                unlink($filePath);
+            // Check if it's a Google Drive file ID
+            $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) 
+                                 && !preg_match('/^\d{10}_/', $certificateFile);
+            
+            if ($isGoogleDriveFile) {
+                // Delete from Google Drive
+                try {
+                    $driveService = new \App\Libraries\GoogleDriveOAuthService();
+                    
+                    if ($driveService->isAuthenticated()) {
+                        $driveService->deleteFile($certificateFile);
+                        log_message('info', 'Civil service certificate deleted from Google Drive: ' . $certificateFile);
+                    } else {
+                        log_message('warning', 'Google Drive not authenticated, could not delete file: ' . $certificateFile);
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Failed to delete civil service certificate from Google Drive: ' . $e->getMessage());
+                }
+            } else {
+                // Delete local file (legacy support)
+                $filePath = WRITEPATH . 'uploads/civil_service/' . $certificateFile;
+                if (file_exists($filePath)) {
+                    unlink($filePath);
+                    log_message('info', 'Civil service certificate deleted from local storage: ' . $certificateFile);
+                }
             }
         }
         
@@ -1172,23 +1294,65 @@ public function viewCivilCertificate($filename = null)
     }
 
     $filename = urldecode($filename);
-    $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
+        
+    // Check if it's a Google Drive file ID
+    $isGoogleDrive = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+        
+    if ($isGoogleDrive) {
+        // File is stored in Google Drive - download and serve it
+        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+        if ($driveService->isEnabled()) {
+            try {
+                // Create temp file
+                $tempFile = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+                    
+                // Download from Google Drive
+                $driveService->downloadFile($filename, $tempFile);
+                    
+                if (file_exists($tempFile)) {
+                    // Serve the file with proper headers for PDF viewer toolbar
+                    return $this->response
+                                ->setHeader('Content-Type', 'application/pdf')
+                                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '.pdf"')
+                                ->setHeader('Accept-Ranges', 'bytes')
+                                ->setBody(file_get_contents($tempFile));
+                } else {
+                    throw new \Exception('Download failed');
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Google Drive civil service certificate serve error: ' . $e->getMessage());
+                    
+                // Fallback: redirect to Google Drive preview URL
+                $previewUrl = "https://drive.google.com/file/d/{$filename}/preview";
+                return redirect()->to($previewUrl);
+            }
+        } else {
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Google Drive service not available.'
+            ])->setStatusCode(500);
+        }
+    } else {
+        // File is stored locally
+        $filePath = WRITEPATH . 'uploads/civil_service/' . $filename;
 
-    // File does not exist
-    if (!file_exists($filePath)) {
-        return $this->response->setStatusCode(404)
-                              ->setJSON([
-                                  'status' => 'warning',
-                                  'message' => 'No civil service certificate has been uploaded for this record.'
-                              ]);
+        // File does not exist
+        if (!file_exists($filePath)) {
+            return $this->response->setStatusCode(404)
+                                  ->setJSON([
+                                      'status' => 'warning',
+                                      'message' => 'No civil service certificate has been uploaded for this record.'
+                                  ]);
+        }
+
+        // File exists → stream PDF inline with proper headers for toolbar
+        return $this->response
+                    ->setHeader('Content-Type', 'application/pdf')
+                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                    ->setHeader('Accept-Ranges', 'bytes')
+                    ->setBody(file_get_contents($filePath));
     }
-
-    // File exists → stream PDF inline
-    return $this->response
-                ->setHeader('Content-Type', 'application/pdf')
-                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                ->setHeader('Accept-Ranges', 'bytes')
-                ->setBody(file_get_contents($filePath));
 }
 
 public function viewEligibilityCertificates()
@@ -1292,7 +1456,10 @@ public function trainings()
 
 public function viewTrainingCertificate($filename = null)
 {
+    log_message('debug', 'viewTrainingCertificate called with filename: ' . var_export($filename, true));
+    
     if (!$filename) {
+        log_message('warning', 'No filename provided to viewTrainingCertificate');
         return $this->response->setStatusCode(404)
                               ->setJSON([
                                   'status' => 'warning',
@@ -1301,21 +1468,93 @@ public function viewTrainingCertificate($filename = null)
     }
 
     $filename = urldecode($filename);
-    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
+    log_message('debug', 'Decoded filename: ' . $filename);
+    
+    // Check if the filename is a Google Drive file ID (typically 28-33 characters long)
+    // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+    
+    log_message('debug', 'Is Google Drive file: ' . ($isGoogleDriveFile ? 'YES' : 'NO'));
+    
+    if ($isGoogleDriveFile) {
+        log_message('debug', 'Attempting to view training certificate from Google Drive: ' . $filename);
+        
+        // Handle Google Drive file
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            log_message('debug', 'Google Drive service initialized, attempting download...');
+            
+            // Download file content from Google Drive
+            $tempPath = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+            
+            try {
+                $downloadResult = $driveService->downloadFile($filename, $tempPath);
+                
+                if ($downloadResult && file_exists($tempPath)) {
+                    $content = file_get_contents($tempPath);
+                    unlink($tempPath); // Clean up temp file
+                    
+                    log_message('info', 'Successfully downloaded training certificate from Google Drive: ' . $filename);
+                    
+                    return $this->response
+                        ->setHeader('Content-Type', 'application/pdf')
+                        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'.pdf"')
+                        ->setHeader('Accept-Ranges', 'bytes')
+                        ->setBody($content);
+                } else {
+                    log_message('error', 'Failed to download training certificate from Google Drive: ' . $filename);
+                    throw new \Exception('Failed to download file from Google Drive');
+                }
+            } catch (\Exception $e) {
+                log_message('error', 'Google Drive download error: ' . $e->getMessage());
+                log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'Failed to download certificate: ' . $e->getMessage()
+                ])->setStatusCode(500);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Google Drive service initialization error: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Google Drive service error: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
+    } else {
+        // Handle local file (fallback for existing files)
+        $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
+        
+        // Also check other possible paths
+        if (!file_exists($filePath)) {
+            $possiblePaths = [
+                WRITEPATH . 'uploads/trainings/' . $filename,
+                WRITEPATH . 'uploads/' . $filename,
+                FCPATH . 'uploads/' . $filename
+            ];
+            
+            foreach ($possiblePaths as $possiblePath) {
+                if (file_exists($possiblePath)) {
+                    $filePath = $possiblePath;
+                    break;
+                }
+            }
+        }
 
-    if (!file_exists($filePath)) {
-        return $this->response->setStatusCode(404)
-                              ->setJSON([
-                                  'status' => 'warning',
-                                  'message' => 'No training certificate has been uploaded for this record.'
-                              ]);
+        if (!file_exists($filePath)) {
+            return $this->response->setStatusCode(404)
+                                  ->setJSON([
+                                      'status' => 'warning',
+                                      'message' => 'No training certificate has been uploaded for this record.'
+                                  ]);
+        }
+
+        return $this->response
+                    ->setHeader('Content-Type', mime_content_type($filePath))
+                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                    ->setHeader('Accept-Ranges', 'bytes')
+                    ->setBody(file_get_contents($filePath));
     }
-
-    return $this->response
-                ->setHeader('Content-Type', mime_content_type($filePath))
-                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                ->setHeader('Accept-Ranges', 'bytes')
-                ->setBody(file_get_contents($filePath));
 }
 
 public function viewTrainingCertificates()
@@ -1400,6 +1639,7 @@ public function viewTrainingCertificates()
 
 /**
  * View combined training certificates for document type 7
+ * Downloads PDFs from Google Drive and combines them using FPDI
  */
 public function viewCombinedTrainingCertificates()
 {
@@ -1438,64 +1678,69 @@ public function viewCombinedTrainingCertificates()
             ->setBody($pdf->Output('S'));
     }
 
-    // Create combined PDF using FPDI
-    $pdf = new \setasign\Fpdi\Fpdi();
-    $hasValidCertificates = false;
-    $pageNumber = 0;
-
-    foreach ($certificates as $index => $cert) {
-        $filePath = WRITEPATH . 'uploads/trainings/' . $cert['certificate_file'];
-
-        if (file_exists($filePath) && is_readable($filePath)) {
-            try {
-                $pageCount = $pdf->setSourceFile($filePath);
-                
-                if ($pageCount > 0) {
-                    $hasValidCertificates = true;
-                    
-                    // Add separator page before each certificate (except first)
-                    if ($index > 0) {
-                        $pdf->AddPage();
-                        $pdf->SetFont('Arial', 'B', 14);
-                        $pdf->Cell(0, 10, '--- Certificate ' . ($index + 1) . ' ---', 0, 1, 'C');
-                        $pdf->Ln(5);
-                        $pdf->SetFont('Arial', '', 11);
-                        $pdf->MultiCell(0, 6, 'Training: ' . ($cert['training_name'] ?? 'N/A'), 0, 'L');
-                        $pdf->MultiCell(0, 6, 'Date: ' . (!empty($cert['date_from']) ? date('M j, Y', strtotime($cert['date_from'])) : 'N/A'), 0, 'L');
-                        $pdf->Ln(10);
-                    }
-                    
-                    for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                        $templateId = $pdf->importPage($pageNo);
-                        $size = $pdf->getTemplateSize($templateId);
-                        
-                        if ($index > 0 || $pageNo > 1) {
-                            $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
-                        }
-                        $pdf->useTemplate($templateId);
-                    }
+    // Use TrainingCertificateCombiner library to combine certificates
+    require_once APPPATH . 'Libraries/TrainingCertificateCombiner.php';
+    $combiner = new \App\Libraries\TrainingCertificateCombiner();
+    
+    // Generate unique filename based on user ID and timestamp
+    $outputFilename = 'combined_training_user_' . $userId . '_' . time() . '.pdf';
+    
+    // Before combining, download Google Drive files to local storage temporarily
+    $googleDriveService = new \App\Libraries\GoogleDriveOAuthService();
+    
+    foreach ($certificates as &$cert) {
+        $certificateFile = $cert['certificate_file'];
+        
+        // Check if it's a Google Drive file ID
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) && !preg_match('/^\d{10}_/', $certificateFile);
+        
+        if ($isGoogleDriveFile) {
+            log_message('debug', 'Downloading Google Drive file: ' . $certificateFile);
+            
+            // Download from Google Drive to local temp storage
+            $localFilePath = WRITEPATH . 'uploads/trainings/' . $certificateFile . '.pdf';
+            
+            if (!file_exists($localFilePath)) {
+                try {
+                    $googleDriveService->downloadFile($certificateFile, $localFilePath);
+                    log_message('debug', 'Downloaded to: ' . $localFilePath);
+                } catch (\Exception $e) {
+                    log_message('error', 'Failed to download Google Drive file: ' . $certificateFile . ' - ' . $e->getMessage());
                 }
-            } catch (\Exception $e) {
-                log_message('error', 'Error importing certificate: ' . $cert['certificate_file'] . ' - ' . $e->getMessage());
-                continue;
             }
+            
+            // Update certificate_file path to local file for combiner
+            $cert['certificate_file'] = $certificateFile . '.pdf';
         }
     }
-
-    // If no valid certificates were found, return empty PDF
-    if (!$hasValidCertificates) {
-        $pdf = new \setasign\Fpdi\Fpdi();
-        $pdf->AddPage();
-        $pdf->SetFont('Arial', 'B', 16);
-        $pdf->Cell(0, 10, 'No Valid Training Certificates', 0, 1, 'C');
-        $pdf->SetFont('Arial', '', 12);
-        $pdf->Ln(10);
-        $pdf->MultiCell(0, 10, 'None of the uploaded certificate files are valid PDF documents.', 0, 'C');
+    
+    // Combine all certificates into one PDF
+    $result = $combiner->combineCertificates($certificates, $outputFilename);
+    
+    if ($result) {
+        // Serve the combined PDF
+        $filePath = WRITEPATH . 'uploads/trainings/' . $result;
+        
+        if (file_exists($filePath)) {
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'inline; filename="All_Training_Certificates.pdf"')
+                ->setBody(file_get_contents($filePath));
+        }
     }
-
+    
+    // If combination failed, return error PDF
+    $pdf = new \setasign\Fpdi\Fpdi();
+    $pdf->AddPage();
+    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Cell(0, 10, 'Error Combining Certificates', 0, 1, 'C');
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Ln(10);
+    $pdf->MultiCell(0, 10, 'Unable to combine your training certificates. Please try again or contact support.', 0, 'C');
+    
     return $this->response
         ->setHeader('Content-Type', 'application/pdf')
-        ->setHeader('Content-Disposition', 'inline; filename="All_Training_Certificates.pdf"')
+        ->setHeader('Content-Disposition', 'inline; filename="Error_Combining_Certificates.pdf"')
         ->setBody($pdf->Output('S'));
 }
 
@@ -1579,49 +1824,88 @@ public function addApplicantTraining()
 
     $file = $this->request->getFile('training_certificate_file');
 
-    // Ensure 'uploads/trainings' folder exists
-    $uploadPath = FCPATH . 'writable/uploads/trainings/';
-    if (!is_dir($uploadPath)) {
-        mkdir($uploadPath, 0777, true);
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+
+        // 🔒 MIME type validation
+        if (!in_array($file->getMimeType(), [
+            'application/pdf',
+            'application/x-pdf'
+        ])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Only PDF files are allowed.'
+            ]);
+        }
+
+        // 🔒 Extension validation
+        if (strtolower($file->getExtension()) !== 'pdf') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid file format. PDF only.'
+            ]);
+        }
+
+        // 🔒 Size limit (5MB)
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File must not exceed 5MB.'
+            ]);
+        }
+
+        // Upload to Google Drive ONLY (no local storage)
+        try {
+            // Initialize Google Drive service
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if (!$driveService->isAuthenticated()) {
+                log_message('warning', 'Google Drive not authenticated for user ID: ' . $userId);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Google Drive authentication required. Please connect your Google Drive account first.',
+                    'auth_required' => true,
+                    'auth_url' => site_url('google/drive')
+                ])->setStatusCode(401);
+            }
+
+            // Create temporary file
+            $tempDir = WRITEPATH . 'temp/';
+            if (!is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            
+            // Use consistent naming: {timestamp}_{original_name}
+            $extension = $file->getClientExtension();
+            $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+            // Sanitize filename: remove special characters but keep underscores
+            $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+            $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+            
+            $tempPath = $tempDir . $googleDriveFileName;
+            $fileContent = file_get_contents($file->getTempName());
+            file_put_contents($tempPath, $fileContent);
+            
+            log_message('debug', 'Uploading training certificate to Google Drive: ' . $googleDriveFileName);
+            
+            // Upload to Google Drive
+            $googleFileId = $driveService->uploadFile($tempPath, $googleDriveFileName, $file->getMimeType());
+            
+            // Clean up temp file
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+            
+            $fileName = $googleFileId;
+            log_message('info', 'Training certificate uploaded to Google Drive. File ID: ' . $googleFileId);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Training certificate upload failed: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to upload certificate to Google Drive: ' . $e->getMessage()
+            ])->setStatusCode(500);
+        }
     }
-
-if ($file && $file->isValid() && !$file->hasMoved()) {
-
-    // 🔒 MIME type validation
-    if (!in_array($file->getMimeType(), [
-        'application/pdf',
-        'application/x-pdf'
-    ])) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Only PDF files are allowed.'
-        ]);
-    }
-
-    // 🔒 Extension validation
-    if (strtolower($file->getExtension()) !== 'pdf') {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid file format. PDF only.'
-        ]);
-    }
-
-    // 🔒 Size limit (5MB)
-    if ($file->getSize() > 5 * 1024 * 1024) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'File must not exceed 5MB.'
-        ]);
-    }
-
-    // Use consistent naming: {timestamp}_{original_name}
-    $extension = $file->getClientExtension();
-    $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
-    // Sanitize filename: remove special characters but keep underscores
-    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-    $fileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
-    $file->move($uploadPath, $fileName);
-}
 
 
     $data = [
@@ -1677,58 +1961,94 @@ public function updateTraining()
         return $this->response->setJSON(['success'=>false,'message'=>'Training not found.']);
     }
 
-    // Handle file upload
+    // Handle file upload - Upload to Google Drive ONLY (no local storage)
     $fileName = $training['certificate_file'];
     $file = $this->request->getFile('training_certificate_file');
 
-    // Ensure 'uploads/trainings' folder exists
-    $uploadPath = FCPATH . 'writable/uploads/trainings/';
-    if (!is_dir($uploadPath)) {
-        mkdir($uploadPath, 0777, true);
-    }
+    if ($file && $file->isValid() && !$file->hasMoved()) {
+        if (!in_array($file->getMimeType(), [
+            'application/pdf',
+            'application/x-pdf'
+        ])) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Only PDF files are allowed.'
+            ]);
+        }
 
-if ($file && $file->isValid() && !$file->hasMoved()) {
+        if (strtolower($file->getExtension()) !== 'pdf') {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Invalid file format. PDF only.'
+            ]);
+        }
 
-    if (!in_array($file->getMimeType(), [
-        'application/pdf',
-        'application/x-pdf'
-    ])) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Only PDF files are allowed.'
-        ]);
-    }
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'File must not exceed 5MB.'
+            ]);
+        }
 
-    if (strtolower($file->getExtension()) !== 'pdf') {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'Invalid file format. PDF only.'
-        ]);
-    }
+        // Initialize Google Drive service
+        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+        
+        if (!$driveService->isAuthenticated()) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Google Drive service not authenticated. Please contact administrator.'
+            ])->setStatusCode(503);
+        }
 
-    if ($file->getSize() > 5 * 1024 * 1024) {
-        return $this->response->setJSON([
-            'success' => false,
-            'message' => 'File must not exceed 5MB.'
-        ]);
-    }
-
-    // 🔥 Delete old file if exists
-    if (!empty($training['certificate_file'])) {
-        $oldPath = $uploadPath . $training['certificate_file'];
-        if (file_exists($oldPath)) {
-            unlink($oldPath);
+        try {
+            // Create temporary file
+            $tempDir = WRITEPATH . 'temp/';
+            if (!is_dir($tempDir)) {
+                mkdir($tempDir, 0755, true);
+            }
+            
+            // Use consistent naming: {timestamp}_{original_name}
+            $extension = $file->getClientExtension();
+            $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+            $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+            $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+            
+            $tempPath = $tempDir . $googleDriveFileName;
+            $fileContent = file_get_contents($file->getTempName());
+            file_put_contents($tempPath, $fileContent);
+            
+            log_message('debug', 'Uploading training certificate to Google Drive: ' . $googleDriveFileName);
+            
+            // Upload to Google Drive
+            $googleFileId = $driveService->uploadFile($tempPath, $googleDriveFileName, $file->getMimeType());
+            
+            // Clean up temp file
+            if (file_exists($tempPath)) {
+                unlink($tempPath);
+            }
+            
+            // Delete old file from Google Drive if exists
+            if (!empty($training['certificate_file'])) {
+                try {
+                    $driveService->deleteFile($training['certificate_file']);
+                    log_message('info', 'Old training certificate deleted from Google Drive');
+                } catch (\Exception $e) {
+                    log_message('warning', 'Could not delete old file: ' . $e->getMessage());
+                }
+            }
+            
+            $fileName = $googleFileId;
+            log_message('info', 'Training certificate uploaded to Google Drive. File ID: ' . $googleFileId);
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Training certificate upload failed: ' . $e->getMessage());
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Failed to upload certificate to Google Drive: ' . $e->getMessage()
+            ])->setStatusCode(500);
         }
     }
-
-    // Use consistent naming: {timestamp}_{original_name}
-    $extension = $file->getClientExtension();
-    $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
-    // Sanitize filename: remove special characters but keep underscores
-    $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-    $fileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
-    $file->move($uploadPath, $fileName);
-}
+    
     // Update data
     $data = [
         'training_name' => $this->request->getPost('training_name'),
@@ -1771,10 +2091,32 @@ if ($file && $file->isValid() && !$file->hasMoved()) {
             if ($certificateFile) {
                 $fileModel->deleteDocument($userId, 7); // document_type_id = 7 for Certificate of Trainings and Seminars
                 
-                // Delete physical file
-                $filePath = WRITEPATH . 'uploads/trainings/' . $certificateFile;
-                if (file_exists($filePath)) {
-                    unlink($filePath);
+                // Check if it's a Google Drive file ID
+                $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) 
+                                     && !preg_match('/^\d{10}_/', $certificateFile);
+                
+                if ($isGoogleDriveFile) {
+                    // Delete from Google Drive
+                    try {
+                        $driveService = new \App\Libraries\GoogleDriveOAuthService();
+                        
+                        if ($driveService->isAuthenticated()) {
+                            $driveService->deleteFile($certificateFile);
+                            log_message('info', 'Training certificate deleted from Google Drive: ' . $certificateFile);
+                        } else {
+                            log_message('warning', 'Google Drive not authenticated, could not delete file: ' . $certificateFile);
+                        }
+                    } catch (\Exception $e) {
+                        log_message('error', 'Failed to delete training certificate from Google Drive: ' . $e->getMessage());
+                        // Continue with deletion even if GD delete fails
+                    }
+                } else {
+                    // Delete local file (legacy support)
+                    $filePath = WRITEPATH . 'uploads/trainings/' . $certificateFile;
+                    if (file_exists($filePath)) {
+                        unlink($filePath);
+                        log_message('info', 'Training certificate deleted from local storage: ' . $certificateFile);
+                    }
                 }
             }
             
@@ -1952,96 +2294,84 @@ public function updateFile()
     // Log authentication status for debugging
     log_message('debug', 'Google Drive OAuth enabled: ' . ($driveService->isEnabled() ? 'YES' : 'NO'));
     
-    if ($driveService->isEnabled()) {
-        // Use Google Drive for file storage
-        try {
-            // Create temporary file with the content
-            $tempDir = WRITEPATH . 'temp/';
-            if (!is_dir($tempDir)) {
-                mkdir($tempDir, 0755, true);
-            }
-            
-            // Generate a consistent filename: {timestamp}_{original_name}
-            $extension = $file->getClientExtension();
-            $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
-            // Sanitize filename: remove special characters but keep underscores
-            $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-            $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
-            
-            $tempFileName = $googleDriveFileName;
-            $tempPath = $tempDir . $tempFileName;
-            
-            // Get the file content and write it directly
-            $fileContent = file_get_contents($file->getTempName());
-            file_put_contents($tempPath, $fileContent);
-            
-            log_message('debug', 'Uploading file to Google Drive: ' . $googleDriveFileName);
-            
-            // Upload to Google Drive with consistent naming
-            $driveFileId = $driveService->uploadFile(
-                $tempPath,
-                $googleDriveFileName,
-                $file->getMimeType()
-            );
-            
-            // Clean up temporary file
-            if (file_exists($tempPath)) {
-                unlink($tempPath);
-            }
-            
-            log_message('info', 'File uploaded to Google Drive successfully. File ID: ' . $driveFileId);
-            
-            // Save Google Drive file ID to database instead of local filename
-            $result = $fileModel->saveDocument($userId, $documentTypeId, $driveFileId);
-            
-            if ($result) {
-                return $this->response->setJSON([
-                    'status' => 'success',
-                    'message' => $documentType['document_type_name'].' updated successfully!',
-                    'file_id' => $driveFileId,
-                    'file_url' => $driveService->getFileUrl($driveFileId)
-                ]);
-            } else {
-                log_message('error', 'Failed to save document record in database');
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Failed to save document in database.'
-                ]);
-            }
-        } catch (Exception $e) {
-            log_message('error', 'Google Drive upload error: ' . $e->getMessage());
-            log_message('debug', 'Exception trace: ' . $e->getTraceAsString());
-            
-            // Fallback to local storage on error
-            log_message('warning', 'Falling back to local storage due to Google Drive error');
-        }
-    }
-    
-    // Fallback to local storage if Google Drive is not available or failed
-    helper('filesystem');
-
-    $newName = $file->getRandomName();
-    $uploadPath = WRITEPATH.'uploads/files';
-
-    if (!is_dir($uploadPath)) mkdir($uploadPath, 0755, true);
-
-    $file->move($uploadPath, $newName);
-
-    // Save or update document using the new model method
-    $result = $fileModel->saveDocument($userId, $documentTypeId, $newName);
-
-    if ($result) {
-        return $this->response->setJSON([
-            'status' => 'success',
-            'message' => $documentType['document_type_name'].' updated successfully!',
-            'file_name' => $newName,
-            'file_url'  => base_url('writable/uploads/files/'.$newName)
-        ]);
-    } else {
+    if (!$driveService->isEnabled()) {
+        log_message('warning', 'Google Drive not authenticated for user ID: ' . $userId);
         return $this->response->setJSON([
             'status' => 'error',
-            'message' => 'Failed to save document.'
-        ]);
+            'message' => 'Google Drive authentication required. Please connect your Google Drive account first.',
+            'auth_required' => true,
+            'auth_url' => site_url('google/drive')
+        ])->setStatusCode(401);
+    }
+    
+    // Use Google Drive for file storage - NO LOCAL FALLBACK
+    try {
+        // Create temporary file with the content
+        $tempDir = WRITEPATH . 'temp/';
+        if (!is_dir($tempDir)) {
+            mkdir($tempDir, 0755, true);
+        }
+        
+        // Generate a consistent filename: {timestamp}_{original_name}
+        $extension = $file->getClientExtension();
+        $baseName = pathinfo($file->getClientName(), PATHINFO_FILENAME);
+        // Sanitize filename: remove special characters but keep underscores
+        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+        $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+        
+        $tempFileName = $googleDriveFileName;
+        $tempPath = $tempDir . $tempFileName;
+        
+        // Get the file content and write it directly
+        $fileContent = file_get_contents($file->getTempName());
+        file_put_contents($tempPath, $fileContent);
+        
+        log_message('debug', 'Uploading file to Google Drive: ' . $googleDriveFileName);
+        
+        // Upload to Google Drive with consistent naming
+        $driveFileId = $driveService->uploadFile(
+            $tempPath,
+            $googleDriveFileName,
+            $file->getMimeType()
+        );
+        
+        // Clean up temporary file
+        if (file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+        
+        log_message('info', 'File uploaded to Google Drive successfully. File ID: ' . $driveFileId);
+        
+        // Save Google Drive file ID to database instead of local filename
+        $result = $fileModel->saveDocument($userId, $documentTypeId, $driveFileId);
+        
+        if ($result) {
+            return $this->response->setJSON([
+                'status' => 'success',
+                'message' => $documentType['document_type_name'].' updated successfully!',
+                'file_id' => $driveFileId,
+                'file_url' => $driveService->getFileUrl($driveFileId)
+            ]);
+        } else {
+            log_message('error', 'Failed to save document record in database');
+            return $this->response->setJSON([
+                'status' => 'error',
+                'message' => 'Failed to save document in database.'
+            ]);
+        }
+    } catch (\Exception $e) {
+        log_message('error', 'Google Drive upload error: ' . $e->getMessage());
+        log_message('debug', 'Exception trace: ' . $e->getTraceAsString());
+        
+        // Clean up temp file if it exists
+        if (isset($tempPath) && file_exists($tempPath)) {
+            unlink($tempPath);
+        }
+        
+        return $this->response->setJSON([
+            'status' => 'error',
+            'message' => 'Failed to upload to Google Drive: ' . $e->getMessage()
+        ])->setStatusCode(500);
     }
 }
 
@@ -2124,6 +2454,89 @@ public function deleteFile()
             'status' => 'error',
             'message' => 'Failed to delete document.'
         ]);
+    }
+}
+
+/**
+ * Get profile photo for display (supports Google Drive and local storage)
+ */
+public function getProfilePhoto()
+{
+    $session = session();
+    
+    // Authentication check
+    if (!$session->get('logged_in')) {
+        return $this->response->setStatusCode(401);
+    }
+    
+    $userId = $session->get('user_id');
+    
+    $applicantModel = new ApplicantModel();
+    $profile = $applicantModel->where('user_id', $userId)->first();
+    
+    if (empty($profile['photo'])) {
+        return redirect()->to(base_url('public/assets/images/default-profile.png'));
+    }
+    
+    $photoIdentifier = $profile['photo'];
+    
+    // Check if it's a Google Drive file ID
+    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $photoIdentifier) && 
+                         !preg_match('/^\d{10}_/', $photoIdentifier);
+    
+    if ($isGoogleDriveFile) {
+        // Serve from Google Drive
+        try {
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if (!$driveService->isEnabled()) {
+                // Fallback to default if service not available
+                return redirect()->to(base_url('public/assets/images/default-profile.png'));
+            }
+            
+            // Get file content from Google Drive
+            $tempPath = WRITEPATH . 'temp/profile_photo_' . $userId . '.jpg';
+            
+            // Download file temporarily
+            $driveService->downloadFile($photoIdentifier, $tempPath);
+            
+            // Read and output file
+            if (file_exists($tempPath)) {
+                $mimeType = mime_content_type($tempPath);
+                $content = file_get_contents($tempPath);
+                
+                // Clean up temp file
+                unlink($tempPath);
+                
+                return $this->response
+                    ->setContentType($mimeType)
+                    ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                    ->setHeader('Pragma', 'no-cache')
+                    ->setHeader('Expires', '0')
+                    ->setBody($content);
+            } else {
+                return redirect()->to(base_url('public/assets/images/default-profile.png'));
+            }
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Error serving profile photo from Google Drive: ' . $e->getMessage());
+            return redirect()->to(base_url('public/assets/images/default-profile.png'));
+        }
+    } else {
+        // Local file - serve directly
+        $photoPath = FCPATH . 'uploads/' . $photoIdentifier;
+        
+        if (file_exists($photoPath)) {
+            $mimeType = mime_content_type($photoPath);
+            return $this->response
+                ->setContentType($mimeType)
+                ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->setHeader('Pragma', 'no-cache')
+                ->setHeader('Expires', '0')
+                ->setBody(file_get_contents($photoPath));
+        } else {
+            return redirect()->to(base_url('public/assets/images/default-profile.png'));
+        }
     }
 }
 

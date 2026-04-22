@@ -13,6 +13,7 @@ class Home extends BaseController
             'jv.id_vacancy as id',
             'jv.status as vacancy_status',
             'jv.plantilla_item_id',
+            'jv.publication_id',
             'jv.date_posted',
             'jv.created_at',
             'jp.interview_date',
@@ -36,14 +37,16 @@ class Home extends BaseController
         $builder->join('`hrmis-template`.lib_offices o', 'pi.item_area_code = o.office_code', 'left');
         $builder->join('`hrmis-template`.lib_divisions d', 'o.id_office = d.office_id', 'left');
         $builder->where('jv.status', 'Active'); // Only Active vacancies
-        $builder->where('jv.status', 'Active');
         $builder->orderBy('jv.created_at', 'DESC');
 
         $jobs = $builder->get()->getResultArray();
 
-        // ✅ COMPUTE MONTHLY SALARY
+        // ✅ COMPUTE MONTHLY SALARY and FETCH REQUIREMENTS
         foreach ($jobs as &$job) {
             $job['monthly_salary'] = $this->get_monthly_salary($job['plantilla_item_id']) ?? 0;
+            
+            // ✅ FETCH REQUIREMENTS from job_publication_requirements
+            $job['application_requirements'] = $this->get_job_requirements($job['publication_id']);
         }
 
         $data['jobs'] = $jobs;
@@ -87,6 +90,41 @@ private function get_monthly_salary($plantilla_item_id)
     ", [$item->salary_grade, $schedule->id_salary_schedule])->getRow();
 
     return $salary ? $salary->sg_sin1 : null;
+}
+
+/**
+ * Get job requirements from job_publication_requirements table
+ * Matches publication_id from job_vacancies
+ */
+private function get_job_requirements($publication_id)
+{
+    if (empty($publication_id)) {
+        return 'N/A';
+    }
+    
+    $db = \Config\Database::connect();
+    
+    // Fetch all requirements for this publication_id
+    $requirements = $db->table('job_publication_requirements')
+                       ->select('requirement_text')
+                       ->where('publication_id', $publication_id)
+                       ->orderBy('id_requirement', 'ASC')
+                       ->get()
+                       ->getResultArray();
+    
+    if (empty($requirements)) {
+        return 'No specific requirements listed.';
+    }
+    
+    // Format requirements as a bulleted list
+    $formattedRequirements = [];
+    foreach ($requirements as $req) {
+        if (!empty($req['requirement_text'])) {
+            $formattedRequirements[] = '• ' . $req['requirement_text'];
+        }
+    }
+    
+    return !empty($formattedRequirements) ? implode("\n", $formattedRequirements) : 'No specific requirements listed.';
 }
 
 }

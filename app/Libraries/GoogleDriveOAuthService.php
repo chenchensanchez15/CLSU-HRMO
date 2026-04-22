@@ -4,7 +4,7 @@ namespace App\Libraries;
 
 use Google\Client;
 use Google\Service\Drive;
-use Google\Service\Drive\File as DriveFile;
+use Google\Service\Drive\DriveFile;
 
 class GoogleDriveOAuthService
 {
@@ -16,25 +16,74 @@ class GoogleDriveOAuthService
     {
         $this->client = new Client();
         
-        // Use Service Account for automatic authentication
-        $credentialsPath = $_ENV['GOOGLE_OAUTH_CREDENTIALS_PATH'] ?? WRITEPATH . 'credentials/google_credentials.json';
+        // Use OAuth Web Client (user delegation) - uploads use user's quota
+        $credentialsPath = $_ENV['GOOGLE_OAUTH_CREDENTIALS_PATH'] ?? WRITEPATH . 'credentials/oauth_credential.json';
         
         log_message('debug', 'Google Drive: Looking for credentials at: ' . $credentialsPath);
+        log_message('debug', 'Google Drive: File exists? ' . (file_exists($credentialsPath) ? 'YES' : 'NO'));
         
         if (file_exists($credentialsPath)) {
             try {
+                // Load OAuth web client credentials
                 $this->client->setAuthConfig($credentialsPath);
-                $this->client->addScope(['https://www.googleapis.com/auth/drive.file', 'https://www.googleapis.com/auth/drive']);
+                log_message('debug', 'Google Drive: OAuth credentials loaded');
                 
-                // Set application name for better identification
+                // Set redirect URI
+                $redirectUri = $_ENV['GOOGLE_REDIRECT_URI'] ?? 'http://localhost:8080/HRMO/google/callback';
+                $this->client->setRedirectUri($redirectUri);
+                
+                // IMPORTANT: Set access type to offline to get refresh token
+                $this->client->setAccessType('offline');
+                $this->client->setPrompt('consent');
+                
+                // Set required scopes for file upload
+                $scopes = [
+                    'https://www.googleapis.com/auth/drive.file',
+                    'https://www.googleapis.com/auth/drive.appdata'
+                ];
+                $this->client->addScope($scopes);
+                log_message('debug', 'Google Drive: Scopes added: ' . implode(', ', $scopes));
+                
+                // Set application name
                 $this->client->setApplicationName('HRMO Document System');
                 
-                log_message('debug', 'Google Drive: Credentials loaded successfully');
+                // Try to load existing token
+                $tokenPath = WRITEPATH . 'google-token.json';
+                if (file_exists($tokenPath)) {
+                    try {
+                        $token = json_decode(file_get_contents($tokenPath), true);
+                        $this->client->setAccessToken($token);
+                        log_message('debug', 'Google Drive: Loaded existing access token');
+                        
+                        // Refresh token if expired
+                        if ($this->client->isAccessTokenExpired()) {
+                            log_message('debug', 'Google Drive: Access token expired, refreshing...');
+                            if ($this->client->getRefreshToken()) {
+                                $newToken = $this->client->fetchAccessTokenWithRefreshToken($this->client->getRefreshToken());
+                                file_put_contents($tokenPath, json_encode($newToken));
+                                log_message('info', 'Google Drive: Access token refreshed successfully');
+                            } else {
+                                log_message('warning', 'Google Drive: No refresh token available, re-authentication needed');
+                                $this->isAuthenticated = false;
+                            }
+                        } else {
+                            $this->isAuthenticated = true;
+                            log_message('info', 'Google Drive: Authenticated with existing token');
+                        }
+                    } catch (\Exception $tokenEx) {
+                        log_message('warning', 'Google Drive: Failed to load token - ' . $tokenEx->getMessage());
+                        $this->isAuthenticated = false;
+                    }
+                } else {
+                    log_message('warning', 'Google Drive: No token file found. User needs to authenticate at /google/drive');
+                    $this->isAuthenticated = false;
+                }
                 
-                // For service accounts, we don't need to fetch token upfront
-                // The token will be fetched automatically when making API calls
-                $this->isAuthenticated = true;
-                log_message('info', 'Google Drive: Service account initialized successfully');
+                if ($this->isAuthenticated) {
+                    log_message('info', 'Google Drive: OAuth authentication successful');
+                } else {
+                    log_message('error', 'Google Drive: Authentication required. Visit /google/drive to authenticate.');
+                }
                 
             } catch (\Exception $e) {
                 log_message('error', 'Google Drive: Failed to load credentials - ' . $e->getMessage());
@@ -90,11 +139,21 @@ class GoogleDriveOAuthService
         try {
             log_message('debug', 'Uploading file to Google Drive: ' . $fileName);
             
+            // Verify authentication before upload
+            if (!$this->isAuthenticated()) {
+                log_message('error', 'Google Drive: Not authenticated, attempting to refresh token');
+                if (!$this->refreshToken()) {
+                    throw new \Exception('Google Drive authentication failed. Please re-authenticate at /google/drive');
+                }
+            }
+            
             // Get Drive service
             $driveService = $this->getDriveService();
             
             // Prepare file metadata
             $folderId = $_ENV['GOOGLE_DRIVE_FOLDER_ID'] ?? null;
+            
+            log_message('debug', 'Upload details - File: ' . $fileName . ', Folder ID: ' . ($folderId ?: 'none'));
             
             $fileMetadata = new DriveFile([
                 'name' => $fileName,
@@ -104,39 +163,76 @@ class GoogleDriveOAuthService
             // Get file content
             $content = file_get_contents($filePath);
             
-            // Create temp file for upload
-            $tempFile = tmpfile();
-            fwrite($tempFile, $content);
-            fseek($tempFile, 0);
+            log_message('debug', 'File size: ' . strlen($content) . ' bytes');
             
-            // Upload file
-            $uploadedFile = $driveService->files->create($fileMetadata, [
-                'data' => $content,
-                'mimeType' => $mimeType,
-                'uploadType' => 'multipart',
-                'fields' => 'id,name,webViewLink',
-                'supportsAllDrives' => true
-            ]);
-            
-            fclose($tempFile);
-            
-            // Make file publicly accessible
-            $permission = new DriveFile([
-                'type' => 'anyone',
-                'role' => 'reader'
-            ]);
-            
-            $driveService->permissions->create($uploadedFile->id, $permission, [
-                'supportsAllDrives' => true
-            ]);
-            
-            log_message('info', 'File uploaded to Google Drive successfully. File ID: ' . $uploadedFile->id);
-            
-            return $uploadedFile->id;
+            // Upload file with proper error handling
+            try {
+                $uploadedFile = $driveService->files->create($fileMetadata, [
+                    'data' => $content,
+                    'mimeType' => $mimeType,
+                    'uploadType' => 'multipart',
+                    'fields' => 'id,name,webViewLink,parents',
+                    'supportsAllDrives' => true
+                ]);
+                
+                log_message('debug', 'File created successfully in Google Drive');
+                
+                // Make file publicly accessible
+                try {
+                    $permissionMetadata = new \Google\Service\Drive\Permission([
+                        'type' => 'anyone',
+                        'role' => 'reader'
+                    ]);
+                    
+                    $driveService->permissions->create($uploadedFile->id, $permissionMetadata, [
+                        'supportsAllDrives' => true
+                    ]);
+                    
+                    log_message('info', 'File permissions set to public');
+                } catch (\Exception $permEx) {
+                    log_message('warning', 'Could not set public permissions: ' . $permEx->getMessage());
+                }
+                
+                log_message('info', 'File uploaded to Google Drive successfully. File ID: ' . $uploadedFile->id);
+                
+                return $uploadedFile->id;
+                
+            } catch (\Exception $uploadEx) {
+                log_message('error', 'Upload failed: ' . $uploadEx->getMessage());
+                log_message('debug', 'Upload exception trace: ' . $uploadEx->getTraceAsString());
+                throw $uploadEx;
+            }
             
         } catch (\Exception $e) {
             log_message('error', 'Google Drive Upload Error: ' . $e->getMessage());
+            log_message('debug', 'Upload error trace: ' . $e->getTraceAsString());
             throw new \Exception('Google Drive upload failed: ' . $e->getMessage());
+        }
+    }
+    
+    /**
+     * Refresh the access token
+     */
+    public function refreshToken()
+    {
+        if (!$this->client->getRefreshToken()) {
+            log_message('error', 'Google Drive: No refresh token available');
+            return false;
+        }
+        
+        try {
+            $newToken = $this->client->fetchAccessTokenWithRefreshToken($this->client->getRefreshToken());
+            
+            // Save updated token
+            $tokenPath = WRITEPATH . 'google-token.json';
+            file_put_contents($tokenPath, json_encode($newToken));
+            
+            log_message('info', 'Google Drive: Access token refreshed successfully');
+            return true;
+            
+        } catch (\Exception $e) {
+            log_message('error', 'Google Drive: Token refresh failed - ' . $e->getMessage());
+            return false;
         }
     }
     

@@ -2122,7 +2122,24 @@ if (file) {
                 Swal.fire({icon:'success',title:'Saved!',text:res.message,timer:1200,showConfirmButton:false})
                 .then(()=> location.reload());
             }else{
-                Swal.fire('Error',res.message,'error');
+                // Check if authentication is required
+                if(res.auth_required && res.auth_url){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Google Drive Authentication Required',
+                        text: res.message,
+                        showCancelButton: true,
+                        confirmButtonText: 'Connect Google Drive',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Redirect to Google Drive authentication
+                            window.location.href = res.auth_url;
+                        }
+                    });
+                } else {
+                    Swal.fire('Error',res.message,'error');
+                }
             }
         });
     });
@@ -2317,8 +2334,57 @@ if (file) {
 
 <!-- Certificate Modal -->
 <div id="certificateModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-90 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-6xl h-full relative flex flex-col shadow-lg">
-        <iframe id="certificateFrame" src="" class="flex-1 w-full h-full border-none"></iframe>
+    <div class="bg-white rounded-xl w-full max-w-6xl h-[90vh] relative flex flex-col shadow-lg">
+        <!-- Toolbar -->
+        <div class="flex items-center justify-between px-4 py-2 border-b bg-gray-50">
+            <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-gray-700">Training Certificate</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="certZoomOut" class="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors" title="Zoom Out">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                    </svg>
+                </button>
+                <button id="certZoomIn" class="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors" title="Zoom In">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m4.5-3H13.5m6.5 0a7.5 7.5 0 11-15 0 7.5 7.5 0 0115 0z"></path>
+                    </svg>
+                </button>
+                <button id="certZoomReset" class="px-2 py-1 text-xs bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors" title="Reset Zoom">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                    </svg>
+                </button>
+                <span id="certZoomLevel" class="text-xs text-gray-600 min-w-[40px]">100%</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="certDownload" class="px-2 py-1 text-xs bg-clsuGreen text-white rounded hover:bg-green-800 transition-colors" title="Download">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                </button>
+                <button id="certPrint" class="px-2 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors" title="Print">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                    </svg>
+                </button>
+                <button id="certFullscreen" class="px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors" title="Fullscreen">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                    </svg>
+                </button>
+                <button id="certCloseModal" class="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors" title="Close">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <!-- PDF Viewer Container -->
+        <div id="certPdfContainer" class="flex-1 overflow-auto bg-gray-200">
+            <iframe id="certificateFrame" src="" class="w-full h-full border-none"></iframe>
+        </div>
     </div>
 </div>
 
@@ -2334,6 +2400,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const certificateModal = document.getElementById('certificateModal');
     const certificateFrame = document.getElementById('certificateFrame');
+    const certPdfContainer = document.getElementById('certPdfContainer');
+    
+    // Certificate viewer state
+    let certCurrentZoom = 100;
+    let certCurrentFileUrl = '';
+    let certCurrentFileName = '';
+
+    // Toolbar button handlers
+    const certZoomInBtn = document.getElementById('certZoomIn');
+    const certZoomOutBtn = document.getElementById('certZoomOut');
+    const certZoomResetBtn = document.getElementById('certZoomReset');
+    const certDownloadBtn = document.getElementById('certDownload');
+    const certPrintBtn = document.getElementById('certPrint');
+    const certFullscreenBtn = document.getElementById('certFullscreen');
+    const certCloseModalBtn = document.getElementById('certCloseModal');
+    const certZoomLevelSpan = document.getElementById('certZoomLevel');
+
+    if (certZoomInBtn) {
+        certZoomInBtn.addEventListener('click', () => {
+            certCurrentZoom = Math.min(certCurrentZoom + 25, 200);
+            certPdfContainer.style.transform = `scale(${certCurrentZoom / 100})`;
+            certPdfContainer.style.transformOrigin = 'top center';
+            certZoomLevelSpan.textContent = `${certCurrentZoom}%`;
+        });
+    }
+
+    if (certZoomOutBtn) {
+        certZoomOutBtn.addEventListener('click', () => {
+            certCurrentZoom = Math.max(certCurrentZoom - 25, 50);
+            certPdfContainer.style.transform = `scale(${certCurrentZoom / 100})`;
+            certPdfContainer.style.transformOrigin = 'top center';
+            certZoomLevelSpan.textContent = `${certCurrentZoom}%`;
+        });
+    }
+
+    if (certZoomResetBtn) {
+        certZoomResetBtn.addEventListener('click', () => {
+            certCurrentZoom = 100;
+            certPdfContainer.style.transform = 'scale(1)';
+            certPdfContainer.style.transformOrigin = 'top center';
+            certZoomLevelSpan.textContent = '100%';
+        });
+    }
+
+    if (certDownloadBtn) {
+        certDownloadBtn.addEventListener('click', () => {
+            if (certCurrentFileUrl) {
+                const a = document.createElement('a');
+                a.href = certCurrentFileUrl;
+                a.download = certCurrentFileName || 'training_certificate.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        });
+    }
+
+    if (certPrintBtn) {
+        certPrintBtn.addEventListener('click', () => {
+            if (certificateFrame.src) {
+                certificateFrame.contentWindow.print();
+            }
+        });
+    }
+
+    if (certFullscreenBtn) {
+        certFullscreenBtn.addEventListener('click', () => {
+            const modal = certificateModal;
+            if (!document.fullscreenElement) {
+                if (modal.requestFullscreen) {
+                    modal.requestFullscreen();
+                } else if (modal.webkitRequestFullscreen) {
+                    modal.webkitRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+    }
+
+    if (certCloseModalBtn) {
+        certCloseModalBtn.addEventListener('click', () => {
+            certificateFrame.src = '';
+            certificateModal.classList.add('hidden');
+            certCurrentZoom = 100;
+            certPdfContainer.style.transform = 'scale(1)';
+            certZoomLevelSpan.textContent = '100%';
+        });
+    }
 
     let tempAddData = {};              // typed Add modal data
     let tempEditDataById = {};         // typed Edit modal data per row id
@@ -2481,6 +2638,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 if (viewBtn) {
     const fileName = viewBtn.dataset.file;
+    
+    // Debug: Log the file name/ID
+    console.log('Training certificate file:', fileName);
 
     // No file → show warning instead of error
     if (!fileName || fileName.trim() === '') {
@@ -2503,13 +2663,20 @@ if (viewBtn) {
             Swal.showLoading();
 
             setTimeout(() => {
-                fetch('<?= base_url("account/viewTrainingCertificate/") ?>' + encodeURIComponent(fileName))
+                // Use backend endpoint to get file (handles both local and Google Drive)
+                const url = '<?= base_url("account/viewTrainingCertificate/") ?>' + encodeURIComponent(fileName);
+                console.log('Fetching certificate from:', url);
+                
+                fetch(url)
                     .then(async res => {
+                        console.log('Response status:', res.status);
                         const contentType = res.headers.get('content-type') || '';
+                        console.log('Response content-type:', contentType);
 
                         // If JSON returned → file missing
                         if (contentType.includes('application/json')) {
                             const data = await res.json();
+                            console.log('Error response:', data);
                             Swal.close();
                             Swal.fire({
                                 icon: 'warning',
@@ -2524,15 +2691,29 @@ if (viewBtn) {
                         return res.blob(); // File exists
                     })
                     .then(blob => {
-                        const url = URL.createObjectURL(blob);
-                        certificateFrame.src = url;
+                        console.log('Blob received, size:', blob.size);
+                        // Create object URL from blob
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // Store for download functionality
+                        certCurrentFileUrl = blobUrl;
+                        certCurrentFileName = fileName;
+                        
+                        // Reset zoom
+                        certCurrentZoom = 100;
+                        certPdfContainer.style.transform = 'scale(1)';
+                        certZoomLevelSpan.textContent = '100%';
+                        
+                        // Display in iframe
+                        certificateFrame.src = blobUrl;
                         certificateModal.classList.remove('hidden');
+                        certificateModal.classList.add('flex');
                         Swal.close(); // close loading
                     })
                     .catch(err => {
-                        console.warn(err);
+                        console.error('Error loading certificate:', err);
                     });
-            }, 1000); // delay before fetch
+            }, 500); // delay before fetch
         }
     });
 }
@@ -2543,6 +2724,12 @@ if (viewBtn) {
     function closeCertificateModalFunc() {
         certificateFrame.src = '';
         certificateModal.classList.add('hidden');
+        certificateModal.classList.remove('flex');
+        certCurrentZoom = 100;
+        certPdfContainer.style.transform = 'scale(1)';
+        certZoomLevelSpan.textContent = '100%';
+        certCurrentFileUrl = '';
+        certCurrentFileName = '';
     }
     certificateModal.addEventListener('click', e => { if(e.target === certificateModal) closeCertificateModalFunc(); });
     document.addEventListener('keydown', e => { if(e.key === 'Escape' && !certificateModal.classList.contains('hidden')) closeCertificateModalFunc(); });
@@ -3044,76 +3231,29 @@ if (viewCombinedTrainingBtn) {
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
     });
-
-    try {
-        // Fetch list of all training certificates
-    const response = await fetch('<?= base_url("account/view-multiple-training-certificates") ?>');
-    const data = await response.json();
-        
-    if (!response.ok || data.status !== 'success') {
-        Swal.close();
+    
+    // Get the certificate modal and iframe
+    const modal = document.getElementById('certificateModal');
+    const frame = document.getElementById('certificateFrame');
+    
+    if (!modal || !frame) {
         Swal.fire({
-                icon: 'warning',
-                title: 'No Certificates',
-                text: 'No training certificates found for your records.',
-                showConfirmButton: false,
-                timer: 2000
-            });
-        return;
-        }
-        
-        // Store certificates and initialize viewer
-        window.trainingCertificates = data.certificates;
-        window.currentCertIndex = 0;
-        
-        // Update UI
-        document.getElementById('total-cert-count').textContent = window.trainingCertificates.length;
-        
-        // Initialize first certificate
-    const cert = window.trainingCertificates[window.currentCertIndex];
-    const frame = document.getElementById('training-multiple-frame');
-    
-    // Update training name
-    document.getElementById('cert-training-name').textContent = cert.training_name;
-    document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
-    
-    // Load certificate file
-    if (cert.file) {
-            // Check if it's a Google Drive file or local file
-        const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
-            
-        if (isGoogleDrive) {
-                // Google Drive - use direct preview
-            frame.src= `https://drive.google.com/file/d/${cert.file}/preview`;
-            } else {
-                // Local file- use controller endpoint
-            frame.src= `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
-            }
-        }
-        
-        // Update button states
-        document.getElementById('prev-cert-btn').disabled = (window.currentCertIndex === 0);
-        document.getElementById('next-cert-btn').disabled = (window.currentCertIndex === window.trainingCertificates.length - 1);
-        
-        // Show modal
-    const modal = document.getElementById('multiple-training-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-    Swal.close();
-        
-    } catch (err) {
-    Swal.close();
-    Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: err.message || 'Unable to load training certificates.',
-            showConfirmButton: false,
-            timer: 1200
+            text: 'Unable to load certificate viewer.',
+            timer: 2000
         });
-    console.error(err);
+        return;
     }
-
+    
+    setTimeout(() => {
+        // Use the combined PDF endpoint that downloads from Google Drive and combines using FPDI
+        frame.src = '<?= site_url('account/viewCombinedTrainingCertificates') ?>';
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        Swal.close();
+    }, 800);
+    
     return;
 }
 
@@ -3371,13 +3511,30 @@ if (viewTrainingBtn) {
                             timer: 1200
                         }).then(() => location.reload());
                     }else{
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: data.message,
-                            showConfirmButton: false,
-                            timer: 1000
-                        });
+                        // Check if authentication is required
+                        if(data.auth_required && data.auth_url){
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Google Drive Authentication Required',
+                                text: data.message,
+                                showCancelButton: true,
+                                confirmButtonText: 'Connect Google Drive',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    // Redirect to Google Drive authentication
+                                    window.location.href = data.auth_url;
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message,
+                                showConfirmButton: false,
+                                timer: 1000
+                            });
+                        }
                     }
                 } catch(err){
                     // Close loading on error
@@ -3475,43 +3632,6 @@ if (viewTrainingBtn) {
 </script>
 </div>
 
-<!-- Multiple Training Certificates Modal -->
-<div id="multiple-training-modal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-[70] flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl w-full max-w-5xl h-[85vh] flex flex-col shadow-lg">
-        <!-- Compact Header -->
-        <div class="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-50 to-blue-100 border-b rounded-t-xl">
-            <div class="flex items-center gap-3">
-                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <h3 class="text-sm font-bold text-gray-800 truncate max-w-md" id="cert-training-name">GitHub Seminar</h3>
-                <span class="text-xs text-gray-600 bg-white px-2 py-1 rounded border mx-2">
-                    <span id="current-cert-num">1</span> / <span id="total-cert-count">2</span>
-                </span>
-            </div>
-            <div class="flex items-center gap-2">
-                <button type="button" id="prev-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-                <button type="button" id="next-cert-btn" class="inline-flex items-center px-2.5 py-1 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
-                <button type="button" id="close-training-multi-btn" class="text-gray-500 hover:text-red-600 transition-colors ml-1">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        
-        <!-- Content Area -->
-        <iframe id="training-multiple-frame" class="flex-1 w-full h-full border-none rounded-b-xl"></iframe>
-    </div>
-</div>
 
 </div>
 </div>
@@ -3567,8 +3687,17 @@ tabButtons.forEach(btn => {
 
 // Restore tab after refresh
 document.addEventListener('DOMContentLoaded', () => {
-    const savedTab = localStorage.getItem('activeTab') || 'personal';
-    activateTab(savedTab);
+    // Check if there's a hash in the URL (e.g., #education, #work, #civil, #training)
+    const hash = window.location.hash.substring(1); // Remove the '#' character
+    
+    if (hash && ['personal', 'education', 'work', 'civil', 'training', 'files'].includes(hash)) {
+        // Use the hash to determine which tab to show
+        activateTab(hash);
+    } else {
+        // Otherwise, use localStorage or default to 'personal'
+        const savedTab = localStorage.getItem('activeTab') || 'personal';
+        activateTab(savedTab);
+    }
 });
 </script>
 
@@ -3630,11 +3759,28 @@ photoInput.addEventListener('change', () => {
                     showConfirmButton: false
                 });
             } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: data.message
-                });
+                // Check if authentication is required
+                if(data.auth_required && data.auth_url){
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Google Drive Authentication Required',
+                        text: data.message,
+                        showCancelButton: true,
+                        confirmButtonText: 'Connect Google Drive',
+                        cancelButtonText: 'Cancel'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Redirect to Google Drive authentication
+                            window.location.href = data.auth_url;
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: data.message
+                    });
+                }
             }
         })
         .catch(err => {
@@ -3648,82 +3794,14 @@ photoInput.addEventListener('change', () => {
     }
 });
 
-// ===== NAVIGATION FOR MULTIPLE TRAINING CERTIFICATES MODAL =====
-document.getElementById('prev-cert-btn')?.addEventListener('click', function() {
-  if (window.currentCertIndex> 0) {
-        window.currentCertIndex--;
-        
-        const cert = window.trainingCertificates[window.currentCertIndex];
-        const frame = document.getElementById('training-multiple-frame');
-        
-        // Update training name
-        document.getElementById('cert-training-name').textContent = cert.training_name;
-        document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
-        
-        // Load certificate file
-        if (cert.file) {
-            const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
-            
-            if (isGoogleDrive) {
-            frame.src = `https://drive.google.com/file/d/${cert.file}/preview`;
-            } else {
-            frame.src = `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
-            }
-        }
-        
-        // Update button states
-        this.disabled = (window.currentCertIndex === 0);
-        document.getElementById('next-cert-btn').disabled = (window.currentCertIndex === window.trainingCertificates.length -1);
-    }
-});
 
-document.getElementById('next-cert-btn')?.addEventListener('click', function() {
-  if (window.currentCertIndex < window.trainingCertificates.length -1) {
-        window.currentCertIndex++;
-        
-        const cert = window.trainingCertificates[window.currentCertIndex];
-        const frame = document.getElementById('training-multiple-frame');
-        
-        // Update training name
-        document.getElementById('cert-training-name').textContent = cert.training_name;
-        document.getElementById('current-cert-num').textContent = window.currentCertIndex + 1;
-        
-        // Load certificate file
-        if (cert.file) {
-            const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
-            
-            if (isGoogleDrive) {
-            frame.src= `https://drive.google.com/file/d/${cert.file}/preview`;
-            } else {
-            frame.src= `<?= base_url('trainings/certificate/') ?>${encodeURIComponent(cert.file)}`;
-            }
-        }
-        
-        // Update button states
-        this.disabled = (window.currentCertIndex === window.trainingCertificates.length -1);
-        document.getElementById('prev-cert-btn').disabled = (window.currentCertIndex === 0);
-    }
-});
-
-document.getElementById('close-training-multi-btn')?.addEventListener('click', function() {
-    const modal = document.getElementById('multiple-training-modal');
-    const frame = document.getElementById('training-multiple-frame');
-  frame.src = '';
-    modal.classList.add('hidden');
-    modal.classList.remove('flex');
-    window.trainingCertificates = [];
-    window.currentCertIndex = 0;
-});
-
-// Close multiple training modal when clicking outside
-document.getElementById('multiple-training-modal')?.addEventListener('click', function(e) {
-  if (e.target === this) {
-        const frame = document.getElementById('training-multiple-frame');
-     frame.src = '';
+// ===== CLOSE DOCUMENT MODAL =====
+document.getElementById('document-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        const frame = document.getElementById('document-frame');
+        frame.src = '';
         this.classList.add('hidden');
         this.classList.remove('flex');
-        window.trainingCertificates = [];
-        window.currentCertIndex = 0;
     }
 });
 </script>

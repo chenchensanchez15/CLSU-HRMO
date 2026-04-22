@@ -290,7 +290,15 @@ function openJobModal(jobId) {
     document.getElementById('modalExperience').textContent = job.experience || 'N/A';
     document.getElementById('modalEligibility').textContent = job.eligibility || 'N/A';
     document.getElementById('modalDuties').textContent = job.duties_responsibilities || 'N/A';
-    document.getElementById('modalRequirements').textContent = job.application_requirements || 'N/A';
+    
+    // Format requirements with bullet points and line breaks
+    const requirements = job.application_requirements || 'N/A';
+    if (requirements !== 'N/A' && requirements.includes('\n')) {
+        // Convert newlines to HTML <br> tags for proper display
+        document.getElementById('modalRequirements').innerHTML = requirements.replace(/\n/g, '<br>');
+    } else {
+        document.getElementById('modalRequirements').textContent = requirements;
+    }
 
     const modal = document.getElementById('jobModal');
     const card = document.getElementById('modalCard');

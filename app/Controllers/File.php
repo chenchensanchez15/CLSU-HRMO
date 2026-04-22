@@ -38,29 +38,109 @@ class File extends Controller
 
         $filename = basename($filename);
         
-        // Check if the filename is a Google Drive file ID (typically 28-33 characters long)
+        // Check if the filename is a Google Drive file ID (typically 20-44 characters long)
         // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
-        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
         
         if ($isGoogleDriveFile) {
-            // File is stored in Google Drive
+            // File is stored in Google Drive - download and serve it for full toolbar
+            $content = null;
+            
+            // Try 1: OAuth service
             $driveService = new \App\Libraries\GoogleDriveOAuthService();
             
             if ($driveService->isEnabled()) {
-                // Redirect to Google Drive public URL instead of downloading
-                $publicUrl = $driveService->getFileUrl($filename);
-                return redirect()->to($publicUrl);
+                try {
+                    log_message('debug', 'Downloading Google Drive file using OAuth: ' . $filename);
+                    
+                    // Create temp file
+                    $tempFile = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+                    
+                    // Download from Google Drive
+                    $driveService->downloadFile($filename, $tempFile);
+                    
+                    if (file_exists($tempFile)) {
+                        $content = file_get_contents($tempFile);
+                        unlink($tempFile);
+                        log_message('info', 'Successfully served Google Drive file (OAuth): ' . $filename);
+                    }
+                } catch (\Exception $e) {
+                    log_message('warning', 'OAuth download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Try 2: Service account fallback
+            if (!$content) {
+                try {
+                    log_message('debug', 'Trying service account for Google Drive file: ' . $filename);
+                    
+                    $serviceAccountPath = WRITEPATH . 'credentials/google_credentials.json';
+                    if (file_exists($serviceAccountPath)) {
+                        $client = new \Google\Client();
+                        $client->setAuthConfig($serviceAccountPath);
+                        $client->addScope([\Google\Service\Drive::DRIVE]);
+                        
+                        $accessToken = $client->fetchAccessTokenWithAssertion();
+                        
+                        if (isset($accessToken['access_token'])) {
+                            // Use cURL to download
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $filename . '?alt=media&supportsAllDrives=true');
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                'Authorization: Bearer ' . $accessToken['access_token']
+                            ]);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            
+                            $content = curl_exec($ch);
+                            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+                            
+                            if ($httpCode == 200 && !empty($content)) {
+                                log_message('info', 'Successfully served Google Drive file (Service Account): ' . $filename);
+                            } else {
+                                $content = null;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Service account download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Serve file if we got content
+            if ($content) {
+                return $this->response
+                            ->setHeader('Content-Type', 'application/pdf')
+                            ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '.pdf"')
+                            ->setHeader('Accept-Ranges', 'bytes')
+                            ->setBody($content);
             } else {
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Google Drive service not available.'
-                ])->setStatusCode(500);
+                // Fallback: redirect to preview URL
+                log_message('warning', 'All download methods failed, redirecting to preview: ' . $filename);
+                $previewUrl = "https://drive.google.com/file/d/{$filename}/preview";
+                return redirect()->to($previewUrl);
             }
         } else {
             // File is stored locally (fallback for existing files)
-            $filePath = WRITEPATH . 'uploads/files/' . $filename;
+            // Check multiple possible locations
+            $possiblePaths = [
+                WRITEPATH . 'uploads/files/' . $filename,           // General uploads
+                WRITEPATH . 'uploads/civil_service/' . $filename,   // Civil service certificates
+                WRITEPATH . 'uploads/trainings/' . $filename,       // Training certificates
+                WRITEPATH . 'uploads/' . $filename,                 // Root uploads folder
+            ];
+            
+            $filePath = null;
+            foreach ($possiblePaths as $path) {
+                if (file_exists($path)) {
+                    $filePath = $path;
+                    break;
+                }
+            }
 
-            if (!file_exists($filePath)) {
+            if (!$filePath) {
+                log_message('warning', 'File not found in any location: ' . $filename);
                 return $this->response->setJSON([
                     'status' => 'error',
                     'message' => 'No file has been uploaded for this document.'
@@ -96,16 +176,85 @@ class File extends Controller
         $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{28,33}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
         
         if ($isGoogleDriveFile) {
-            // Redirect to Google Drive public URL
+            // Try to serve file content for full toolbar (same as viewFile method)
+            $content = null;
+            
+            // Try 1: OAuth service
             $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
             if ($driveService->isEnabled()) {
-                $publicUrl = $driveService->getFileUrl($filename);
-                return redirect()->to($publicUrl);
+                try {
+                    log_message('debug', 'Downloading Google Drive file using OAuth: ' . $filename);
+                    
+                    $tempFile = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+                    $driveService->downloadFile($filename, $tempFile);
+                    
+                    if (file_exists($tempFile)) {
+                        $content = file_get_contents($tempFile);
+                        unlink($tempFile);
+                        log_message('info', 'Successfully served Google Drive file (OAuth): ' . $filename);
+                    }
+                } catch (\Exception $e) {
+                    log_message('warning', 'OAuth download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Try 2: Service account fallback
+            if (!$content) {
+                try {
+                    $serviceAccountPath = WRITEPATH . 'credentials/google_credentials.json';
+                    if (file_exists($serviceAccountPath)) {
+                        $client = new \Google\Client();
+                        $client->setAuthConfig($serviceAccountPath);
+                        $client->addScope([\Google\Service\Drive::DRIVE]);
+                        
+                        $accessToken = $client->fetchAccessTokenWithAssertion();
+                        
+                        if (isset($accessToken['access_token'])) {
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $filename . '?alt=media&supportsAllDrives=true');
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                'Authorization: Bearer ' . $accessToken['access_token']
+                            ]);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            
+                            $content = curl_exec($ch);
+                            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+                            
+                            if ($httpCode == 200 && !empty($content)) {
+                                log_message('info', 'Successfully served Google Drive file (Service Account): ' . $filename);
+                            } else {
+                                $content = null;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Service account download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Serve file if we got content
+            if ($content) {
+                return $this->response
+                            ->setHeader('Content-Type', 'application/pdf')
+                            ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '.pdf"')
+                            ->setHeader('Accept-Ranges', 'bytes')
+                            ->setBody($content);
             } else {
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Google Drive service not available.'
-                ])->setStatusCode(500);
+                // Last resort: redirect to Google Drive URL
+                log_message('warning', 'All download methods failed, redirecting to Google Drive: ' . $filename);
+                $driveService = new \App\Libraries\GoogleDriveOAuthService();
+                if ($driveService->isEnabled()) {
+                    $publicUrl = $driveService->getFileUrl($filename);
+                    return redirect()->to($publicUrl);
+                } else {
+                    return $this->response->setJSON([
+                        'status' => 'error',
+                        'message' => 'Unable to access file. Please try again later.'
+                    ])->setStatusCode(500);
+                }
             }
         } else {
             // Handle local file (fallback for existing files)

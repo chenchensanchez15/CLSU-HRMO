@@ -526,11 +526,11 @@ window.onclick = function(event) {
                                 class="view-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
                                 data-file-id="<?= $isGoogleDriveFile ? esc($cs['certificate']) : '' ?>"
                                 data-file="<?= !$isGoogleDriveFile ? site_url('applications/viewCivilCertificate/'.$cs['certificate']) : '' ?>">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-1 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                            View Certificate
+                            <span class="pointer-events-none">View Certificate</span>
                         </button>
                     <?php else: ?>
                         <span class="text-gray-500 text-xs">-</span>
@@ -599,11 +599,11 @@ window.onclick = function(event) {
                                 class="view-training-certificate-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800"
                                 data-file-id="<?= $isGoogleDriveFile ? esc($tr['certificate_file']) : '' ?>"
                                 data-file="<?= !$isGoogleDriveFile ? site_url('applications/viewTrainingCertificate/'.$app['id_job_application'].'/'.$tr['certificate_file']) : '' ?>">
-                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-1 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                            View Certificate
+                            <span class="pointer-events-none">View Certificate</span>
                         </button>
                     <?php else: ?>
                         <span class="text-gray-500 text-xs">-</span>
@@ -706,13 +706,13 @@ window.onclick = function(event) {
                     if ($docTypeId == 7) { // Training certificates (could be combined PDF)
                         $fileUrl = site_url('applications/viewTrainingCertificate/' . ($app['id_job_application'] ?? '') . '/' . $file['id']);
                     } else {
-                        // Other documents (shouldn't happen with current logic, but fallback)
-                        $fileUrl = site_url('applications/viewDocument/' . ($app['id_job_application'] ?? '') . '/' . urlencode($file['name']));
+                        // Other documents - use File controller which handles all file types
+                        $fileUrl = site_url('file/viewFile/' . $file['id']);
                     }
                     $fileIdAttr = '';
                     $fileDataAttr = 'data-file="' . esc($fileUrl) . '"';
                 } else {
-                    // Google Drive file
+                    // Google Drive file - use data-file-id attribute
                     $fileIdAttr = 'data-file-id="' . esc($file['id']) . '"';
                     $fileDataAttr = '';
                 }
@@ -739,11 +739,11 @@ window.onclick = function(event) {
                                    <?= $fileIdAttr ?>
                                    <?= $fileDataAttr ?>
                                    data-file-name="<?= esc($file['name']) ?>">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-4 h-4 mr-1 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                 </svg>
-                                View Document
+                                <span class="pointer-events-none">View Document</span>
                             </button>
                        <?php endif; ?>
                     </div>
@@ -964,21 +964,23 @@ window.onclick = function(event) {
                                 </td>
                             </tr>
 
+
+
                             <!-- 3 -->
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="px-4 py-3 font-medium">
-                                    3. Resume
+                                    3. Certificate of Eligibility/Rating/License
                                 </td>
                                 <td class="px-4 py-3 text-center">
-                                    <div id="resume-view-link"
+                                    <div id="eligibility-view-link"
                                          class="flex justify-center text-gray-400 italic text-xs">
                                         No file available
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-center">
                                     <input type="file"
-                                           name="resume"
-                                           id="resume-upload"
+                                           name="eligibility"
+                                           id="eligibility-upload"
                                            accept=".pdf"
                                            data-max-size="5242880"
                                            class="block w-full text-xs text-gray-600 cursor-pointer">
@@ -1027,9 +1029,50 @@ window.onclick = function(event) {
                                 </td>
                             </tr>
 
+                            <!-- 6 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    6. Certificate of Employment
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="employment-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="employment"
+                                           id="employment-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
+                            <!-- 7 -->
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="px-4 py-3 font-medium">
+                                    7. Certificate of Trainings and Seminars
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div id="trainings-view-link"
+                                         class="flex justify-center text-gray-400 italic text-xs">
+                                        No file available
+                                    </div>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <input type="file"
+                                           name="trainings"
+                                           id="trainings-upload"
+                                           accept=".pdf"
+                                           data-max-size="5242880"
+                                           class="block w-full text-xs text-gray-600 cursor-pointer">
+                                </td>
+                            </tr>
+
                         </tbody>
                     </table>
-                </div>
 
                 <!-- FOOTER -->
                 <div class="flex justify-end gap-3 pt-4 border-t">
@@ -1081,11 +1124,27 @@ function openEditModal(applicationId) {
                     </button>`;
             }
 
+            function createTrainingsViewButton(url, count) {
+                return `
+                    <button type="button" class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800" data-file="${url}">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        View Document (${count})
+                    </button>`;
+            }
+
             if (data.pds) document.getElementById('pds-view-link').innerHTML = createViewButton(data.pds);
             if (data.performance_rating) document.getElementById('performance-rating-view-link').innerHTML = createViewButton(data.performance_rating);
-            if (data.resume) document.getElementById('resume-view-link').innerHTML = createViewButton(data.resume);
+            if (data.eligibility) document.getElementById('eligibility-view-link').innerHTML = createViewButton(data.eligibility);
             if (data.tor) document.getElementById('tor-view-link').innerHTML = createViewButton(data.tor);
             if (data.diploma) document.getElementById('diploma-view-link').innerHTML = createViewButton(data.diploma);
+            if (data.employment) document.getElementById('employment-view-link').innerHTML = createViewButton(data.employment);
+            if (data.trainings) {
+                const trainingsCount = data.trainings_count || 0;
+                document.getElementById('trainings-view-link').innerHTML = createTrainingsViewButton(data.trainings, trainingsCount);
+            }
 
             modal.classList.remove('opacity-0', 'pointer-events-none');
             modal.classList.add('opacity-100');
@@ -1122,50 +1181,21 @@ document.addEventListener('click', function(e) {
     const btn = e.target.closest('.view-document-btn');
     if (!btn) return;
 
-    // Check if this is a Google Drive file ID (new approach)
+    let fileUrl = '';
+    
+    // Check for data-file-id first (Google Drive files from uploaded documents section)
     const fileId = btn.getAttribute('data-file-id');
-    const fileName = btn.getAttribute('data-file-name');
-    
     if (fileId) {
-        // Google Drive file - open directly in viewer
-        const googleDriveUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-        Swal.close();
-        
-        // Open document viewer modal (overlays on top of edit modal)
-        const modal = document.getElementById('document-modal');
-        const frame = document.getElementById('document-frame');
-        frame.src = googleDriveUrl;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        return;
+        // Use File controller endpoint which will download and serve with full toolbar
+        fileUrl = '<?= site_url('file/viewFile/') ?>' + fileId;
+    } else {
+        // Use data-file URL (for other documents)
+        fileUrl = btn.getAttribute('data-file');
     }
     
-    // Fallback to old approach (data-file URL)
-    const fileUrl = btn.getAttribute('data-file');
     if (!fileUrl) return;
-    
-    // Extract filename from URL to check if it's a Google Drive file
-    const urlParts = fileUrl.split('/');
-    const filename = urlParts[urlParts.length - 1];
-    const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(filename) && !/^\d{10}_/.test(filename);
 
-    if(isGoogleDriveFile) {
-        // For Google Drive files, show in modal with iframe
-        const googleDriveUrl = `https://drive.google.com/file/d/${filename}/preview`;
-        Swal.close();
-        
-        // Open document viewer modal (overlays on top of edit modal)
-        const modal = document.getElementById('document-modal');
-        const frame = document.getElementById('document-frame');
-        frame.src = googleDriveUrl;
-
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        return;
-    }
-    
-    // Show loading first
+    // Show loading
     Swal.fire({
         title: 'Loading...',
         text: 'Please wait while the file loads.',
@@ -1173,15 +1203,13 @@ document.addEventListener('click', function(e) {
         didOpen: () => Swal.showLoading()
     });
 
-    // Simulate 2-second loading delay
+    // Simply load the file in iframe - controller will serve with full PDF viewer toolbar
+    const modal = document.getElementById('document-modal');
+    const frame = document.getElementById('document-frame');
+    frame.src = fileUrl;
+
     setTimeout(() => {
         Swal.close();
-        
-        // Open document viewer modal (overlays on top of edit modal)
-        const modal = document.getElementById('document-modal');
-        const frame = document.getElementById('document-frame');
-        frame.src = fileUrl;
-
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }, 1000);
@@ -1213,55 +1241,32 @@ document.addEventListener('click', async function(e) {
     // Show loading
    Swal.fire({
         title: 'Loading Certificates...',
-        text: 'Please wait while we fetch all training certificates.',
+        text: 'Please wait while we combine all training certificates.',
         allowOutsideClick: false,
         didOpen: () => Swal.showLoading()
     });
     
-    try {
-        // Fetch list of all training certificates
-        const response = await fetch(`<?= site_url('training-documents/view-multiple/') ?>${applicationId}`);
-        const data = await response.json();
-        
-      if (!response.ok || data.status !== 'success') {
-            throw new Error(data.message || 'Failed to fetch certificates');
-        }
-        
-      if (data.count === 0) {
-          Swal.fire({
-                icon: 'warning',
-                title: 'No Certificates',
-                text: 'No training certificates found for this application.',
-                showConfirmButton: false,
-                timer: 2000
-            });
-          return;
-        }
-        
-        // Store certificates and initialize viewer
-        trainingCertificates = data.certificates;
-        currentCertIndex = 0;
-        
-        // Update UI
-        document.getElementById('total-cert-count').textContent = trainingCertificates.length;
-        updateTrainingCertificateViewer();
-        
-        // Show modal
-        const modal = document.getElementById('multiple-training-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-       Swal.close();
-        
-    } catch (err) {
-       Swal.close();
-       Swal.fire({
+    // Get the main document modal and iframe
+    const modal = document.getElementById('document-modal');
+    const frame = document.getElementById('document-frame');
+    
+    if (!modal || !frame) {
+        Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: err.message || 'Unable to load training certificates.'
+            text: 'Unable to load certificate viewer.',
+            timer: 2000
         });
-        console.error(err);
+        return;
     }
+    
+    setTimeout(() => {
+        // Use the combined PDF endpoint for this specific application
+        frame.src = '<?= site_url('applications/viewCombinedTrainingCertificates/') ?>' + applicationId;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        Swal.close();
+    }, 800);
 });
 
 function updateTrainingCertificateViewer() {
@@ -1280,8 +1285,8 @@ function updateTrainingCertificateViewer() {
        const isGoogleDrive = /^[a-zA-Z0-9_-]{20,}$/.test(cert.file) && !/^\d{10}_/.test(cert.file);
         
       if (isGoogleDrive) {
-            // Google Drive - use direct preview
-           frame.src = `https://drive.google.com/file/d/${cert.file}/preview`;
+            // Google Drive - use File controller which downloads and serves with full toolbar
+           frame.src = '<?= site_url('file/viewFile/') ?>' + cert.file;
         } else {
             // Local file - use controller endpoint
            frame.src = `<?= site_url('training-documents/get-certificate/') ?>${encodeURIComponent(cert.file)}`;
@@ -1374,15 +1379,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle civil service and training certificate view buttons only
     document.addEventListener('click', async (e) => {
+        // Use closest() to ensure we get the button element, not its children
         const civilBtn = e.target.closest('.view-certificate-btn');
         const trainingBtn = e.target.closest('.view-training-certificate-btn');
-        // Removed documentBtn handling to prevent duplication
         
         if (!civilBtn && !trainingBtn) return;
         
+        // Prevent multiple triggers from child elements (SVG, text nodes)
         e.preventDefault();
         e.stopPropagation();
         
+        // Get the actual button that was clicked
         const btn = civilBtn || trainingBtn;
         const fileId = btn.dataset.fileId?.trim();
         const fileUrl = btn.dataset.file?.trim();

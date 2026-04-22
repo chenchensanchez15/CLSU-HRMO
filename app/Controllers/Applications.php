@@ -375,6 +375,25 @@ foreach ($civilServiceRecords as $cs) {
 // =========================
 // INSERT INTO application_trainings
 // =========================
+
+// First, fetch existing trainings from applicant_trainings to get certificate_file (Google Drive IDs)
+$userId = session()->get('user_id');
+$existingTrainings = $db->table('applicant_trainings')
+    ->where('user_id', $userId)
+    ->orderBy('added_date', 'ASC')
+    ->get()
+    ->getResultArray();
+
+// Create a map of training names to their certificate files
+$trainingCertificateMap = [];
+foreach ($existingTrainings as $training) {
+    // Use training name + date_from as key to match
+    $key = strtolower(trim($training['training_name'])) . '|' . ($training['date_from'] ?? '');
+    if (!empty($training['certificate_file'])) {
+        $trainingCertificateMap[$key] = $training['certificate_file'];
+    }
+}
+
 $training_categories   = $this->request->getPost('training_category_id') ?? [];
 $training_names        = $this->request->getPost('training_name') ?? [];
 $training_venues       = $this->request->getPost('training_venue') ?? [];
@@ -400,34 +419,86 @@ for ($i = 0; $i < $totalRows; $i++) {
 
     $certificateFile = null;
 
-    // 1️⃣ NEW upload → writable/uploads/trainings
+    // 1️⃣ NEW upload → Upload to Google Drive (not local storage)
     if (
         isset($uploadedFiles[$i]) &&
         $uploadedFiles[$i]->isValid() &&
         !$uploadedFiles[$i]->hasMoved()
     ) {
-        // Use consistent naming: {timestamp}_{original_name}
-        $extension = $uploadedFiles[$i]->getClientExtension();
-        $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
-        // Sanitize filename: remove special characters but keep underscores
-        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-        $certificateFile = time() . '_' . $sanitizedBaseName . '.' . $extension;
-        $uploadedFiles[$i]->move($writablePath, $certificateFile);
+        try {
+            // Initialize Google Drive service
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if (!$driveService->isAuthenticated()) {
+                log_message('warning', 'Google Drive not authenticated for training upload');
+                // Skip upload if not authenticated
+                $certificateFile = null;
+            } else {
+                // Create temporary file
+                $tempDir = WRITEPATH . 'temp/';
+                if (!is_dir($tempDir)) {
+                    mkdir($tempDir, 0755, true);
+                }
+                
+                // Use consistent naming: {timestamp}_{original_name}
+                $extension = $uploadedFiles[$i]->getClientExtension();
+                $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
+                $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+                $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+                
+                $tempPath = $tempDir . $googleDriveFileName;
+                $fileContent = file_get_contents($uploadedFiles[$i]->getTempName());
+                file_put_contents($tempPath, $fileContent);
+                
+                log_message('debug', 'Uploading training certificate to Google Drive: ' . $googleDriveFileName);
+                
+                // Upload to Google Drive
+                $googleFileId = $driveService->uploadFile($tempPath, $googleDriveFileName, $uploadedFiles[$i]->getMimeType());
+                
+                // Clean up temp file
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
+                
+                $certificateFile = $googleFileId;
+                log_message('info', 'Training certificate uploaded to Google Drive. File ID: ' . $googleFileId);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Training certificate upload failed: ' . $e->getMessage());
+            $certificateFile = null;
+        }
     }
 
-    // 2️⃣ PREFILLED certificate → COPY public → writable
-    elseif (!empty($existingFiles[$i])) {
-
-        $oldFile = $existingFiles[$i];
-
-        // already exists in writable
-        if (file_exists($writablePath . $oldFile)) {
-            $certificateFile = $oldFile;
+    // 2️⃣ EXISTING certificate from applicant_trainings → Copy Google Drive File ID
+    elseif (!empty($training_names[$i])) {
+        // Try to find matching training in applicant_trainings
+        $key = strtolower(trim($training_names[$i])) . '|' . (!empty($training_from[$i]) ? date('Y-m-d', strtotime($training_from[$i])) : '');
+        
+        if (isset($trainingCertificateMap[$key])) {
+            // Found matching training - copy the Google Drive File ID
+            $certificateFile = $trainingCertificateMap[$key];
+            log_message('debug', 'Copied certificate_file from applicant_trainings: ' . $certificateFile);
         }
-        // copy from public/uploads → writable/uploads/trainings
-        elseif (file_exists($publicPath . $oldFile)) {
-            copy($publicPath . $oldFile, $writablePath . $oldFile);
-            $certificateFile = $oldFile;
+        // Fallback: check existingFiles array (for backward compatibility)
+        elseif (!empty($existingFiles[$i])) {
+            $oldFile = $existingFiles[$i];
+            
+            // Check if it's already a Google Drive File ID
+            $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $oldFile) && !preg_match('/^\d{10}_/', $oldFile);
+            
+            if ($isGoogleDriveFile) {
+                // It's a Google Drive File ID - use it directly
+                $certificateFile = $oldFile;
+                log_message('debug', 'Using existing Google Drive File ID: ' . $oldFile);
+            }
+            // Legacy: local file handling (for old files before Google Drive migration)
+            elseif (file_exists($writablePath . $oldFile)) {
+                $certificateFile = $oldFile;
+            }
+            elseif (file_exists($publicPath . $oldFile)) {
+                copy($publicPath . $oldFile, $writablePath . $oldFile);
+                $certificateFile = $oldFile;
+            }
         }
     }
 
@@ -446,11 +517,13 @@ for ($i = 0; $i < $totalRows; $i++) {
         'training_hours'       => $training_hours[$i] ?? 0,
         'training_sponsor'     => $training_sponsors[$i] ?? 'N/A',
         'training_remarks'     => $training_remarks[$i] ?? 'N/A',
-        'certificate_file'     => $certificateFile,
+        'certificate_file'     => $certificateFile,  // ← Now properly includes Google Drive File IDs
         'added_date'           => date('Y-m-d H:i:s'),
         'created_at'           => date('Y-m-d H:i:s'),
         'updated_at'           => date('Y-m-d H:i:s')
     ]);
+    
+    log_message('debug', 'Inserted training: ' . $training_names[$i] . ' | certificate_file: ' . ($certificateFile ?? 'NULL'));
 }
 // =========================
 // DOCUMENTS: Now handled via applicant_documents (per-user, not per-application)
@@ -727,10 +800,12 @@ unset($work);
                             if (file_exists($fullPath)) {
                                 log_message('debug', 'Combined PDF exists at: ' . $fullPath . ', Size: ' . filesize($fullPath) . ' bytes');
                             } else {
-                                log_message('error', 'Combined PDF NOT FOUND at: ' . $fullPath);
+                                log_message('warning', 'Combined PDF NOT FOUND at: ' . $fullPath . ', will use original file ID');
+                                // Keep the original fileId from applicant_documents
                             }
                         } else {
-                            log_message('error', 'Failed to generate combined training certificate');
+                            log_message('warning', 'Failed to generate combined training certificate, using original file ID');
+                            // Keep the original fileId from applicant_documents
                         }
                     }
                                     
@@ -749,11 +824,63 @@ unset($work);
                 
                 log_message('debug', 'Total files collected: ' . count($googleDriveFiles));
             } else {
-                log_message('error', 'Google Drive service NOT ENABLED');
+                log_message('warning', 'Google Drive service NOT ENABLED - using documents from database directly');
+                // Fallback: Add documents from database even without Google Drive metadata
+                foreach ($docs as $doc) {
+                    $fileId = $doc['filename'];
+                    $docTypeId = $doc['document_type_id'];
+                    
+                    $docLabels = [
+                        1 => 'Personal Data Sheet (PDS)',
+                        2 => 'Performance Rating',
+                        3 => 'Certificate of Eligibility/Rating/License',
+                        4 => 'Transcript of Records (TOR)',
+                        5 => 'Diploma or Proof of Graduation',
+                        6 => 'Certificate of Employment',
+                        7 => 'Certificate of Trainings and Seminars'
+                    ];
+                    
+                    $fileName = $docLabels[$docTypeId] ?? 'Document';
+                    
+                    $googleDriveFiles[] = [
+                        'id' => $fileId,
+                        'name' => $fileName,
+                        'document_type_id' => $docTypeId,
+                        'mimeType' => 'application/pdf'
+                    ];
+                    
+                    log_message('debug', 'Added document without metadata: ' . $fileName . ' (ID: ' . $fileId . ')');
+                }
             }
         } catch (\Exception $e) {
             log_message('error', 'Exception fetching Google Drive metadata: ' . $e->getMessage());
             log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+            
+            // Fallback: Still show documents from database even if Google Drive fetch fails
+            log_message('warning', 'Using documents from database due to Google Drive error');
+            foreach ($docs as $doc) {
+                $fileId = $doc['filename'];
+                $docTypeId = $doc['document_type_id'];
+                
+                $docLabels = [
+                    1 => 'Personal Data Sheet (PDS)',
+                    2 => 'Performance Rating',
+                    3 => 'Certificate of Eligibility/Rating/License',
+                    4 => 'Transcript of Records (TOR)',
+                    5 => 'Diploma or Proof of Graduation',
+                    6 => 'Certificate of Employment',
+                    7 => 'Certificate of Trainings and Seminars'
+                ];
+                
+                $fileName = $docLabels[$docTypeId] ?? 'Document';
+                
+                $googleDriveFiles[] = [
+                    'id' => $fileId,
+                    'name' => $fileName,
+                    'document_type_id' => $docTypeId,
+                    'mimeType' => 'application/pdf'
+                ];
+            }
         }
     } else {
         log_message('error', 'No user_id available for fetching documents');
@@ -1030,7 +1157,7 @@ $training_categories   = $this->request->getPost('training_category_id') ?? [];
 $training_names        = $this->request->getPost('training_name') ?? [];
 $training_from         = $this->request->getPost('training_date_from') ?? [];
 $training_to           = $this->request->getPost('training_date_to') ?? [];
-$training_venues       = $this->request->getPost('training_venue') ?? []; // <-- added
+$training_venues       = $this->request->getPost('training_venue') ?? [];
 $training_facilitators = $this->request->getPost('training_facilitator') ?? [];
 $training_hours        = $this->request->getPost('training_hours') ?? [];
 $training_sponsors     = $this->request->getPost('training_sponsor') ?? [];
@@ -1039,35 +1166,92 @@ $existingFiles         = $this->request->getPost('existing_certificate_file') ??
 
 $trainTable = $db->table('application_trainings');
 $writablePath = WRITEPATH . 'uploads/trainings/';
+$publicPath = FCPATH . 'uploads/';
 $uploadedFiles = $this->request->getFileMultiple('training_certificate');
 $totalRows = count($training_names);
 
 for ($i = 0; $i < $totalRows; $i++) {
     if (empty(trim($training_names[$i] ?? ''))) continue;
 
-    $certificateFile = $existingFiles[$i] ?? null;
+    $certificateFile = null;
 
+    // 1️⃣ NEW upload → Upload to Google Drive
     if (isset($uploadedFiles[$i]) && $uploadedFiles[$i]->isValid() && !$uploadedFiles[$i]->hasMoved()) {
-        // Use consistent naming: {timestamp}_{original_name}
-        $extension = $uploadedFiles[$i]->getClientExtension();
-        $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
-        // Sanitize filename: remove special characters but keep underscores
-        $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
-        $certificateFile = time() . '_' . $sanitizedBaseName . '.' . $extension;
-        $uploadedFiles[$i]->move($writablePath, $certificateFile);
+        try {
+            // Initialize Google Drive service
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if (!$driveService->isAuthenticated()) {
+                log_message('warning', 'Google Drive not authenticated for training upload');
+                $certificateFile = null;
+            } else {
+                // Create temporary file
+                $tempDir = WRITEPATH . 'temp/';
+                if (!is_dir($tempDir)) {
+                    mkdir($tempDir, 0755, true);
+                }
+                
+                // Use consistent naming: {timestamp}_{original_name}
+                $extension = $uploadedFiles[$i]->getClientExtension();
+                $baseName = pathinfo($uploadedFiles[$i]->getClientName(), PATHINFO_FILENAME);
+                $sanitizedBaseName = preg_replace('/[^a-zA-Z0-9_-]/', '_', $baseName);
+                $googleDriveFileName = time() . '_' . $sanitizedBaseName . '.' . $extension;
+                
+                $tempPath = $tempDir . $googleDriveFileName;
+                $fileContent = file_get_contents($uploadedFiles[$i]->getTempName());
+                file_put_contents($tempPath, $fileContent);
+                
+                log_message('debug', 'Uploading training certificate to Google Drive: ' . $googleDriveFileName);
+                
+                // Upload to Google Drive
+                $googleFileId = $driveService->uploadFile($tempPath, $googleDriveFileName, $uploadedFiles[$i]->getMimeType());
+                
+                // Clean up temp file
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
+                
+                $certificateFile = $googleFileId;
+                log_message('info', 'Training certificate uploaded to Google Drive. File ID: ' . $googleFileId);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Training certificate upload failed: ' . $e->getMessage());
+            $certificateFile = null;
+        }
+    }
+    // 2️⃣ EXISTING certificate → Check if it's a Google Drive File ID or local file
+    elseif (!empty($existingFiles[$i])) {
+        $oldFile = $existingFiles[$i];
+        
+        // Check if it's already a Google Drive File ID
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $oldFile) && !preg_match('/^\d{10}_/', $oldFile);
+        
+        if ($isGoogleDriveFile) {
+            // It's a Google Drive File ID - use it directly
+            $certificateFile = $oldFile;
+            log_message('debug', 'Using existing Google Drive File ID: ' . $oldFile);
+        }
+        // Legacy: local file handling
+        elseif (file_exists($writablePath . $oldFile)) {
+            $certificateFile = $oldFile;
+        }
+        elseif (file_exists($publicPath . $oldFile)) {
+            copy($publicPath . $oldFile, $writablePath . $oldFile);
+            $certificateFile = $oldFile;
+        }
     }
 
     $data = [
         'training_category_id' => $training_categories[$i] ?? 1,
         'training_name'        => $training_names[$i],
-        'training_venue'       => $training_venues[$i] ?? 'N/A', // <-- added
+        'training_venue'       => $training_venues[$i] ?? 'N/A',
         'date_from'            => !empty($training_from[$i]) ? date('Y-m-d', strtotime($training_from[$i])) : null,
         'date_to'              => !empty($training_to[$i]) ? date('Y-m-d', strtotime($training_to[$i])) : null,
         'training_facilitator' => $training_facilitators[$i] ?? 'N/A',
         'training_hours'       => $training_hours[$i] ?? 0,
         'training_sponsor'     => $training_sponsors[$i] ?? 'N/A',
         'training_remarks'     => $training_remarks[$i] ?? 'N/A',
-        'certificate_file'     => $certificateFile,
+        'certificate_file'     => $certificateFile,  // ← Now properly handles Google Drive File IDs
         'updated_at'           => $currentDate
     ];
 
@@ -1079,6 +1263,8 @@ for ($i = 0; $i < $totalRows; $i++) {
         $data['created_at']         = $currentDate;
         $trainTable->insert($data);
     }
+    
+    log_message('debug', 'Updated/Inserted training: ' . $training_names[$i] . ' | certificate_file: ' . ($certificateFile ?? 'NULL'));
 }
 
 $deletedTrainings = $this->request->getPost('deleted_training_ids');
@@ -1322,6 +1508,9 @@ public function viewPhoto($user_id)
     $mime = mime_content_type($filePath) ?: 'image/jpeg';
     return $this->response->setHeader('Content-Type', $mime)
                           ->setHeader('Content-Disposition', 'inline; filename="' . basename($profile['photo']) . '"')
+                          ->setHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                          ->setHeader('Pragma', 'no-cache')
+                          ->setHeader('Expires', '0')
                           ->setBody(file_get_contents($filePath));
 }
 
@@ -1381,10 +1570,27 @@ public function getFiles($id)
         return $this->response->setJSON([
             'pds' => null,
             'performance_rating' => null,
-            'resume' => null,
+            'eligibility' => null,
             'tor' => null,
-            'diploma' => null
+            'diploma' => null,
+            'employment' => null,
+            'trainings' => null
         ]);
+    }
+    
+    // Fetch trainings for this application (needed for combining certificates)
+    $trainings = [];
+    $user_id = $application['user_id'];
+    if ($user_id) {
+        $trainings = $db->table('application_trainings at')
+                        ->join('lib_training_category tc', 'at.training_category_id = tc.id_training_category', 'left')
+                        ->select('at.id_application_trainings, at.training_name, at.date_from, at.date_to, at.training_facilitator, at.training_hours, at.training_sponsor, at.training_remarks, at.certificate_file, tc.training_category_name')
+                        ->where(['at.job_application_id' => $id])
+                        ->orderBy('at.date_from', 'DESC')
+                        ->get()
+                        ->getResultArray();
+        
+        log_message('debug', 'Trainings fetched for getFiles: ' . count($trainings));
     }
     
     // Get documents from applicant_documents by user_id
@@ -1393,14 +1599,36 @@ public function getFiles($id)
         ->get()
         ->getResultArray();
     
-    // Map to expected format
+    // Map to expected format - use File controller for viewing
     $files = [];
     foreach ($docs as $doc) {
         $docTypeId = $doc['document_type_id'];
-        if ($docTypeId == 1) $files['pds'] = $doc['filename'];
-        if ($docTypeId == 2) $files['performance_rating'] = $doc['filename'];
-        if ($docTypeId == 4) $files['tor'] = $doc['filename'];
-        if ($docTypeId == 5) $files['diploma'] = $doc['filename'];
+        $filename = $doc['filename'];  // Use the filename (Google Drive ID or local filename)
+        
+        // Special handling for trainings (document_type_id = 7)
+        // Combine multiple training certificates into one PDF
+        if ($docTypeId == 7 && !empty($trainings)) {
+            log_message('debug', 'Processing training certificates combination for edit modal...');
+            
+            $combiner = new \App\Libraries\TrainingCertificateCombiner();
+            $combinedFile = $combiner->getCombinedCertificatePath($id, $trainings);
+            
+            if ($combinedFile) {
+                // Use the combined PDF file path instead
+                $filename = $combinedFile;
+                log_message('debug', 'Using combined training certificate: ' . $combinedFile);
+            } else {
+                log_message('warning', 'Failed to generate combined training certificate, using original file ID');
+            }
+        }
+        
+        if ($docTypeId == 1) $files['pds'] = $filename;
+        if ($docTypeId == 2) $files['performance_rating'] = $filename;
+        if ($docTypeId == 3) $files['eligibility'] = $filename;
+        if ($docTypeId == 4) $files['tor'] = $filename;
+        if ($docTypeId == 5) $files['diploma'] = $filename;
+        if ($docTypeId == 6) $files['employment'] = $filename;
+        if ($docTypeId == 7) $files['trainings'] = $filename;
     }
     
     log_message('debug', 'Files found: ' . print_r($files, true));
@@ -1409,19 +1637,25 @@ public function getFiles($id)
         return $this->response->setJSON([
             'pds' => null,
             'performance_rating' => null,
-            'resume' => null,
+            'eligibility' => null,
             'tor' => null,
-            'diploma' => null
+            'diploma' => null,
+            'employment' => null,
+            'trainings' => null
         ]);
     }
     
-    // Return file URLs for viewing
+    // Return file URLs for viewing using File controller (same as uploaded documents section)
     return $this->response->setJSON([
-        'pds' => $files['pds'] ? base_url('applications/viewDocument/' . $id . '/pds') : null,
-        'performance_rating' => $files['performance_rating'] ? base_url('applications/viewDocument/' . $id . '/performance_rating') : null,
-        'resume' => $files['resume'] ? base_url('applications/viewDocument/' . $id . '/resume') : null,
-        'tor' => $files['tor'] ? base_url('applications/viewDocument/' . $id . '/tor') : null,
-        'diploma' => $files['diploma'] ? base_url('applications/viewDocument/' . $id . '/diploma') : null,
+        'pds' => $files['pds'] ? base_url('file/viewFile/' . $files['pds']) : null,
+        'performance_rating' => $files['performance_rating'] ? base_url('file/viewFile/' . $files['performance_rating']) : null,
+        'eligibility' => $files['eligibility'] ? base_url('file/viewFile/' . $files['eligibility']) : null,
+        'tor' => $files['tor'] ? base_url('file/viewFile/' . $files['tor']) : null,
+        'diploma' => $files['diploma'] ? base_url('file/viewFile/' . $files['diploma']) : null,
+        'employment' => $files['employment'] ? base_url('file/viewFile/' . $files['employment']) : null,
+        // Training certificates use viewTrainingCertificate endpoint for combined PDF support
+        'trainings' => $files['trainings'] ? base_url('applications/viewTrainingCertificate/' . $id . '/' . $files['trainings']) : null,
+        'trainings_count' => count($trainings), // Return count for display in button
     ]);
 }
 
@@ -1631,6 +1865,117 @@ private function get_monthly_salary($job_vacancy_id)
         LIMIT 1", [$item->salary_grade, $schedule->id_salary_schedule])->getRow();
 
     return $salary ? $salary->sg_sin1 : null;
+}
+
+/**
+ * View combined training certificates for an application
+ * Downloads PDFs from Google Drive and combines them using FPDI
+ */
+public function viewCombinedTrainingCertificates($applicationId)
+{
+    // Get application to find the user
+    $db = \Config\Database::connect();
+    $application = $db->table('job_applications')
+        ->where('id_job_application', $applicationId)
+        ->get()
+        ->getRowArray();
+    
+    if (!$application) {
+        return $this->response->setStatusCode(404)
+            ->setJSON(['message' => 'Application not found']);
+    }
+    
+    $userId = $application['user_id'];
+    
+    // Get all training certificates for this applicant
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+    $certificates = $trainingModel
+        ->where('user_id', $userId)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->orderBy('added_date', 'ASC')
+        ->findAll();
+
+    if (empty($certificates)) {
+        // Return a simple PDF with message when no certificates found
+        $pdf = new \setasign\Fpdi\Fpdi();
+        $pdf->AddPage();
+        $pdf->SetFont('Arial', 'B', 16);
+        $pdf->Cell(0, 10, 'No Training Certificates Found', 0, 1, 'C');
+        $pdf->SetFont('Arial', '', 12);
+        $pdf->Ln(10);
+        $pdf->MultiCell(0, 10, 'This applicant has not uploaded any training certificates yet.', 0, 'C');
+        
+        return $this->response
+            ->setHeader('Content-Type', 'application/pdf')
+            ->setHeader('Content-Disposition', 'inline; filename="Training_Certificates.pdf"')
+            ->setBody($pdf->Output('S'));
+    }
+
+    // Use TrainingCertificateCombiner library to combine certificates
+    require_once APPPATH . 'Libraries/TrainingCertificateCombiner.php';
+    $combiner = new \App\Libraries\TrainingCertificateCombiner();
+    
+    // Generate unique filename based on application ID and timestamp
+    $outputFilename = 'combined_training_app_' . $applicationId . '_' . time() . '.pdf';
+    
+    // Before combining, download Google Drive files to local storage temporarily
+    $googleDriveService = new \App\Libraries\GoogleDriveOAuthService();
+    
+    foreach ($certificates as &$cert) {
+        $certificateFile = $cert['certificate_file'];
+        
+        // Check if it's a Google Drive file ID
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) && !preg_match('/^\d{10}_/', $certificateFile);
+        
+        if ($isGoogleDriveFile) {
+            log_message('debug', 'Downloading Google Drive file: ' . $certificateFile);
+            
+            // Download from Google Drive to local temp storage
+            $localFilePath = WRITEPATH . 'uploads/trainings/' . $certificateFile . '.pdf';
+            
+            if (!file_exists($localFilePath)) {
+                try {
+                    $googleDriveService->downloadFile($certificateFile, $localFilePath);
+                    log_message('debug', 'Downloaded to: ' . $localFilePath);
+                } catch (\Exception $e) {
+                    log_message('error', 'Failed to download Google Drive file: ' . $certificateFile . ' - ' . $e->getMessage());
+                }
+            }
+            
+            // Update certificate_file path to local file for combiner
+            $cert['certificate_file'] = $certificateFile . '.pdf';
+        }
+    }
+    
+    // Combine all certificates into one PDF
+    $result = $combiner->combineCertificates($certificates, $outputFilename);
+    
+    if ($result) {
+        // Serve the combined PDF
+        $filePath = WRITEPATH . 'uploads/trainings/' . $result;
+        
+        if (file_exists($filePath)) {
+            return $this->response
+                ->setHeader('Content-Type', 'application/pdf')
+                ->setHeader('Content-Disposition', 'inline; filename="All_Training_Certificates.pdf"')
+                ->setBody(file_get_contents($filePath));
+        }
+    }
+    
+    // If combination failed, return error PDF
+    $pdf = new \setasign\Fpdi\Fpdi();
+    $pdf->AddPage();
+    $pdf->SetFont('Arial', 'B', 16);
+    $pdf->Cell(0, 10, 'Error Combining Certificates', 0, 1, 'C');
+    $pdf->SetFont('Arial', '', 12);
+    $pdf->Ln(10);
+    $pdf->MultiCell(0, 10, 'Unable to combine training certificates. Please try again or contact support.', 0, 'C');
+    
+    return $this->response
+        ->setHeader('Content-Type', 'application/pdf')
+        ->setHeader('Content-Disposition', 'inline; filename="Error_Combining_Certificates.pdf"')
+        ->setBody($pdf->Output('S'));
 }
 
 }

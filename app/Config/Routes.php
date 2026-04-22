@@ -37,6 +37,11 @@ $routes->get('applications/view/(:num)', 'Applications::view/$1');
 $routes->post('applications/update/(:num)', 'Applications::update/$1'); // this fixes your 404
 $routes->post('applications/withdraw/(:num)', 'Applications::withdraw/$1');
 
+// Google Drive OAuth
+$routes->get('google/drive', 'Google::drive');
+$routes->get('google/callback', 'Google::callback');
+$routes->get('google/callback/', 'Google::callback'); // Handle trailing slash
+
 // Documents & Files
 $routes->get('applications/viewDocument/(:num)/(:segment)', 'Applications::viewDocument/$1/$2');
 $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
@@ -75,9 +80,12 @@ $routes->get('files/training/(:any)', 'Files::training/$1');
 $routes->get('files/document/(:any)', 'Files::document/$1');
 // New routes for multi-document training certificate viewer (actual files, NOT combined)
 $routes->get('training-documents/view-multiple/(:num)', 'TrainingDocuments::viewMultiple/$1');
+$routes->get('training-documents/view-multiple-by-user/(:any)', 'TrainingDocuments::viewMultipleByUser/$1');
 $routes->get('training-documents/get-certificate/(:any)', 'TrainingDocuments::getCertificate/$1');
 // Route for user's own multiple training certificates in profile
 $routes->get('account/view-multiple-training-certificates', 'Account::viewMultipleTrainingCertificates');
+$routes->get('account/viewCombinedTrainingCertificates', 'Account::viewCombinedTrainingCertificates');
+$routes->get('applications/viewCombinedTrainingCertificates/(:num)', 'Applications::viewCombinedTrainingCertificates/$1');
 $routes->delete('account/deleteEducation/(:num)', 'Account::deleteEducation/$1');
 // Family background functionality removed
 $routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1');

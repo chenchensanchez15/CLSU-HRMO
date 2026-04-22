@@ -19,17 +19,27 @@ class Dashboard extends BaseController
 
     $userId = $session->get('user_id');
 
-    // Only check profile completion AFTER password has been changed
-    // This prevents redirecting user before they see the "change password" message
-    $passwordChanged = $session->get('password_changed');
+    // CRITICAL: Do NOT redirect to profile on FIRST LOGIN (first_login = 1)
+    // User must see "Change Password" alert FIRST before being redirected to profile
     
-    if ($passwordChanged) {
-        $session->remove('password_changed');
+    // Check if user needs to complete profile (for self-registered or admin-created users)
+    $isFirstLogin = $session->get('first_login');
+    
+    // If this is first login (first_login = 1), skip all redirect logic
+    // Let the dashboard view show the "Change Password" SweetAlert first
+    if ($isFirstLogin == 1) {
+        // Don't redirect - let user see the password change prompt
+        // Profile redirect will happen AFTER password is changed
+    } else {
+        // Only check profile completion for non-first-login users
+        
+        // Check if password was just changed
+        $passwordChanged = $session->get('password_changed');
         
         // Get the stored redirect URL (if any)
         $redirectAfterPasswordChange = $session->get('redirect_after_password_change');
         
-        // Check if personal details are complete before redirecting to apply
+        // Check profile completeness for ALL users who haven't completed it
         $applicantModel = new \App\Models\ApplicantModel();
         $profile = $applicantModel->where('user_id', $userId)->first();
         
@@ -40,17 +50,29 @@ class Dashboard extends BaseController
                               !empty($profile['citizenship']) && 
                               !empty($profile['residential_address']);
         
-        if (!$hasPersonalDetails) {
-            // Redirect to account/personal to fill details first, store apply URL for later
-            if ($redirectAfterPasswordChange) {
-                $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
-            }
-            return redirect()->to('/account/personal')->with('fill_details_required', true);
-        }
+        // If password was just changed OR profile completion required
+        $profileCompletionRequired = $session->get('profile_completion_required');
         
-        // Personal details complete, redirect to original apply URL (if exists)
-        if ($redirectAfterPasswordChange) {
-            return redirect()->to($redirectAfterPasswordChange);
+        if ($passwordChanged || $profileCompletionRequired) {
+            if ($passwordChanged) {
+                $session->remove('password_changed');
+            }
+            if ($profileCompletionRequired) {
+                $session->remove('profile_completion_required');
+            }
+            
+            if (!$hasPersonalDetails) {
+                // Redirect to account/personal to fill details first, store apply URL for later
+                if ($redirectAfterPasswordChange) {
+                    $session->set('redirect_after_profile_complete', $redirectAfterPasswordChange);
+                }
+                return redirect()->to('/account/personal')->with('fill_details_required', true);
+            }
+            
+            // Personal details complete, redirect to original apply URL (if exists)
+            if ($redirectAfterPasswordChange) {
+                return redirect()->to($redirectAfterPasswordChange);
+            }
         }
     }
 

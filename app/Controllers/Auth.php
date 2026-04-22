@@ -41,6 +41,8 @@ public function loginPost()
                 if ($redirectUrl) {
                     $session->set('redirect_after_password_change', $redirectUrl);
                 }
+                // Set flag that profile needs to be completed after password change
+                $session->set('profile_completion_required', true);
                 return redirect()->to('/dashboard')->with('first_login', true);
             }
 

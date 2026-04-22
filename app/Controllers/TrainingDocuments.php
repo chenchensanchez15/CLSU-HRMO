@@ -67,6 +67,65 @@ class TrainingDocuments extends BaseController
     }
     
     /**
+     * View multiple training certificates by user ID (for apply page)
+     */
+    public function viewMultipleByUser($user_id)
+    {
+        $db = \Config\Database::connect();
+        
+        // Fetch trainings for this user
+        $trainings = $db->table('applicant_trainings at')
+            ->join('lib_training_category tc', 'at.training_category_id = tc.id_training_category', 'left')
+            ->select('at.id_applicant_training, at.training_name, at.date_from, at.date_to, at.training_facilitator, at.training_hours, at.training_sponsor, at.training_remarks, at.certificate_file, tc.training_category_name')
+            ->where(['at.user_id' => $user_id])
+            ->orderBy('at.date_from', 'DESC')
+            ->get()
+            ->getResultArray();
+        
+       if (empty($trainings)) {
+           return $this->response
+                ->setStatusCode(404)
+                ->setJSON([
+                    'status' => 'error',
+                    'message' => 'No trainings found for this user.'
+                ]);
+        }
+        
+        // Collect all certificate files
+        $certificateFiles = [];
+        foreach ($trainings as $training) {
+           if (!empty($training['certificate_file'])) {
+                $certificateFiles[] = [
+                    'certificate_file' => $training['certificate_file'],
+                    'training_name' => $training['training_name'] ?? 'Training',
+                    'date_from' => !empty($training['date_from']) ? date('F d, Y', strtotime($training['date_from'])) : '-',
+                    'date_to' => !empty($training['date_to']) ? date('F d, Y', strtotime($training['date_to'])) : '-',
+                    'facilitator' => $training['training_facilitator'] ?? '-',
+                    'hours' => $training['training_hours'] ?? '-',
+                ];
+            }
+        }
+        
+       if (empty($certificateFiles)) {
+           return $this->response
+                ->setStatusCode(404)
+                ->setJSON([
+                    'status' => 'warning',
+                    'message' => 'No training certificates found.'
+                ]);
+        }
+        
+        // Return list of certificate files for the modal to display
+       return $this->response
+            ->setHeader('Content-Type', 'application/json')
+            ->setJSON([
+                'status' => 'success',
+                'certificates' => $certificateFiles,
+                'count' => count($certificateFiles)
+            ]);
+    }
+    
+    /**
      * Serve individual training certificate file
      */
     public function getCertificate($filename)
