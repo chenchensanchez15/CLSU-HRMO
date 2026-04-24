@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <head>
     <title>Applicant Dashboard | CLSU Online Job Application System</title>
-    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/CLSU-HRMO/public/assets/images/favicon.ico">
 </head>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -75,7 +75,7 @@ window.onclick = function(event) {
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
     <div class="flex items-center justify-between max-w-7xl mx-auto">
         <div class="flex items-center gap-4">
-            <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
+            <img src="/CLSU-HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <span class="text-xl font-bold">CLSU Online Job Application</span>
             </div>

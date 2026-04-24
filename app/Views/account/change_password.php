@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <head>
     <title>Change Password | CLSU Online Job Application System</title>
-    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/CLSU-HRMO/public/assets/images/favicon.ico">
 </head>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +31,7 @@ tailwind.config = {
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
     <div class="flex items-center gap-3">
         <img
-            src="/HRMO/public/assets/images/clsu-logo2.png"
+            src="/CLSU-HRMO/public/assets/images/clsu-logo2.png"
             alt="CLSU Logo"
             class="w-12 h-auto"
         >

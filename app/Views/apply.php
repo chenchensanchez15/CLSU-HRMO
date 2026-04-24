@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
 <head>
     <title>Application Information | CLSU Online Job Application System</title>
-    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/CLSU-HRMO/public/assets/images/favicon.ico">
 </head>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +29,7 @@
 
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
     <div class="flex items-center gap-3">
-        <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
+        <img src="/CLSU-HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
         <div class="flex flex-col leading-tight">
             <a href="<?= site_url('dashboard') ?>" class="text-xl font-bold no-underline hover:no-underline" style="text-decoration: none;">CLSU Online Job Application</a>
         </div>
@@ -234,6 +234,7 @@
             <!-- Smaller Edit Button -->
             <button id="editFromAlert" 
                     type="button"
+                    onclick="window.location.href='<?= base_url('account/personal') ?>#personal'"
                     class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -426,6 +427,7 @@ foreach($libDegreeLevels as $levelObj){
             <!-- Smaller Edit Button -->
             <button id="editEducationBtn" 
                     type="button"
+                    onclick="window.location.href='<?= base_url('account/personal') ?>#education'"
                     class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -515,6 +517,7 @@ foreach($libDegreeLevels as $levelObj){
             <!-- Smaller Edit Button -->
             <button id="editWorkBtn" 
                     type="button"
+                    onclick="window.location.href='<?= base_url('account/personal') ?>#work'"
                     class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -644,6 +647,7 @@ $civil_services = $db->table('applicant_civil_service')
             <!-- Smaller Edit Button -->
             <button id="editCivilServiceBtn" 
                     type="button"
+                    onclick="window.location.href='<?= base_url('account/personal') ?>#civil'"
                     class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -926,6 +930,7 @@ $trainings = $db->table('applicant_trainings at')
             <!-- Smaller Edit Button -->
             <button id="editTrainingsBtn" 
                     type="button"
+                    onclick="window.location.href='<?= base_url('account/personal') ?>#training'"
                     class="inline-flex items-center px-2 py-1 bg-clsuGreen text-white text-[10px] font-medium rounded hover:bg-green-800 transition-colors">
                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1243,6 +1248,16 @@ $documents = $documents ?? [
             'diploma'           => '5. Copy of Diploma or Proof of Graduation'
         ];
     }
+    
+    // Debug: Log Google Drive files count
+    if (!empty($googleDriveFiles)) {
+        log_message('debug', 'Apply page: Found ' . count($googleDriveFiles) . ' Google Drive files for user ' . $userId);
+        foreach ($googleDriveFiles as $gFile) {
+            log_message('debug', 'Apply page: Google Drive file - ' . $gFile['name'] . ' (ID: ' . $gFile['id'] . ')');
+        }
+    } else {
+        log_message('debug', 'Apply page: No Google Drive files found for user ' . $userId);
+    }
     ?>
 
     <div class="overflow-x-auto mb-5">
@@ -1255,37 +1270,127 @@ $documents = $documents ?? [
     </th>
     <td class="px-3 py-2 border-b border-gray-200 flex items-center gap-2">
         <?php 
-        // For dynamic requirements, we don't have existing documents to show by default
-        // For default requirements, show existing documents
-        // For split requirements, handle special cases
+        // Get the file value from database documents
         $hasExistingDoc = false;
         $fileValue = '';
+        $isCertificateType = false;
+        $certificateList = [];
+        $docTypeId = null; // Initialize docTypeId
         
+        // First, check if this is a default requirement (pds, tor, etc.)
         if (strpos($key, 'requirement_') === false && !empty($documents[$key])) {
-            // Default requirements with existing documents
             $hasExistingDoc = true;
             $fileValue = $documents[$key];
-        } elseif (strpos($key, '_tor') !== false) {
-            // Split TOR requirement
-            $fileValue = $documents['tor'] ?? '';
-            $hasExistingDoc = !empty($fileValue);
-        } elseif (strpos($key, '_diploma') !== false) {
-            // Split Diploma requirement
-            $fileValue = $documents['diploma'] ?? '';
-            $hasExistingDoc = !empty($fileValue);
-        } elseif (strpos($key, '_employment') !== false) {
-            // Employment certificate - would need to check work experience certificates
-            $hasExistingDoc = false; // No existing employment certificates in current structure
+            
+            // Set docTypeId for default requirements
+            if ($key === 'pds') $docTypeId = 1;
+            elseif ($key === 'performance_rating') $docTypeId = 2;
+            elseif ($key === 'eligibility') {
+                $docTypeId = 3;
+                $isCertificateType = true;
+                $certificateList = $certificateInfo['civil_service_certificates'] ?? [];
+            }
+            elseif ($key === 'tor') $docTypeId = 4;
+            elseif ($key === 'diploma') $docTypeId = 5;
+            elseif ($key === 'employment') $docTypeId = 6;
+            elseif ($key === 'trainings') {
+                $docTypeId = 7;
+                $isCertificateType = true;
+                $certificateList = $certificateInfo['training_certificates'] ?? [];
+            }
+        } 
+        // For split requirements (_tor, _diploma, etc.)
+        elseif (strpos($key, '_tor') !== false && !empty($documents['tor'])) {
+            $fileValue = $documents['tor'];
+            $hasExistingDoc = true;
+            $docTypeId = 4;
+        } elseif (strpos($key, '_diploma') !== false && !empty($documents['diploma'])) {
+            $fileValue = $documents['diploma'];
+            $hasExistingDoc = true;
+            $docTypeId = 5;
+        } elseif (strpos($key, '_employment') !== false && !empty($documents['employment'])) {
+            $fileValue = $documents['employment'];
+            $hasExistingDoc = true;
+            $docTypeId = 6;
         } elseif (strpos($key, '_trainings') !== false) {
-            // Training certificates - would need to check training certificates
-            $hasExistingDoc = false; // No existing training certificates in current structure
+            // Training certificates - check document type 7
+            $docTypeId = 7;
+            $isCertificateType = true;
+            $certificateList = $certificateInfo['training_certificates'] ?? [];
+            $hasExistingDoc = !empty($certificateList);
+        }
+        // For dynamic requirements, match by document type based on requirement text
+        elseif (strpos($key, 'requirement_') === 0) {
+            $labelLower = strtolower($label);
+            
+            // Map requirement text to document type IDs
+            if (strpos($labelLower, 'personal data sheet') !== false || strpos($labelLower, 'pds') !== false) {
+                $docTypeId = 1;
+            } elseif (strpos($labelLower, 'performance rating') !== false) {
+                $docTypeId = 2;
+            } elseif (strpos($labelLower, 'eligibility') !== false || strpos($labelLower, 'rating') !== false || strpos($labelLower, 'license') !== false) {
+                $docTypeId = 3;
+                $isCertificateType = true;
+                $certificateList = $certificateInfo['civil_service_certificates'] ?? [];
+            } elseif (strpos($labelLower, 'transcript of records') !== false || strpos($labelLower, 'tor') !== false) {
+                $docTypeId = 4;
+            } elseif (strpos($labelLower, 'diploma') !== false || strpos($labelLower, 'proof of graduation') !== false) {
+                $docTypeId = 5;
+            } elseif (strpos($labelLower, 'certificate of employment') !== false) {
+                $docTypeId = 6;
+            } elseif (strpos($labelLower, 'certificate of trainings') !== false || strpos($labelLower, 'seminars') !== false) {
+                $docTypeId = 7;
+                $isCertificateType = true;
+                $certificateList = $certificateInfo['training_certificates'] ?? [];
+            } elseif (strpos($labelLower, 'resume') !== false || strpos($labelLower, 'curriculum vitae') !== false || strpos($labelLower, 'cv') !== false) {
+                $docTypeId = null; // Resume doesn't have a document type
+            } else {
+                $docTypeId = null; // Unknown document type
+            }
+            
+            // Look up the document in userDocsByType
+            if (isset($docTypeId) && isset($userDocsByType[$docTypeId])) {
+                $fileValue = $userDocsByType[$docTypeId];
+                $hasExistingDoc = !empty($fileValue);
+            }
+            
+            // For certificate types, also check if there are certificates
+            if ($isCertificateType && !empty($certificateList)) {
+                $hasExistingDoc = true;
+            }
         }
         ?>
-        <?php if ($hasExistingDoc): ?>
+        <?php if ($isCertificateType && !empty($certificateList)): ?>
+            <!-- Special handling for Certificate of Trainings and Seminars (and Eligibility) -->
+            <?php if ($docTypeId == 7): ?>
+                <button 
+                    type="button"
+                    class="viewCombinedTrainingBtn inline-flex items-center px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded">
+                    <i class="fa-regular fa-eye mr-1"></i> View Certificates (<?= count($certificateList) ?>)
+                </button>
+            <?php else: ?>
+                <!-- For civil service certificates, list them individually -->
+                <div class="flex flex-col gap-1">
+                    <?php foreach ($certificateList as $cert): ?>
+                        <?php 
+                        $certFile = $cert['certificate'] ?? '';
+                        ?>
+                        <?php if (!empty($certFile)): ?>
+                            <button 
+                                type="button"
+                                class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
+                                data-file="<?= esc($certFile) ?>">
+                                <i class="fa-regular fa-eye mr-1"></i> View Document
+                            </button>
+                        <?php endif; ?>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        <?php elseif ($hasExistingDoc): ?>
             <button 
                 type="button"
                 class="viewFileBtn inline-flex items-center px-2 py-1 text-xs font-medium rounded text-blue-600 hover:bg-blue-50"
-                data-file="<?= base_url('file/viewFile/' . $fileValue) ?>">
+                data-file="<?= esc($fileValue) ?>">
                 <i class="fa-regular fa-eye mr-1"></i> View Document
             </button>
         <?php else: ?>
@@ -1371,16 +1476,41 @@ document.addEventListener('DOMContentLoaded', function(){
     const frame = document.getElementById('fileFrame');
     let isOpening = false;
 
+    // View Combined Training Certificates button click
+    document.addEventListener('click', function(e){
+        const viewCombinedTrainingBtn = e.target.closest('.viewCombinedTrainingBtn');
+        if (!viewCombinedTrainingBtn) return;
+        
+        e.preventDefault();
+        
+        Swal.fire({
+            title: 'Loading Certificates...',
+            text: 'Please wait while we combine all your training certificates.',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+        
+        setTimeout(() => {
+            // Use the combined PDF endpoint
+            frame.src = '<?= site_url('account/viewCombinedTrainingCertificates') ?>';
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            Swal.close();
+        }, 800);
+        
+        return;
+    });
+
     // View button click
     document.addEventListener('click', function(e){
         const btn = e.target.closest('.viewFileBtn');
         if(!btn) return;
 
         e.preventDefault();
-        const fileUrl = btn.dataset.file;
+        const fileValue = btn.dataset.file;
 
         // No file → show SweetAlert2 warning
-        if(!fileUrl || fileUrl.trim() === ''){
+        if(!fileValue || fileValue.trim() === ''){
             Swal.fire({
                 icon: 'warning',
                 title: 'No File Available',
@@ -1392,16 +1522,63 @@ document.addEventListener('DOMContentLoaded', function(){
         }
 
         // Check if this is a Google Drive file ID (28-33 characters, no timestamp prefix)
-        const fileName = fileUrl.split('/').pop();
-        const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(fileName) && !/^\d{10}_/.test(fileName);
+        const isGoogleDriveFile = /^[a-zA-Z0-9_-]{28,33}$/.test(fileValue) && !/^\d{10}_/.test(fileValue);
 
         if(isGoogleDriveFile) {
-            // For Google Drive files, show in modal with iframe
-            const googleDriveUrl = `https://drive.google.com/file/d/${fileName}/preview`;
-            Swal.close();
-            frame.src = googleDriveUrl;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            // For Google Drive files, fetch as blob and show in modal (same as account/personal Files tab)
+            Swal.fire({
+                title: 'Loading...',
+                text: 'Please wait while the file loads.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                    
+                    setTimeout(() => {
+                        // Use backend endpoint to get Google Drive file
+                        fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(fileValue)}`)
+                            .then(async res => {
+                                const contentType = res.headers.get('content-type') || '';
+                                
+                                // JSON returned → file missing
+                                if (contentType.includes('application/json')) {
+                                    const data = await res.json();
+                                    Swal.close();
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No File Available',
+                                        text: data.message || 'No file has been uploaded for this document.',
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    });
+                                    throw new Error('File not available');
+                                }
+                                
+                                return res.blob(); // File exists
+                            })
+                            .then(blob => {
+                                if(blob){
+                                    const url = URL.createObjectURL(blob);
+                                    Swal.close();
+                                    frame.src = url;
+                                    modal.classList.remove('hidden');
+                                    modal.classList.add('flex');
+                                }
+                            })
+                            .catch(err => {
+                                if(err.message !== 'File not available'){
+                                    Swal.close();
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'No File Available',
+                                        text: 'Unable to load file.',
+                                        showConfirmButton: false,
+                                        timer: 1000
+                                    });
+                                }
+                            });
+                    }, 500);
+                }
+            });
             return;
         }
 
@@ -1418,7 +1595,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
         setTimeout(async () => {
             try{
-                const response = await fetch(fileUrl);
+                const response = await fetch(`<?= base_url('account/viewFile/') ?>${encodeURIComponent(fileValue)}`);
 
                 // Check if the response is OK
                 if(!response.ok){
@@ -1433,7 +1610,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
                 // File exists → show modal
                 Swal.close();
-                frame.src = fileUrl;
+                frame.src = `<?= base_url('account/viewFile/') ?>${encodeURIComponent(fileValue)}`;
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
 

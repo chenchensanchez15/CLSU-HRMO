@@ -27,7 +27,7 @@
 
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
     <div class="flex items-center gap-3">
-        <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
+        <img src="/CLSU-HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
         <div class="flex flex-col leading-tight">
             <span class="text-xl font-bold">CLSU Online Job Application</span>
             <span class="text-sm font-medium opacity-90">Human Resource Management Office</span>

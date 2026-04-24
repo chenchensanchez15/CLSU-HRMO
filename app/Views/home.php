@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <head>
     <title>CLSU Online Job Application</title>
-    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/CLSU-HRMO/public/assets/images/favicon.ico">
 </head>
 
 
@@ -32,7 +32,7 @@
 <header class="bg-clsuGreen text-white py-4 px-4">
     <div class="max-w-5xl mx-auto flex items-center justify-center">
         <div class="flex items-center gap-3 text-center md:text-left">
-            <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-16 h-auto"/>
+            <img src="/CLSU-HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-16 h-auto"/>
             <div>
                 <h1 class="text-3xl font-bold mb-1">CLSU Online Job Application</h1>
                 <p class="text-base max-w-2xl">

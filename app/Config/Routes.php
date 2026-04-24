@@ -64,7 +64,7 @@ $routes->post('account/updateCivilService', 'Account::updateCivilService');
 $routes->delete('account/deleteCivilService/(:num)', 'Account::deleteCivilService/$1');
 $routes->post('account/updateFiles', 'Account::updateFiles');
 
-// Grouped account routes
+
 $routes->group('account', function($routes) {
     $routes->get('personal', 'Account::personal');
     $routes->post('updateTraining', 'Account::updateTraining');
@@ -78,16 +78,16 @@ $routes->get('applications/viewTrainingCertificate/(:num)/(:any)', 'Applications
 $routes->get('trainings/certificate/(:any)', 'Account::viewTrainingCertificate/$1');
 $routes->get('files/training/(:any)', 'Files::training/$1');
 $routes->get('files/document/(:any)', 'Files::document/$1');
-// New routes for multi-document training certificate viewer (actual files, NOT combined)
+
 $routes->get('training-documents/view-multiple/(:num)', 'TrainingDocuments::viewMultiple/$1');
 $routes->get('training-documents/view-multiple-by-user/(:any)', 'TrainingDocuments::viewMultipleByUser/$1');
 $routes->get('training-documents/get-certificate/(:any)', 'TrainingDocuments::getCertificate/$1');
-// Route for user's own multiple training certificates in profile
+
 $routes->get('account/view-multiple-training-certificates', 'Account::viewMultipleTrainingCertificates');
 $routes->get('account/viewCombinedTrainingCertificates', 'Account::viewCombinedTrainingCertificates');
 $routes->get('applications/viewCombinedTrainingCertificates/(:num)', 'Applications::viewCombinedTrainingCertificates/$1');
 $routes->delete('account/deleteEducation/(:num)', 'Account::deleteEducation/$1');
-// Family background functionality removed
+
 $routes->get('account/viewCivilCertificate/(:any)', 'Account::viewCivilCertificate/$1');
 $routes->get('account/viewTrainingCertificate/(:any)', 'Account::viewTrainingCertificate/$1');
 $routes->post('account/updateFile', 'Account::updateFile');
@@ -102,12 +102,12 @@ $routes->get('applications/getFiles/(:num)', 'Applications::getFiles/$1');
 $routes->get('account/viewEligibilityCertificates', 'Account::viewEligibilityCertificates');
 $routes->get('account/viewTrainingCertificates', 'Account::viewTrainingCertificates');
 
-// Google Auth
+
 $routes->get('google/redirectToGoogle', 'GoogleAuth::redirectToGoogle');
 $routes->get('google/callback', 'GoogleAuth::handleCallback');
 $routes->get('google/revokeAccess', 'GoogleAuth::revokeAccess');
 
-// Job Vacancies
+
 $routes->get('job-vacancies', 'JobVacancies::index');
 $routes->get('job-vacancies/create', 'JobVacancies::create');
 $routes->post('job-vacancies', 'JobVacancies::store');

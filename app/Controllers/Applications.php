@@ -159,13 +159,44 @@ class Applications extends BaseController
         if ($docTypeId == 6) $documentsMap['employment'] = $filename;       // Certificate of Employment
         if ($docTypeId == 7) $documentsMap['trainings'] = $filename;        // Trainings
     }
+    
+    // Also pass the raw userDocs for dynamic requirements matching
+    $userDocsByType = [];
+    foreach ($userDocs as $doc) {
+        $userDocsByType[$doc['document_type_id']] = $doc['filename'];
+    }
+    
+    // Fetch training certificates for document type 7
+    $trainingModel = new \App\Models\ApplicantTrainingModel();
+    $trainingCertificates = $trainingModel
+        ->where('user_id', $user_id)
+        ->where('certificate_file IS NOT NULL')
+        ->where('certificate_file !=', '')
+        ->findAll();
+    
+    // Fetch civil service certificates for document type 3
+    $civilServiceModel = new \App\Models\ApplicantCivilServiceModel();
+    $civilServiceCertificates = $civilServiceModel
+        ->where('user_id', $user_id)
+        ->where('certificate IS NOT NULL')
+        ->where('certificate !=', '')
+        ->findAll();
+    
+    $certificateInfo = [
+        'training_certificates' => $trainingCertificates,
+        'civil_service_certificates' => $civilServiceCertificates
+    ];
+
 
     return view('apply', [
         'job'         => $job,
         'profile'     => $profile,
         'requirements'=> $requirements,
         'createdBy'   => $createdBy,
-        'documents'   => $documentsMap
+        'documents'   => $documentsMap,
+        'userDocsByType' => $userDocsByType,
+        'certificateInfo' => $certificateInfo,
+        'userId'      => $user_id
     ]);
 }
 
@@ -1653,9 +1684,19 @@ public function getFiles($id)
         'tor' => $files['tor'] ? base_url('file/viewFile/' . $files['tor']) : null,
         'diploma' => $files['diploma'] ? base_url('file/viewFile/' . $files['diploma']) : null,
         'employment' => $files['employment'] ? base_url('file/viewFile/' . $files['employment']) : null,
-        // Training certificates use viewTrainingCertificate endpoint for combined PDF support
-        'trainings' => $files['trainings'] ? base_url('applications/viewTrainingCertificate/' . $id . '/' . $files['trainings']) : null,
+        // Return individual training certificates instead of combined PDF
+        'trainings' => !empty($trainings) ? array_map(function($training) {
+            return [
+                'certificate_file' => $training['certificate_file'] ?? null,
+                'training_name' => $training['training_name'] ?? 'Training',
+                'date_from' => $training['date_from'] ?? null,
+                'date_to' => $training['date_to'] ?? null,
+            ];
+        }, array_filter($trainings, function($t) {
+            return !empty($t['certificate_file']);
+        })) : null,
         'trainings_count' => count($trainings), // Return count for display in button
+        'application_id' => $id, // Return application ID for view-all button
     ]);
 }
 
@@ -1887,16 +1928,18 @@ public function viewCombinedTrainingCertificates($applicationId)
     
     $userId = $application['user_id'];
     
-    // Get all training certificates for this applicant
-    $trainingModel = new \App\Models\ApplicantTrainingModel();
-    $certificates = $trainingModel
-        ->where('user_id', $userId)
-        ->where('certificate_file IS NOT NULL')
-        ->where('certificate_file !=', '')
-        ->orderBy('added_date', 'ASC')
-        ->findAll();
+    // Get all training certificates for this specific application (not from applicant profile)
+    $trainings = $db->table('application_trainings at')
+        ->join('lib_training_category tc', 'at.training_category_id = tc.id_training_category', 'left')
+        ->select('at.id_application_trainings, at.training_name, at.date_from, at.date_to, at.training_facilitator, at.training_hours, at.training_sponsor, at.training_remarks, at.certificate_file, tc.training_category_name')
+        ->where(['at.job_application_id' => $applicationId])
+        ->where('at.certificate_file IS NOT NULL')
+        ->where('at.certificate_file !=', '')
+        ->orderBy('at.date_from', 'ASC')
+        ->get()
+        ->getResultArray();
 
-    if (empty($certificates)) {
+    if (empty($trainings)) {
         // Return a simple PDF with message when no certificates found
         $pdf = new \setasign\Fpdi\Fpdi();
         $pdf->AddPage();
@@ -1904,7 +1947,7 @@ public function viewCombinedTrainingCertificates($applicationId)
         $pdf->Cell(0, 10, 'No Training Certificates Found', 0, 1, 'C');
         $pdf->SetFont('Arial', '', 12);
         $pdf->Ln(10);
-        $pdf->MultiCell(0, 10, 'This applicant has not uploaded any training certificates yet.', 0, 'C');
+        $pdf->MultiCell(0, 10, 'This applicant has not uploaded any training certificates for this application.', 0, 'C');
         
         return $this->response
             ->setHeader('Content-Type', 'application/pdf')
@@ -1922,8 +1965,8 @@ public function viewCombinedTrainingCertificates($applicationId)
     // Before combining, download Google Drive files to local storage temporarily
     $googleDriveService = new \App\Libraries\GoogleDriveOAuthService();
     
-    foreach ($certificates as &$cert) {
-        $certificateFile = $cert['certificate_file'];
+    foreach ($trainings as &$training) {
+        $certificateFile = $training['certificate_file'];
         
         // Check if it's a Google Drive file ID
         $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) && !preg_match('/^\d{10}_/', $certificateFile);
@@ -1944,12 +1987,12 @@ public function viewCombinedTrainingCertificates($applicationId)
             }
             
             // Update certificate_file path to local file for combiner
-            $cert['certificate_file'] = $certificateFile . '.pdf';
+            $training['certificate_file'] = $certificateFile . '.pdf';
         }
     }
     
     // Combine all certificates into one PDF
-    $result = $combiner->combineCertificates($certificates, $outputFilename);
+    $result = $combiner->combineCertificates($trainings, $outputFilename);
     
     if ($result) {
         // Serve the combined PDF

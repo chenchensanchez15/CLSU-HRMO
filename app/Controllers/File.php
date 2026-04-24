@@ -9,21 +9,118 @@ class File extends Controller
     // Training certificate
     public function viewTrainingCertificate($id, $filename)
     {
-        $filename = basename($filename);
-        $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
-
-        if (!file_exists($filePath)) {
-            // Return JSON error
+        if (!$filename) {
             return $this->response->setJSON([
                 'status' => 'error',
                 'message' => 'No training certificate has been uploaded for this record.'
             ])->setStatusCode(404);
         }
 
-        return $this->response
-                    ->setHeader('Content-Type', 'application/pdf')
-                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                    ->setBody(file_get_contents($filePath));
+        $filename = urldecode($filename);
+        
+        // Check if the filename is a Google Drive file ID (typically 20-44 characters long)
+        // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
+        $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
+        
+        if ($isGoogleDriveFile) {
+            // File is stored in Google Drive - download and serve it
+            log_message('debug', 'Attempting to view Google Drive training certificate: ' . $filename);
+            
+            $content = null;
+            
+            // Try 1: OAuth service
+            $driveService = new \App\Libraries\GoogleDriveOAuthService();
+            
+            if ($driveService->isEnabled()) {
+                try {
+                    log_message('debug', 'Downloading Google Drive training certificate using OAuth: ' . $filename);
+                    
+                    // Create temp file
+                    $tempFile = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
+                    
+                    // Download from Google Drive
+                    $driveService->downloadFile($filename, $tempFile);
+                    
+                    if (file_exists($tempFile)) {
+                        $content = file_get_contents($tempFile);
+                        unlink($tempFile);
+                        log_message('info', 'Successfully served Google Drive training certificate (OAuth): ' . $filename);
+                    }
+                } catch (\Exception $e) {
+                    log_message('warning', 'OAuth download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Try 2: Service account fallback
+            if (!$content) {
+                try {
+                    log_message('debug', 'Trying service account for Google Drive training certificate: ' . $filename);
+                    
+                    $serviceAccountPath = WRITEPATH . 'credentials/google_credentials.json';
+                    if (file_exists($serviceAccountPath)) {
+                        $client = new \Google\Client();
+                        $client->setAuthConfig($serviceAccountPath);
+                        $client->addScope([\Google\Service\Drive::DRIVE]);
+                        
+                        $accessToken = $client->fetchAccessTokenWithAssertion();
+                        
+                        if (isset($accessToken['access_token'])) {
+                            // Use cURL to download
+                            $ch = curl_init();
+                            curl_setopt($ch, CURLOPT_URL, 'https://www.googleapis.com/drive/v3/files/' . $filename . '?alt=media&supportsAllDrives=true');
+                            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                                'Authorization: Bearer ' . $accessToken['access_token']
+                            ]);
+                            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                            
+                            $content = curl_exec($ch);
+                            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                            curl_close($ch);
+                            
+                            if ($httpCode == 200 && !empty($content)) {
+                                log_message('info', 'Successfully served Google Drive training certificate (Service Account): ' . $filename);
+                            } else {
+                                $content = null;
+                            }
+                        }
+                    }
+                } catch (\Exception $e) {
+                    log_message('error', 'Service account download failed: ' . $e->getMessage());
+                }
+            }
+            
+            // Serve file if we got content
+            if ($content) {
+                return $this->response
+                            ->setHeader('Content-Type', 'application/pdf')
+                            ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '.pdf"')
+                            ->setHeader('Accept-Ranges', 'bytes')
+                            ->setBody($content);
+            } else {
+                // Fallback: redirect to preview URL
+                log_message('warning', 'All download methods failed for training certificate, redirecting to preview: ' . $filename);
+                $previewUrl = 'https://drive.google.com/file/d/' . $filename . '/preview';
+                return redirect()->to($previewUrl);
+            }
+        } else {
+            // Handle local file (fallback for existing files)
+            $filename = basename($filename);
+            $filePath = WRITEPATH . 'uploads/trainings/' . $filename;
+
+            if (!file_exists($filePath)) {
+                // Return JSON error
+                return $this->response->setJSON([
+                    'status' => 'error',
+                    'message' => 'No training certificate has been uploaded for this record.'
+                ])->setStatusCode(404);
+            }
+
+            return $this->response
+                        ->setHeader('Content-Type', 'application/pdf')
+                        ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                        ->setBody(file_get_contents($filePath));
+        }
     }
 
     // General files (PDS, Resume, TOR, Diploma, etc.)

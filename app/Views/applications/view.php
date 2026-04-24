@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <head>
     <title>Applicant Dashboard | CLSU Online Job Application System</title>
-    <link rel="icon" type="image/x-icon" href="/HRMO/public/assets/images/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="/CLSU-HRMO/public/assets/images/favicon.ico">
 </head>
 
 <script src="https://cdn.tailwindcss.com"></script>
@@ -74,7 +74,7 @@ window.onclick = function(event) {
 <header class="bg-clsuGreen text-white py-3 px-6 shadow">
     <div class="flex items-center justify-between max-w-7xl mx-auto">
         <div class="flex items-center gap-4">
-            <img src="/HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
+            <img src="/CLSU-HRMO/public/assets/images/clsu-logo2.png" alt="CLSU Logo" class="w-12 h-auto">
             <div class="flex flex-col leading-tight">
                 <a href="<?= site_url('dashboard') ?>" class="text-xl font-bold no-underline hover:no-underline" style="text-decoration: none;">CLSU Online Job Application</a>
             </div>
@@ -1124,26 +1124,25 @@ function openEditModal(applicationId) {
                     </button>`;
             }
 
-            function createTrainingsViewButton(url, count) {
-                return `
-                    <button type="button" class="view-document-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800" data-file="${url}">
-                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        View Document (${count})
-                    </button>`;
-            }
-
             if (data.pds) document.getElementById('pds-view-link').innerHTML = createViewButton(data.pds);
             if (data.performance_rating) document.getElementById('performance-rating-view-link').innerHTML = createViewButton(data.performance_rating);
             if (data.eligibility) document.getElementById('eligibility-view-link').innerHTML = createViewButton(data.eligibility);
             if (data.tor) document.getElementById('tor-view-link').innerHTML = createViewButton(data.tor);
             if (data.diploma) document.getElementById('diploma-view-link').innerHTML = createViewButton(data.diploma);
             if (data.employment) document.getElementById('employment-view-link').innerHTML = createViewButton(data.employment);
-            if (data.trainings) {
-                const trainingsCount = data.trainings_count || 0;
-                document.getElementById('trainings-view-link').innerHTML = createTrainingsViewButton(data.trainings, trainingsCount);
+            
+            // Handle training certificates - show "View All" button like uploaded documents section
+            if (data.trainings && data.trainings.length > 0) {
+                const trainingsCount = data.trainings.length;
+                const applicationId = data.application_id;
+                document.getElementById('trainings-view-link').innerHTML = `
+                    <button type="button" class="view-all-trainings-btn inline-flex items-center text-blue-600 text-xs hover:text-blue-800" data-application-id="${applicationId}">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        View All (${trainingsCount})
+                    </button>`;
             }
 
             modal.classList.remove('opacity-0', 'pointer-events-none');

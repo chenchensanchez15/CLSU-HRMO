@@ -730,7 +730,8 @@ public function updatePhoto()
         $userModel = new UserModel();
         $user = $userModel->find($userId);
 
-        if (!password_verify($current, $user['password'])) {
+        $passwordHash = isset($user['password']) ? (string) $user['password'] : '';
+        if (!$user || !password_verify($current, $passwordHash)) {
             return redirect()->back()->with('error', 'Current password is incorrect.');
         }
 
@@ -1243,8 +1244,9 @@ public function deleteCivilService($id = null)
             $fileModel->deleteDocument($userId, 3); // document_type_id = 3 for Certificate of Eligibility
             
             // Check if it's a Google Drive file ID
-            $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) 
-                                 && !preg_match('/^\d{10}_/', $certificateFile);
+            $certificateFileStr = (string) $certificateFile;
+            $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFileStr) 
+                                 && !preg_match('/^\d{10}_/', $certificateFileStr);
             
             if ($isGoogleDriveFile) {
                 // Delete from Google Drive
@@ -1456,10 +1458,7 @@ public function trainings()
 
 public function viewTrainingCertificate($filename = null)
 {
-    log_message('debug', 'viewTrainingCertificate called with filename: ' . var_export($filename, true));
-    
     if (!$filename) {
-        log_message('warning', 'No filename provided to viewTrainingCertificate');
         return $this->response->setStatusCode(404)
                               ->setJSON([
                                   'status' => 'warning',
@@ -1468,93 +1467,21 @@ public function viewTrainingCertificate($filename = null)
     }
 
     $filename = urldecode($filename);
-    log_message('debug', 'Decoded filename: ' . $filename);
-    
-    // Check if the filename is a Google Drive file ID (typically 28-33 characters long)
-    // Local uploaded files have timestamp prefixes like "1772469100_filename.pdf"
-    $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $filename) && !preg_match('/^\d{10}_/', $filename);
-    
-    log_message('debug', 'Is Google Drive file: ' . ($isGoogleDriveFile ? 'YES' : 'NO'));
-    
-    if ($isGoogleDriveFile) {
-        log_message('debug', 'Attempting to view training certificate from Google Drive: ' . $filename);
-        
-        // Handle Google Drive file
-        try {
-            $driveService = new \App\Libraries\GoogleDriveOAuthService();
-            
-            log_message('debug', 'Google Drive service initialized, attempting download...');
-            
-            // Download file content from Google Drive
-            $tempPath = sys_get_temp_dir() . '/' . uniqid('gdrive_') . '.pdf';
-            
-            try {
-                $downloadResult = $driveService->downloadFile($filename, $tempPath);
-                
-                if ($downloadResult && file_exists($tempPath)) {
-                    $content = file_get_contents($tempPath);
-                    unlink($tempPath); // Clean up temp file
-                    
-                    log_message('info', 'Successfully downloaded training certificate from Google Drive: ' . $filename);
-                    
-                    return $this->response
-                        ->setHeader('Content-Type', 'application/pdf')
-                        ->setHeader('Content-Disposition', 'inline; filename="'.$filename.'.pdf"')
-                        ->setHeader('Accept-Ranges', 'bytes')
-                        ->setBody($content);
-                } else {
-                    log_message('error', 'Failed to download training certificate from Google Drive: ' . $filename);
-                    throw new \Exception('Failed to download file from Google Drive');
-                }
-            } catch (\Exception $e) {
-                log_message('error', 'Google Drive download error: ' . $e->getMessage());
-                log_message('error', 'Stack trace: ' . $e->getTraceAsString());
-                return $this->response->setJSON([
-                    'status' => 'error',
-                    'message' => 'Failed to download certificate: ' . $e->getMessage()
-                ])->setStatusCode(500);
-            }
-        } catch (\Exception $e) {
-            log_message('error', 'Google Drive service initialization error: ' . $e->getMessage());
-            return $this->response->setJSON([
-                'status' => 'error',
-                'message' => 'Google Drive service error: ' . $e->getMessage()
-            ])->setStatusCode(500);
-        }
-    } else {
-        // Handle local file (fallback for existing files)
-        $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
-        
-        // Also check other possible paths
-        if (!file_exists($filePath)) {
-            $possiblePaths = [
-                WRITEPATH . 'uploads/trainings/' . $filename,
-                WRITEPATH . 'uploads/' . $filename,
-                FCPATH . 'uploads/' . $filename
-            ];
-            
-            foreach ($possiblePaths as $possiblePath) {
-                if (file_exists($possiblePath)) {
-                    $filePath = $possiblePath;
-                    break;
-                }
-            }
-        }
+    $filePath = FCPATH . 'writable/uploads/trainings/' . $filename;
 
-        if (!file_exists($filePath)) {
-            return $this->response->setStatusCode(404)
-                                  ->setJSON([
-                                      'status' => 'warning',
-                                      'message' => 'No training certificate has been uploaded for this record.'
-                                  ]);
-        }
-
-        return $this->response
-                    ->setHeader('Content-Type', mime_content_type($filePath))
-                    ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
-                    ->setHeader('Accept-Ranges', 'bytes')
-                    ->setBody(file_get_contents($filePath));
+    if (!file_exists($filePath)) {
+        return $this->response->setStatusCode(404)
+                              ->setJSON([
+                                  'status' => 'warning',
+                                  'message' => 'No training certificate has been uploaded for this record.'
+                              ]);
     }
+
+    return $this->response
+                ->setHeader('Content-Type', mime_content_type($filePath))
+                ->setHeader('Content-Disposition', 'inline; filename="' . $filename . '"')
+                ->setHeader('Accept-Ranges', 'bytes')
+                ->setBody(file_get_contents($filePath));
 }
 
 public function viewTrainingCertificates()
@@ -2092,8 +2019,9 @@ public function updateTraining()
                 $fileModel->deleteDocument($userId, 7); // document_type_id = 7 for Certificate of Trainings and Seminars
                 
                 // Check if it's a Google Drive file ID
-                $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFile) 
-                                     && !preg_match('/^\d{10}_/', $certificateFile);
+                $certificateFileStr = (string) $certificateFile;
+                $isGoogleDriveFile = preg_match('/^[a-zA-Z0-9_-]{20,}$/', $certificateFileStr) 
+                                     && !preg_match('/^\d{10}_/', $certificateFileStr);
                 
                 if ($isGoogleDriveFile) {
                     // Delete from Google Drive
